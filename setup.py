@@ -23,7 +23,7 @@ setup(name='imars_dags',
     long_description=long_description,
     author='Tylar Murray',
     author_email='imarsroot@marine.usf.edu',
-    url='https://github.com/7yl4r/imars_dags',
+    url='https://github.com/USF-IMARS/imars_dags',
 
     tests_require=['nose'],
     install_requires=[

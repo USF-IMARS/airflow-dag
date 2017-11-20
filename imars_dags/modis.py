@@ -55,15 +55,19 @@ def myd03_filename(
     product_datetime,
     sat_char
 ):
-    """ builds a filename for M*D03.YYDDDDHHMMSS.hdf formatted paths """
-    return "M{}D03.{}.hdf".format(sat_char, datetime.strftime)
+    """ builds a filename for M*D03.YYDDDHHMMSS.hdf formatted paths """
+    return "M{}D03.{}.hdf".format(sat_char, product_datetime.strftime("%y%j%H%M%S"))
 
 ingest_product_root_path="/srv/imars-objects/nrt-pub/data/aqua/modis/level1/"
 modis_processing_filecheck = BashOperator(
     task_id='filecheck',
     bash_command="""
-        test -e {ingest_product_root_path}{{ myd03_filename(execution_date, "Y") }}
+        test -e {root_path}{{ params.pathbuilder(execution_date, "Y") }}
     """,
+     params={
+        'pathbuilder': myd03_filename,
+        'root_path': ingest_product_root_path,
+    },
     dag=dag_processing
 )
 # =============================================================================

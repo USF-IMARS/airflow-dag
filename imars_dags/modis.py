@@ -21,18 +21,63 @@ default_args = {
     # 'end_date': datetime(2016, 1, 1),
 }
 
-dag = DAG('modis', default_args=default_args, schedule_interval=timedelta(hours=6))
+dag_ingest = DAG('modis', default_args=default_args, schedule_interval=timedelta(hours=6))
 
+# =============================================================================
+# === Modis ingest subscription(s)
+# =============================================================================
 modis_ingest = BashOperator(
     task_id='subscription_1310',
     bash_command='/opt/RemoteDownlinks/ingest_subscription.py',
-    dag=dag
+    dag=dag_ingest
 )
 # NOTE: this writes files out to /srv/imars-objects/subscription-1310/modis_l0
 # example filenames:
 # MOD00.A2017318.0430_1.PDS.bz2
 # MOD00.A2017309.0115_1.PDS.bz2
+# =============================================================================
 
+# for each (new) pass file:
+dag_processing = DAG('modis_processing', default_args=default_args, schedule_interval=timedelta(minutes=5))
+
+
+# =============================================================================
+# === file existance check
+# =============================================================================
+# test -e gives exit status 1 if file DNE
+# This node will fail if the input files have not been ingested and thus the DAG
+# will not run. This is useful because we run every 5m, but we really only want
+# to process the granules that have come in from our subscription. When the
+# DAG fails at this stage, then you know that the granule for this time was
+# not ingested by the subscription service.
+
+def myd03_filename(
+    product_datetime,
+    sat_char
+):
+    """ builds a filename for M*D03.YYDDDDHHMMSS.hdf formatted paths """
+    return "M{}D03.{}.hdf".format(sat_char, datetime.strftime)
+
+ingest_product_root_path="/srv/imars-objects/nrt-pub/data/aqua/modis/level1/"
+modis_processing_filecheck = BashOperator(
+    task_id='filecheck',
+    bash_command="""
+        test -e {ingest_product_root_path}{{ myd03_filename(execution_date, "Y") }}
+    """,
+    dag=dag_processing
+)
+# =============================================================================
+# =============================================================================
+# === Day/Night Metadata for given pass mxd03 file
+# =============================================================================
+# new_mxd03_path=""
+# modis_mxd03_day_night = BashOperator(
+#     task_id='modis_mxd03_day_night',
+#     bash_command='/opt/sat-scripts/sat-scripts/DayNight.sh '+ new_mxd03_path,
+#     dag=dag_processing
+# )
+
+# =============================================================================
 # =============================================================================
 # === IMaRS oc_png cut_mapped_pass PngGenerator
 # =============================================================================
@@ -69,7 +114,7 @@ oc_png_template = """
 #         'output_file': '',
 #         # TODO
 #     },
-#     dag=dag
+#     dag=dag_processing
 # )
 # TODO: set imars.{sat}.{sensor}.{product_family}.mapped as upstream
 # t3.set_upstream(t1)

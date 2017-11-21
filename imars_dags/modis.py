@@ -58,27 +58,30 @@ def myd03_filename(
     """ builds a filename for M*D03.YYDDDHHMMSS.hdf formatted paths """
     return "M{}D03.{}.hdf".format(sat_char, product_datetime.strftime("%y%j%H%M%S"))
 
+myd03_params = {
+   'pathbuilder': myd03_filename,
+   'root_path': "/srv/imars-objects/nrt-pub/data/aqua/modis/level1/",
+}
+
 modis_processing_filecheck = BashOperator(
     task_id='filecheck',
     bash_command="""
         test -e {{params.root_path}}{{ params.pathbuilder(execution_date, "Y") }}
     """,
-     params={
-        'pathbuilder': myd03_filename,
-        'root_path': "/srv/imars-objects/nrt-pub/data/aqua/modis/level1/",
-    },
+     params=myd03_params,
     dag=dag_processing
 )
 # =============================================================================
 # =============================================================================
 # === Day/Night Metadata for given pass mxd03 file
 # =============================================================================
-# new_mxd03_path=""
-# modis_mxd03_day_night = BashOperator(
-#     task_id='modis_mxd03_day_night',
-#     bash_command='/opt/sat-scripts/sat-scripts/DayNight.sh '+ new_mxd03_path,
-#     dag=dag_processing
-# )
+modis_mxd03_day_night = BashOperator(
+    task_id='modis_mxd03_day_night',
+    bash_command='/opt/sat-scripts/sat-scripts/DayNight.sh {{ params.pathbuilder(execution_date, "Y") }}',
+    params=myd03_params,
+    dag=dag_processing
+)
+modis_processing_filecheck >> modis_mxd03_day_night
 
 # =============================================================================
 # =============================================================================

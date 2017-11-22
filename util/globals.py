@@ -11,11 +11,6 @@ class QUEUE:
 
     Queues are used to limit job allocation to certain workers. Useful when
     a task has specific software requriments that may not be met on all users.
-
-    Use of queues should be co-ordinated with use of pools because otherwise the
-    default pool will fill with queued tasks which have no workers available and
-    workers assigned to other queues will not have anything to pick up out of
-    the pool.
     """
     DEFAULT = 'default'  # default queue any worker can pick up tasks from
     SAT_SCRIPTS = 'sat_scripts'  # only workers with sat-scripts installed &
@@ -28,7 +23,6 @@ class POOL:
 
     Pools are used to limit # of jobs of a certain type running.
     Example usages:
-       * limit # of jobs within in a queue to make sure systems do not get overloaded.
        * limit # of jobs working with a certain file system so we don't waste a lot of
             processing time waiting on file i/o because of too many competing workers.
 
@@ -36,8 +30,7 @@ class POOL:
     Pools with the names below must be created there before using else your
     scheduler will get confused.
     """
-    DEFAULT = 'default'
-    SAT_SCRIPTS = 'sat_scripts'
+    DEFAULT = None  # default pool selected by not providing a value
 
 
 

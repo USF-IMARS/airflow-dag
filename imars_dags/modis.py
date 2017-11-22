@@ -5,6 +5,14 @@ from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from datetime import datetime, timedelta
 
+class QUEUE:
+    """
+    basically an enum class, the string values *must* match those used in
+    the puppet configuration exactly so that workers can attach to the queues.
+    """
+    DEFAULT = 'default'  # default queue any worker can pick up tasks from
+    SAT_SCRIPTS = 'sat_scripts'  # only workers with sat-scripts installed &
+    # functioning can pick up tasks from SAT_SCRIPTS
 
 default_args = {
     'owner': 'airflow',
@@ -15,8 +23,8 @@ default_args = {
     'email_on_retry': False,
     'retries': 0,
     'retry_delay': timedelta(minutes=90),
-    # 'queue': 'bash_queue',
-    # 'pool': 'backfill',
+    'queue': QUEUE.DEFAULT,  # use queues to limit job allocation to certain workers
+    # 'pool': 'backfill',  # use pools to limit # of processes hitting at once
     # 'priority_weight': 10,
     # 'end_date': datetime(2016, 1, 1),
 }
@@ -69,7 +77,8 @@ modis_processing_filecheck = BashOperator(
         test -e {{params.root_path}}{{ params.pathbuilder(execution_date, "Y") }}
     """,
      params=myd03_params,
-    dag=modis_processing
+    dag=modis_processing,
+    queue=QUEUE.SAT_SCRIPTS
 )
 # =============================================================================
 # =============================================================================

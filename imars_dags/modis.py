@@ -38,7 +38,7 @@ modis_ingest = BashOperator(
 # =============================================================================
 
 # for each (new) pass file:
-dag_processing = DAG('modis_processing', default_args=default_args, schedule_interval=timedelta(minutes=5))
+modis_processing = DAG('modis_processing', default_args=default_args, schedule_interval=timedelta(minutes=5))
 
 
 # =============================================================================
@@ -69,7 +69,7 @@ modis_processing_filecheck = BashOperator(
         test -e {{params.root_path}}{{ params.pathbuilder(execution_date, "Y") }}
     """,
      params=myd03_params,
-    dag=dag_processing
+    dag=modis_processing
 )
 # =============================================================================
 # =============================================================================
@@ -79,7 +79,7 @@ modis_mxd03_day_night = BashOperator(
     task_id='modis_mxd03_day_night',
     bash_command='/opt/sat-scripts/sat-scripts/DayNight.sh {{ params.pathbuilder(execution_date, "Y") }}',
     params=myd03_params,
-    dag=dag_processing
+    dag=modis_processing
 )
 modis_processing_filecheck >> modis_mxd03_day_night
 

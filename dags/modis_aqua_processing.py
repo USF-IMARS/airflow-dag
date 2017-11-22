@@ -6,7 +6,7 @@ from airflow.operators.bash_operator import BashOperator
 from datetime import datetime, timedelta
 
 # === ./imars_dags/modis_aqua_processing.py :
-from imars_dags.imars_dags.globals import QUEUE
+from imars_dags.util.globals import QUEUE
 
 default_args = {
     'owner': 'airflow',

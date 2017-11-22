@@ -29,21 +29,6 @@ default_args = {
     # 'end_date': datetime(2016, 1, 1),
 }
 
-dag_ingest = DAG('modis', default_args=default_args, schedule_interval=timedelta(hours=6))
-
-# =============================================================================
-# === Modis ingest subscription(s)
-# =============================================================================
-modis_ingest = BashOperator(
-    task_id='subscription_1310',
-    bash_command='/opt/RemoteDownlinks/ingest_subscription.py',
-    dag=dag_ingest
-)
-# NOTE: this writes files out to /srv/imars-objects/subscription-1310/modis_l0
-# example filenames:
-# MOD00.A2017318.0430_1.PDS.bz2
-# MOD00.A2017309.0115_1.PDS.bz2
-# =============================================================================
 
 # for each (new) pass file:
 modis_processing = DAG('modis_processing', default_args=default_args, schedule_interval=timedelta(minutes=5))

@@ -3,26 +3,11 @@ airflow processing pipeline definition for MODIS data
 """
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
-from datetime import datetime, timedelta
+from datetime import timedelta
 
-from imars_dags.util.globals import QUEUE
+from imars_dags.util.globals import QUEUE, DEFAULT_ARGS
 
-default_args = {
-    'owner': 'airflow',
-    'depends_on_past': False,
-    'start_date': datetime(2017, 11, 7),
-    'email': ['imarsroot@marine.usf.edu'],
-    'email_on_failure': False,
-    'email_on_retry': False,
-    'retries': 0,
-    'retry_delay': timedelta(minutes=90),
-    'queue': QUEUE.DEFAULT,  # use queues to limit job allocation to certain workers
-    # 'pool': 'backfill',  # use pools to limit # of processes hitting at once
-    # 'priority_weight': 10,
-    # 'end_date': datetime(2016, 1, 1),
-}
-
-modis_ingest = DAG('modis_ingest', default_args=default_args, schedule_interval=timedelta(hours=6))
+modis_ingest = DAG('modis_ingest', default_args=DEFAULT_ARGS, schedule_interval=timedelta(hours=6))
 
 # =============================================================================
 # === Modis ingest subscription(s)

@@ -6,7 +6,7 @@ from airflow.operators.bash_operator import BashOperator
 from datetime import timedelta
 
 # === ./imars_dags/modis_aqua_processing.py :
-from imars_dags.util.globals import QUEUE, DEFAULT_ARGS
+from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, POOL
 
 
 # for each (new) pass file:
@@ -54,7 +54,8 @@ myd03_day_night = BashOperator(
     bash_command='/opt/sat-scripts/sat-scripts/DayNight.sh {{ params.pathbuilder(execution_date, "Y") }}',
     params=myd03_params,
     dag=modis_aqua_processing,
-    queue=QUEUE.SAT_SCRIPTS
+    queue=QUEUE.SAT_SCRIPTS,
+    pool=POOL.SAT_SCRIPTS
 )
 myd03_filecheck >> myd03_day_night
 

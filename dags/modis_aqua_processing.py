@@ -54,8 +54,7 @@ myd03_day_night = BashOperator(
     bash_command='/opt/sat-scripts/sat-scripts/DayNight.sh {{ params.pathbuilder(execution_date, "Y") }}',
     params=myd03_params,
     dag=modis_aqua_processing,
-    queue=QUEUE.SAT_SCRIPTS,
-    pool=POOL.SAT_SCRIPTS
+    queue=QUEUE.SAT_SCRIPTS
 )
 myd03_filecheck >> myd03_day_night
 

@@ -25,7 +25,7 @@ default_args = {
 
 
 # for each (new) pass file:
-modis_processing = DAG('modis_processing', default_args=default_args, schedule_interval=timedelta(minutes=5))
+modis_aqua_processing = DAG('modis_aqua_processing', default_args=default_args, schedule_interval=timedelta(minutes=5))
 
 
 # =============================================================================
@@ -42,7 +42,9 @@ def myd03_filename(
     product_datetime,
     sat_char
 ):
-    """ builds a filename for M*D03.YYDDDHHMMSS.hdf formatted paths """
+    """ builds a filename for M*D03.YYDDDHHMMSS.hdf formatted paths.
+    sat_char=Y for Aqua, O for Terra
+    """
     return "M{}D03.{}.hdf".format(sat_char, product_datetime.strftime("%y%j%H%M%S"))
 
 myd03_params = {
@@ -50,26 +52,26 @@ myd03_params = {
    'root_path': "/srv/imars-objects/nrt-pub/data/aqua/modis/level1/",
 }
 
-modis_processing_filecheck = BashOperator(
-    task_id='filecheck',
+myd03_filecheck = BashOperator(
+    task_id='mYd03_filecheck',
     bash_command="""
         test -e {{params.root_path}}{{ params.pathbuilder(execution_date, "Y") }}
     """,
      params=myd03_params,
-    dag=modis_processing,
+    dag=modis_aqua_processing,
     queue=QUEUE.SAT_SCRIPTS
 )
 # =============================================================================
 # =============================================================================
 # === Day/Night Metadata for given pass mxd03 file
 # =============================================================================
-modis_mxd03_day_night = BashOperator(
-    task_id='modis_mxd03_day_night',
+myd03_day_night = BashOperator(
+    task_id='myd03_day_night',
     bash_command='/opt/sat-scripts/sat-scripts/DayNight.sh {{ params.pathbuilder(execution_date, "Y") }}',
     params=myd03_params,
-    dag=modis_processing
+    dag=modis_aqua_processing
 )
-modis_processing_filecheck >> modis_mxd03_day_night
+myd03_filecheck >> myd03_day_night
 
 # =============================================================================
 # =============================================================================

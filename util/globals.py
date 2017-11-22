@@ -1,5 +1,5 @@
 """
-these are constants that can be referenced from multiple DAGs
+these are constants that can be referenced from multiple DAGs.
 """
 
 from datetime import datetime, timedelta

@@ -5,7 +5,7 @@ from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from datetime import datetime, timedelta
 
-from imars_dags.imars_dags.globals import QUEUE
+from imars_dags.util.globals import QUEUE
 
 default_args = {
     'owner': 'airflow',

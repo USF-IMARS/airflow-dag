@@ -11,6 +11,11 @@ class QUEUE:
 
     Queues are used to limit job allocation to certain workers. Useful when
     a task has specific software requriments that may not be met on all users.
+
+    Use of queues should be co-ordinated with use of pools because otherwise the
+    default pool will fill with queued tasks which have no workers available and
+    workers assigned to other queues will not have anything to pick up out of
+    the pool.
     """
     DEFAULT = 'default'  # default queue any worker can pick up tasks from
     SAT_SCRIPTS = 'sat_scripts'  # only workers with sat-scripts installed &
@@ -27,10 +32,13 @@ class POOL:
        * limit # of jobs working with a certain file system so we don't waste a lot of
             processing time waiting on file i/o because of too many competing workers.
 
-    The list of pools is managed in the UI (Menu -> Admin -> Pools) by giving
-        the pools a name and assigning it a number of worker slots.
+    The list of pools is managed in the webserver UI (Menu -> Admin -> Pools).
+    Pools with the names below must be created there before using else your
+    scheduler will get confused.
     """
-    SAT_SCRIPTS="sat_scripts"
+    DEFAULT = 'default'
+    SAT_SCRIPTS = 'sat_scripts'
+
 
 
 """ default arguments to pass into airflow DAGs for use by Operators"""
@@ -44,7 +52,7 @@ DEFAULT_ARGS = {
     'retries': 0,
     'retry_delay': timedelta(minutes=90),
     'queue': QUEUE.DEFAULT,
-    # 'pool': 'backfill', 
+    'pool': POOL.DEFAULT,
     # 'priority_weight': 10,
     # 'end_date': datetime(2016, 1, 1),
 }

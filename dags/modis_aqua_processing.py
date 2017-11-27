@@ -62,7 +62,7 @@ myd03_filecheck >> myd03_day_night
 
 # =============================================================================
 # =============================================================================
-# === IMaRS oc_png cut_mapped_pass PngGenerator
+# === IMaRS chlor_a oc_png cut_mapped_pass PngGenerator
 # =============================================================================
 # Ported from [IMaRS IPOPP SPA](https://github.com/USF-IMARS/imars)
 #     * SPA=imars
@@ -77,10 +77,10 @@ myd03_filecheck >> myd03_day_night
 #
 oc_png_template = """
     /opt/sat-scripts/sat-scripts/PngGenerator.py
-        -f {params.input_file}
-        -m {params.mask_file}
+        -f {{params.root_path}}{{ params.pathbuilder(execution_date, "Y") }}
+        -m {params.product}_{params.place_name}_{params.sensor}mask
         -c {params.conversion}
-        -o {params.output_file}
+        -o /srv/imars-objects/region_{params.place_name}/l3_modis_chlor_a_1km_pass_png/{params.sat}.{{execution_date}}.{params.place_name}.{params.sds}.png
         -s {params.sds}
         -n {params.no_data}
         -l {params.valid_min}
@@ -94,9 +94,22 @@ oc_png_template = """
 #         task_id='oc_png_'+region.place_name,
 #         bash_command=oc_png_template,
 #         params={
-#             'input_file': '',
-#             'output_file': '',
-#             # TODO
+#             'root_path': myd03_params.root_path,
+#             'pathbuilder': myd03_params.pathbuilder,
+#             'product':"chlor_a",
+#             'sds': "chlor_a",
+#             'sat': 'aqua',
+#             'place_name':region.place_name,
+#             'sensor':'modis',
+#             # This is a python equation for each thumbnails.
+#             #   DO NOT PUT SPACES INSIDE THE EQUATION, but separate equations
+#             #   with spaces. Input must be data.
+#             'conversion': 'np.log10(data+1)/0.00519 250*np.log10((0.59*(data*5)**.86)+1.025)/np.log10(2)',
+#             'no_data': 0, # seadas raw value for no data 0 for hdf5, was -32767
+#             'valid_min': 'NaN',
+#             'valid_max': 'NaN',
+#             'coordinates': # TODO: something like the following from the generic.xml:
+#             # "-a {source_north} -d {source_east} -e {source_south} -g {source_west} -w {latmax} -x {lonmax} -y {latmin} -z {lonmin}"
 #         },
 #         dag=modis_aqua_processing,
 #         queue=QUEUE.SAT_SCRIPTS
@@ -104,3 +117,5 @@ oc_png_template = """
 #     # TODO: set imars.{sat}.{sensor}.{product_family}.mapped as upstream
 #     myd03_day_night >> oc_png_region
 # =============================================================================
+
+# TODO: very similar to above, but with nflh

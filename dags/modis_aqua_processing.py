@@ -7,7 +7,7 @@ from datetime import timedelta
 
 # === ./imars_dags/modis_aqua_processing.py :
 from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, POOL
-
+from imars_dags.settings.regions import REGIONS
 
 # for each (new) pass file:
 modis_aqua_processing = DAG('modis_aqua_processing', default_args=DEFAULT_ARGS, schedule_interval=timedelta(minutes=5))
@@ -42,16 +42,18 @@ myd03_filecheck = BashOperator(
     bash_command="""
         test -e {{params.root_path}}{{ params.pathbuilder(execution_date, "Y") }}
     """,
-     params=myd03_params,
+    params=myd03_params,
     dag=modis_aqua_processing
 )
 # =============================================================================
 # =============================================================================
-# === Day/Night Metadata for given pass mxd03 file
+# === Check Day/Night Metadata for given pass mxd03 file
 # =============================================================================
+# this node will fail if the input file is a night pass and the DAG will not
+# proceed.
 myd03_day_night = BashOperator(
     task_id='myd03_day_night',
-    bash_command='/opt/sat-scripts/sat-scripts/DayNight.sh {{ params.pathbuilder(execution_date, "Y") }}',
+    bash_command='/opt/sat-scripts/sat-scripts/DayNight.sh {{params.root_path}}{{ params.pathbuilder(execution_date, "Y") }}',
     params=myd03_params,
     dag=modis_aqua_processing,
     queue=QUEUE.SAT_SCRIPTS
@@ -86,17 +88,19 @@ oc_png_template = """
         {params.coordinates}
 """
 
-# TODO: construct one of these tasks for each region:
-# oc_png = BashOperator(
-#     task_id='oc_png',
-#     bash_command=oc_png_template,
-#     params={
-#         'input_file': '',
-#         'output_file': '',
-#         # TODO
-#     },
-#     dag=dag_processing
-# )
-# TODO: set imars.{sat}.{sensor}.{product_family}.mapped as upstream
-# t3.set_upstream(t1)
+# construct one of these tasks for each region:
+# for region in REGIONS:
+#     oc_png_region = BashOperator(
+#         task_id='oc_png_'+region.place_name,
+#         bash_command=oc_png_template,
+#         params={
+#             'input_file': '',
+#             'output_file': '',
+#             # TODO
+#         },
+#         dag=modis_aqua_processing,
+#         queue=QUEUE.SAT_SCRIPTS
+#     )
+#     # TODO: set imars.{sat}.{sensor}.{product_family}.mapped as upstream
+#     myd03_day_night >> oc_png_region
 # =============================================================================

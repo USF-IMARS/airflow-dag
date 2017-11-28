@@ -7,6 +7,7 @@ from datetime import timedelta
 
 # === ./imars_dags/modis_aqua_processing.py :
 from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, POOL
+from imars_dags.util.satfilename import mxd03
 from imars_dags.settings.regions import REGIONS
 
 # for each (new) pass file:
@@ -23,27 +24,8 @@ modis_aqua_processing = DAG('modis_aqua_processing', default_args=DEFAULT_ARGS, 
 # DAG fails at this stage, then you know that the granule for this time was
 # not ingested by the subscription service.
 
-def myd03_filename(
-    product_datetime,
-    sat_char
-):
-    """ builds a filename for M*D03.YYDDDHHMMSS.hdf formatted paths.
-    These are level 1 GEO files for modis.
-
-    Parameters
-    -----------------
-    sat_char : char
-        Y for Aqua, O for Terra
-    root_path : str filepath
-        path in which all files live
-    """
-    return "M{}D03.{}.hdf".format(
-        sat_char,
-        product_datetime.strftime("%y%j%H%M%S")
-    )
-
 myd03_params = {
-   'pathbuilder': myd03_filename,
+   'pathbuilder': mxd03,
    'root_path': "/srv/imars-objects/nrt-pub/data/aqua/modis/level1/",
 }
 

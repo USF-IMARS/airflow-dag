@@ -28,9 +28,19 @@ def myd03_filename(
     sat_char
 ):
     """ builds a filename for M*D03.YYDDDHHMMSS.hdf formatted paths.
-    sat_char=Y for Aqua, O for Terra
+    These are level 1 GEO files for modis.
+
+    Parameters
+    -----------------
+    sat_char : char
+        Y for Aqua, O for Terra
+    root_path : str filepath
+        path in which all files live
     """
-    return "M{}D03.{}.hdf".format(sat_char, product_datetime.strftime("%y%j%H%M%S"))
+    return "M{}D03.{}.hdf".format(
+        sat_char,
+        product_datetime.strftime("%y%j%H%M%S")
+    )
 
 myd03_params = {
    'pathbuilder': myd03_filename,
@@ -67,7 +77,9 @@ myd03_filecheck = BashOperator(
 
 myd03_day_night = BashOperator(
     task_id='myd03_day_night',
-    bash_command='/opt/sat-scripts/sat-scripts/DayNight.sh {{params.root_path}}{{ params.pathbuilder(execution_date, "Y") }}',
+    bash_command="""/opt/sat-scripts/sat-scripts/DayNight.sh
+        {{params.root_path}}{{ params.pathbuilder(execution_date, "Y") }}
+    """,
     params=myd03_params,
     dag=modis_aqua_processing,
     queue=QUEUE.SAT_SCRIPTS
@@ -94,6 +106,19 @@ myd03_filecheck >> myd03_day_night
 #        <env name="OCSSWROOT" value="{algohome}" />
 #        <env name="OCVARROOT" value="{algohome}{/}run{/}var" />
 #        <env name="PATH" value=".:{algohome}{/}run{/}bin{/}linux:${PATH}" />
+# myd03_modis_oc_l2gen = BashOperator(
+#     task_id='myd03_modis_oc_l2gen',
+#     bash_command="""/opt/ocssw/bin/l2gen
+#         ifile=$DATA_DIR/l1b/$FILENAME.L1B_LAC
+#         ofile=$DATA_DIR/L2_gen/$FILENAME.L2
+#         geofile={{params.root_path}}{{ params.pathbuilder(execution_date, "Y") }}
+#         par=$DATA_DIR/generic_l2gen.par
+#     """,
+#     params=myd03_params,
+#     dag=modis_aqua_processing,
+#     queue=QUEUE.SAT_SCRIPTS
+# )
+
 
 # =============================================================================
 # =============================================================================
@@ -153,4 +178,4 @@ oc_png_template = """
 #     myd03_day_night >> oc_png_region
 # =============================================================================
 
-# TODO: very similar to above, but with nflh
+# TODO: very similar to above, but with nflh instead of chlor_a

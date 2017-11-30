@@ -38,7 +38,7 @@ class POOL:
 DEFAULT_ARGS = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2017, 11, 7),
+    'start_date': datetime(2017, 11, 6, 20, 25),
     'email': ['imarsroot@marine.usf.edu'],
     'email_on_failure': False,
     'email_on_retry': False,

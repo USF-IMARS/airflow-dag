@@ -43,3 +43,17 @@ def l1a_geo(
     return "/srv/imars-objects/modis_aqua_gom/geo/" + "A{}00.GEO".format(
         product_datetime.strftime("%Y%j%H%M")
     )
+
+def okm(product_datetime):
+    return "/srv/imars-objects/modis_aqua_gom/l1b/" + "A{}00.L1B_LAC".format(
+        product_datetime.strftime("%Y%j%H%M")
+    )
+
+def hkm(product_datetime):
+    return "/srv/imars-objects/modis_aqua_gom/hkm/" + "A{}00.L1B_HKM".format(
+        product_datetime.strftime("%Y%j%H%M")
+    )
+def qkm(product_datetime):
+    return "/srv/imars-objects/modis_aqua_gom/qkm/" + "A{}00.L1B_QKM".format(
+        product_datetime.strftime("%Y%j%H%M")
+    )

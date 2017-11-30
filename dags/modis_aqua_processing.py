@@ -7,7 +7,8 @@ from datetime import timedelta
 
 # === ./imars_dags/modis_aqua_processing.py :
 from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, POOL
-from imars_dags.util.satfilename import mxd03, l1a_LAC_bz2, l1a_LAC, l1a_geo
+from imars_dags.util.satfilename import mxd03, l1a_LAC_bz2, l1a_LAC, l1a_geo  # TODO: replace these
+from imars_dags.util import satfilename
 from imars_dags.settings.regions import REGIONS
 
 # for each (new) pass file:
@@ -16,7 +17,6 @@ modis_aqua_processing = DAG(
     default_args=DEFAULT_ARGS,
     schedule_interval=timedelta(minutes=5)
 )
-
 
 # =============================================================================
 # === file existance check
@@ -73,10 +73,30 @@ l1a_2_geo = BashOperator(
 )
 obdaac_ingest_unzip >> l1a_2_geo
 # =============================================================================
-# === modis l1a + geo -> l2
+# === modis l1a + geo -> l1b
 # =============================================================================
-#$OCSSWROOT/run/scripts/modis_L1B.py --okm=$DATA_DIR/l1b/$FILENAME.L1B_LAC --hkm=$DATA_DIR/l1b/$FILENAME.L1B_HKM --qkm=$DATA_DIR/l1b/$FILENAME.L1B_QKM $DATA_DIR/l1a_A/$FILENAME.L1A_LAC.x.hdf $DATA_DIR/GEO/$FILENAME.GEO
-# TODO
+make_l1b = BashOperator(
+    task_id='make_l1b',
+    bash_command="""
+        export OCSSWROOT=/opt/ocssw && source /opt/ocssw/OCSSW_bash.env && \
+        $OCSSWROOT/run/scripts/modis_L1B.py \
+        --okm={{params.okm_pather(execution_date)}} \
+        --hkm={{params.okm_pather(execution_date)}} \
+        --qkm={{params.okm_pather(execution_date)}} \
+        {{params.l1a_pather(execution_date)}} \
+        {{params.geo_pather(execution_date)}}
+    """,
+    params={
+        'l1a_pather': l1a_LAC,
+        'geo_pather': l1a_geo,
+        'okm_pather': satfilename.okm,
+        'hkm_pather': satfilename.hkm,
+        'qkm_pather': satfilename.qkm
+    },
+    dag=modis_aqua_processing
+)
+l1a_2_geo >> make_l1b
+obdaac_ingest_unzip >> make_l1b
 # =============================================================================
 # =============================================================================
 # === Check Day/Night Metadata for given pass mxd03 file

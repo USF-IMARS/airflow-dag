@@ -80,8 +80,8 @@ make_l1b = BashOperator(
         export OCSSWROOT=/opt/ocssw && source /opt/ocssw/OCSSW_bash.env && \
         $OCSSWROOT/run/scripts/modis_L1B.py \
         --okm={{params.okm_pather(execution_date)}} \
-        --hkm={{params.okm_pather(execution_date)}} \
-        --qkm={{params.okm_pather(execution_date)}} \
+        --hkm={{params.hkm_pather(execution_date)}} \
+        --qkm={{params.qkm_pather(execution_date)}} \
         {{params.l1a_pather(execution_date)}} \
         {{params.geo_pather(execution_date)}}
     """,

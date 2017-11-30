@@ -7,7 +7,6 @@ from datetime import timedelta
 
 # === ./imars_dags/modis_aqua_processing.py :
 from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, POOL
-from imars_dags.util.satfilename import mxd03, l1a_LAC_bz2, l1a_LAC, l1a_geo  # TODO: replace these
 from imars_dags.util import satfilename
 from imars_dags.settings.regions import REGIONS
 
@@ -33,7 +32,7 @@ obdaac_ingest_filecheck = BashOperator(
         test -e {{ params.satfilepather(execution_date) }}
     """,
     params={
-       'satfilepather': l1a_LAC_bz2,
+       'satfilepather': satfilename.l1a_LAC_bz2,
     },
     dag=modis_aqua_processing
 )
@@ -47,8 +46,8 @@ obdaac_ingest_unzip = BashOperator(
         bzip2 -d -k -c {{ params.bz2_pather(execution_date) }} > {{ params.l1a_pather(execution_date) }}
     """,
     params={
-        'bz2_pather': l1a_LAC_bz2,
-        'l1a_pather': l1a_LAC
+        'bz2_pather': satfilename.l1a_LAC_bz2,
+        'l1a_pather': satfilename.l1a_LAC
     },
     dag=modis_aqua_processing
 )
@@ -66,8 +65,8 @@ l1a_2_geo = BashOperator(
         {{params.l1a_pather(execution_date)}}
     """,
     params={
-        'l1a_pather': l1a_LAC,
-        'geo_pather': l1a_geo
+        'l1a_pather': satfilename.l1a_LAC,
+        'geo_pather': satfilename.l1a_geo
     },
     dag=modis_aqua_processing
 )
@@ -87,8 +86,8 @@ make_l1b = BashOperator(
         {{params.geo_pather(execution_date)}}
     """,
     params={
-        'l1a_pather': l1a_LAC,
-        'geo_pather': l1a_geo,
+        'l1a_pather': satfilename.l1a_LAC,
+        'geo_pather': satfilename.l1a_geo,
         'okm_pather': satfilename.okm,
         'hkm_pather': satfilename.hkm,
         'qkm_pather': satfilename.qkm

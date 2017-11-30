@@ -52,6 +52,7 @@ obdaac_ingest_unzip = BashOperator(
     },
     dag=modis_aqua_processing
 )
+obdaac_ingest_filecheck >> obdaac_ingest_unzip
 # =============================================================================
 # =============================================================================
 # === modis GEO
@@ -70,7 +71,13 @@ l1a_2_geo = BashOperator(
     },
     dag=modis_aqua_processing
 )
-
+obdaac_ingest_unzip >> l1a_2_geo
+# =============================================================================
+# === modis l1a + geo -> l2
+# =============================================================================
+#$OCSSWROOT/run/scripts/modis_L1B.py --okm=$DATA_DIR/l1b/$FILENAME.L1B_LAC --hkm=$DATA_DIR/l1b/$FILENAME.L1B_HKM --qkm=$DATA_DIR/l1b/$FILENAME.L1B_QKM $DATA_DIR/l1a_A/$FILENAME.L1A_LAC.x.hdf $DATA_DIR/GEO/$FILENAME.GEO
+# TODO
+# =============================================================================
 # =============================================================================
 # === Check Day/Night Metadata for given pass mxd03 file
 # =============================================================================

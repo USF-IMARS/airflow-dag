@@ -7,7 +7,7 @@ from datetime import timedelta
 
 # === ./imars_dags/modis_aqua_processing.py :
 from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, POOL
-from imars_dags.util.satfilename import mxd03
+from imars_dags.util.satfilename import mxd03, l1a_LAC_bz2, l1a_LAC
 from imars_dags.settings.regions import REGIONS
 
 # for each (new) pass file:
@@ -27,18 +27,29 @@ modis_aqua_processing = DAG(
 # to process the granules that have come in from our subscription. When the
 # DAG fails at this stage, then you know that the granule for this time was
 # not ingested by the subscription service.
-
-myd03_params = {
-   'pathbuilder': mxd03,
-   'root_path': "/srv/imars-objects/nrt-pub/data/aqua/modis/level1/",
-}
-
-myd03_filecheck = BashOperator(
-    task_id='myd03_filecheck',
+obdaac_ingest_filecheck = BashOperator(
+    task_id='obdaac_ingest_filecheck',
     bash_command="""
-        test -e {{params.root_path}}{{ params.pathbuilder(execution_date, "Y") }}
+        test -e {{ params.satfilepather(execution_date) }}
     """,
-    params=myd03_params,
+    params={
+       'satfilepather': l1a_LAC_bz2,
+    },
+    dag=modis_aqua_processing
+)
+# =============================================================================
+# =============================================================================
+# === unzip the files
+# =============================================================================
+obdaac_ingest_unzip = BashOperator(
+    task_id='obdaac_ingest_unzip',
+    bash_command="""
+        bzip2 -d -k -c {{ params.bz2_pather(execution_date) }} > {{ params.l1a_pather(execution_date) }}
+    """,
+    params={
+        'bz2_pather': l1a_LAC_bz2,
+        'l1a_pather': l1a_LAC
+    },
     dag=modis_aqua_processing
 )
 # =============================================================================
@@ -61,17 +72,16 @@ myd03_filecheck = BashOperator(
 #      errorFile="errfile_DayNightCheck">
 #      <env name="MODIS_DB_HOME" value="{algohome}" />
 
-myd03_day_night = BashOperator(
-    task_id='myd03_day_night',
-    bash_command="""/opt/sat-scripts/sat-scripts/DayNight.sh
-        {{params.root_path}}{{ params.pathbuilder(execution_date, "Y") }}
-    """,
-    params=myd03_params,
-    dag=modis_aqua_processing,
-    queue=QUEUE.SAT_SCRIPTS
-)
-myd03_filecheck >> myd03_day_night
-
+# myd03_day_night = BashOperator(
+#     task_id='myd03_day_night',
+#     bash_command="""/opt/sat-scripts/sat-scripts/DayNight.sh
+#         {{params.root_path}}{{ params.pathbuilder(execution_date, "Y") }}
+#     """,
+#     params=myd03_params,
+#     dag=modis_aqua_processing,
+#     queue=QUEUE.SAT_SCRIPTS
+# )
+# myd03_filecheck >> myd03_day_night
 # =============================================================================
 # =============================================================================
 # === seadas modis_oc

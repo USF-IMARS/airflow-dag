@@ -59,8 +59,8 @@ obdaac_ingest_unzip = BashOperator(
 l1a_2_geo = BashOperator(
     task_id='l1a_2_geo',
     bash_command="""
-        source /opt/ocssw/OCSSW_bash.env && \
-        /opt/ocssw/scripts/modis_GEO.py \
+        export OCSSWROOT=/opt/ocssw && source /opt/ocssw/OCSSW_bash.env && \
+        /opt/ocssw/run/scripts/modis_GEO.py \
         --output={{params.geo_pather(execution_date)}} \
         {{params.l1a_pather(execution_date)}}
     """,

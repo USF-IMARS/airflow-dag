@@ -1,5 +1,5 @@
 """
-airflow processing pipeline definition for MODIS data
+airflow processing pipeline definition for MODIS aqua data
 """
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
@@ -11,7 +11,11 @@ from imars_dags.util.satfilename import mxd03
 from imars_dags.settings.regions import REGIONS
 
 # for each (new) pass file:
-modis_aqua_processing = DAG('modis_aqua_processing', default_args=DEFAULT_ARGS, schedule_interval=timedelta(minutes=5))
+modis_aqua_processing = DAG(
+    'modis_aqua_processing',
+    default_args=DEFAULT_ARGS,
+    schedule_interval=timedelta(minutes=5)
+)
 
 
 # =============================================================================
@@ -30,7 +34,7 @@ myd03_params = {
 }
 
 myd03_filecheck = BashOperator(
-    task_id='mYd03_filecheck',
+    task_id='myd03_filecheck',
     bash_command="""
         test -e {{params.root_path}}{{ params.pathbuilder(execution_date, "Y") }}
     """,

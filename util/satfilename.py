@@ -36,3 +36,10 @@ def l1a_LAC(
     return "/srv/imars-objects/modis_aqua_gom/l1a/" + "A{}00.L1A_LAC".format(
         product_datetime.strftime("%Y%j%H%M")
     )
+
+def l1a_geo(
+    product_datetime
+):
+    return "/srv/imars-objects/modis_aqua_gom/geo/" + "A{}00.GEO".format(
+        product_datetime.strftime("%Y%j%H%M")
+    )

@@ -7,7 +7,7 @@ from datetime import timedelta
 
 # === ./imars_dags/modis_aqua_processing.py :
 from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, POOL
-from imars_dags.util.satfilename import mxd03, l1a_LAC_bz2, l1a_LAC
+from imars_dags.util.satfilename import mxd03, l1a_LAC_bz2, l1a_LAC, l1a_geo
 from imars_dags.settings.regions import REGIONS
 
 # for each (new) pass file:
@@ -53,6 +53,24 @@ obdaac_ingest_unzip = BashOperator(
     dag=modis_aqua_processing
 )
 # =============================================================================
+# =============================================================================
+# === modis GEO
+# =============================================================================
+l1a_2_geo = BashOperator(
+    task_id='l1a_2_geo',
+    bash_command="""
+        source /opt/ocssw/OCSSW_bash.env && \
+        /opt/ocssw/scripts/modis_GEO.py \
+        --output={{params.geo_pather(execution_date)}} \
+        {{params.l1a_pather(execution_date)}}
+    """,
+    params={
+        'l1a_pather': l1a_LAC,
+        'geo_pather': l1a_geo
+    },
+    dag=modis_aqua_processing
+)
+
 # =============================================================================
 # === Check Day/Night Metadata for given pass mxd03 file
 # =============================================================================

@@ -43,7 +43,7 @@ DEFAULT_ARGS = {
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 2,
-    'retry_delay': timedelta(hours=48),
+    'retry_delay': timedelta(hours=24, minutes=1),  # +1m offset to stagger scheduling
     'queue': QUEUE.DEFAULT,
     'pool': POOL.DEFAULT,
     # 'priority_weight': 10,

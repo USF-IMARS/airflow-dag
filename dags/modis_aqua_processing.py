@@ -50,7 +50,8 @@ obdaac_ingest_filecheck = BashOperator(
     params={
        'satfilepather': satfilename.l1a_LAC_bz2,
     },
-    dag=modis_aqua_processing
+    dag=modis_aqua_processing,
+    retries=0
 )
 wait_for_data_delay >> obdaac_ingest_filecheck
 # =============================================================================

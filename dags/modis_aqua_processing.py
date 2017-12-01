@@ -3,6 +3,7 @@ airflow processing pipeline definition for MODIS aqua data
 """
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
+from airflow.operators.sensors import TimeDeltaSensor
 from datetime import timedelta
 
 # === ./imars_dags/modis_aqua_processing.py :
@@ -17,6 +18,21 @@ modis_aqua_processing = DAG(
     schedule_interval=timedelta(minutes=5)
 )
 
+# =============================================================================
+# === delay to wait for upstream data to become available.
+# =============================================================================
+# ie wait for download from  OB.DAAC to complete.
+# this makes sure that we don't try to run this DAG until `delta` amount of time
+# past the `execution_date` (which is the datetime of the satellite recording).
+#
+# `delta` is the amount of time we expect between satellite measurement and
+# the data being available on our server. Usually something like 2-48 hours.
+wait_for_data_delay = TimeDeltaSensor(
+    delta=timedelta(hours=36),
+    task_id='wait_for_data_delay',
+    dag=modis_aqua_processing
+)
+# =============================================================================
 # =============================================================================
 # === file existance check
 # =============================================================================
@@ -36,6 +52,7 @@ obdaac_ingest_filecheck = BashOperator(
     },
     dag=modis_aqua_processing
 )
+wait_for_data_delay >> obdaac_ingest_filecheck
 # =============================================================================
 # =============================================================================
 # === unzip the files

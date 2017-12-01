@@ -62,3 +62,6 @@ def l2(product_datetime):
     return "/srv/imars-objects/modis_aqua_gom/l2/" + "A{}00.L2".format(
         product_datetime.strftime("%Y%j%H%M")
     )
+
+def png(product_datetime, region_name):
+    return "/srv/imars-objects/modis_aqua_gom/png/" + region_name + "_" + str(product_datetime) + ".png"

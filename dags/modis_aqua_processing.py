@@ -198,31 +198,29 @@ l1a_2_geo >> l2gen
 #   -c {conversion} -o {output_file} -s {sds} -n {no_data} -l {valid_min}
 #   -u {valid_max} {coordinates}"
 #
-oc_png_template = """
-    /opt/sat-scripts/sat-scripts/PngGenerator.py
-        -f {{params.root_path}}{{ params.pathbuilder(execution_date, "Y") }}
-        -m {params.product}_{params.place_name}_{params.sensor}mask
-        -c {params.conversion}
-        -o /srv/imars-objects/region_{params.place_name}/l3_modis_chlor_a_1km_pass_png/{params.sat}.{{execution_date}}.{params.place_name}.{params.sds}.png
-        -s {params.sds}
-        -n {params.no_data}
-        -l {params.valid_min}
-        -u {params.valid_max}
-        {params.coordinates}
-"""
-
 # construct one of these tasks for each region:
 # for region in REGIONS:
 #     oc_png_region = BashOperator(
-#         task_id='oc_png_'+region.place_name,
-#         bash_command=oc_png_template,
+#         task_id='oc_png_'+region['place_name'],
+#         bash_command="""
+#             /opt/sat-scripts/sat-scripts/PngGenerator.py
+#                 -f {{ params.l2_pather(execution_date) }}
+#                 -m /opt/sat-scripts/masks/{{params.product}}_{{params.place_name}}_{{params.sensor}}mask
+#                 -c {{params.conversion}}
+#                 -o {{params.png_pather(execution_date, params.place_name)}}
+#                 -s {{params.sds}}
+#                 -n {{params.no_data}}
+#                 -l {{params.valid_min}}
+#                 -u {{params.valid_max}}
+#                 {{params.coordinates}}
+#         """,
 #         params={
-#             'root_path': myd03_params.root_path,
-#             'pathbuilder': myd03_params.pathbuilder,
+#             'l2_pather':  satfilename.l2,
+#             'png_pather': satfilename.png,
 #             'product':"chlor_a",
 #             'sds': "chlor_a",
 #             'sat': 'aqua',
-#             'place_name':region.place_name,
+#             'place_name':region['place_name'],
 #             'sensor':'modis',
 #             # This is a python equation for each thumbnails.
 #             #   DO NOT PUT SPACES INSIDE THE EQUATION, but separate equations
@@ -231,14 +229,20 @@ oc_png_template = """
 #             'no_data': 0, # seadas raw value for no data 0 for hdf5, was -32767
 #             'valid_min': 'NaN',
 #             'valid_max': 'NaN',
-#             'coordinates': # TODO: something like the following from the generic.xml:
-#             # "-a {source_north} -d {source_east} -e {source_south} -g {source_west} -w {latmax} -x {lonmax} -y {latmin} -z {lonmin}"
+#             'coordinates': (  # -w {latmax} -x {lonmax} -y {latmin} -z {lonmin}"
+#                 " -w " + str(region['latmax']) +
+#                 " -x " + str(region['lonmax']) +
+#                 " -y " + str(region['latmin']) +
+#                 " -z " + str(region['lonmin'])
+#             )
+#             # should also include source_{N/S/E/W} vars?
+#             # "-a {source_north} -d {source_east} -e {source_south} -g {source_west}
 #         },
 #         dag=modis_aqua_processing,
 #         queue=QUEUE.SAT_SCRIPTS
 #     )
 #     # TODO: set imars.{sat}.{sensor}.{product_family}.mapped as upstream
-#     myd03_day_night >> oc_png_region
+#     l2gen >> oc_png_region
 # =============================================================================
 
 # TODO: very similar to above, but with nflh instead of chlor_a

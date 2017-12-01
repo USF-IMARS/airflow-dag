@@ -1,0 +1,17 @@
+# Generic param file for Ocean Color image processing from Level-1A files
+# Written by Dan Otis, August 2017
+# Need to set input and output filenames manually in l2gen call
+
+# SUITE
+suite=OC
+
+# PRODUCTS
+l2prod=Rrs_412 Rrs_443 Rrs_488 Rrs_531 Rrs_547 Rrs_667 Rrs_678 adg_443_giop aph_443_giop bbp_s_giop chlor_a nflh opp_cbpm2 par l2_flags
+
+# PROCESSING OPTIONS
+cirrus_opt=false
+
+# ANCILLARY INPUTS  Default = climatology (select 'Get Ancillary' to download ancillary files)
+
+# IOP OPTIONS
+iop_opt=7

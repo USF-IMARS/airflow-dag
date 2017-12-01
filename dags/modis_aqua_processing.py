@@ -97,6 +97,27 @@ make_l1b = BashOperator(
 l1a_2_geo >> make_l1b
 obdaac_ingest_unzip >> make_l1b
 # =============================================================================
+# === l2gen l1b -> l2
+# =============================================================================
+l2gen = BashOperator(
+    task_id="l2gen",
+    bash_command="""
+        export OCSSWROOT=/opt/ocssw && source /opt/ocssw/OCSSW_bash.env && \
+        $OCSSWROOT/run/bin/linux_64/l2gen \
+        ifile={{params.l1b_pather(execution_date)}} \
+        ofile={{params.l2_pather(execution_date)}} \
+        geofile={{params.geo_pather(execution_date)}} \
+        par={{params.parfile}}
+    """,
+    params={
+        'l1b_pather': satfilename.okm,
+        'geo_pather': satfilename.l1a_geo,
+        'l2_pather':  satfilename.l2,
+        'parfile': "/root/airflow/dags/imars_dags/settings/generic_l2gen.par"
+    },
+    dag=modis_aqua_processing
+)
+# =============================================================================
 # =============================================================================
 # === Check Day/Night Metadata for given pass mxd03 file
 # =============================================================================

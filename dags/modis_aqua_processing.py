@@ -117,6 +117,8 @@ l2gen = BashOperator(
     },
     dag=modis_aqua_processing
 )
+make_l1b >> l2gen
+l1a_2_geo >> l2gen
 # =============================================================================
 # =============================================================================
 # === Check Day/Night Metadata for given pass mxd03 file

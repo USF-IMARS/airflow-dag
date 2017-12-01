@@ -42,7 +42,7 @@ DEFAULT_ARGS = {
     'email': ['imarsroot@marine.usf.edu'],
     'email_on_failure': False,
     'email_on_retry': False,
-    'retries': 2,
+    'retries': 1,
     'retry_delay': timedelta(hours=24, minutes=1),  # +1m offset to stagger scheduling
     'queue': QUEUE.DEFAULT,
     'pool': POOL.DEFAULT,

@@ -57,3 +57,8 @@ def qkm(product_datetime):
     return "/srv/imars-objects/modis_aqua_gom/qkm/" + "A{}00.L1B_QKM".format(
         product_datetime.strftime("%Y%j%H%M")
     )
+
+def l2(product_datetime):
+    return "/srv/imars-objects/modis_aqua_gom/l2/" + "A{}00.L2".format(
+        product_datetime.strftime("%Y%j%H%M")
+    )

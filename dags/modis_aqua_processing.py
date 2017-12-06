@@ -1,5 +1,5 @@
 """
-airflow processing pipeline definition for MODIS aqua data
+airflow processing pipeline definition for MODIS aqua per-pass processing 
 """
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator

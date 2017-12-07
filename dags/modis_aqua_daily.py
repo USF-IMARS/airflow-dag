@@ -17,12 +17,15 @@ this_dag = DAG(
     schedule_interval=timedelta(days=1)
 )
 
+def get_todays_l2s(todays_datetime):
+    """ returns a list of l2 files """
+    return []
 # TODO: query earthdata CMR to find what granules cover this day,
 # (for info see https://github.com/USF-IMARS/imars_dags/issues/2 )
 # then spin up an ExternalTaskSensor for each pass so that we wait for the
 # pass-level processing to complete before continuing.
 # [ref](https://stackoverflow.com/a/38028511/1483986)
-# NOTE: we might be able to remove the delay below 
+# NOTE: we might be able to remove the delay below
 
 # =============================================================================
 # === delay to wait for upstream data to become available.
@@ -54,8 +57,7 @@ wait_for_data_delay = TimeDeltaSensor(
 #     /srv/imars-objects/modis_aqua_gom/l2/A2017313192500.L2
 #
 #     -t is the target (output) file, -f is the format
-def get_todays_l2s(todays_datetime):
-    """ returns a list of l2 files """
+
 l3gen = BashOperator(
     task_id="l3gen",
     bash_command="""
@@ -66,7 +68,7 @@ l3gen = BashOperator(
     """,
     params={
         'satfilename': satfilename,
-        'get_todays_l2s':
+        'get_todays_l2s':get_todays_l2s
     },
     dag=this_dag
 )

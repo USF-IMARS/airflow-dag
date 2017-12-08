@@ -1,5 +1,8 @@
 """
-airflow processing pipeline definition for MODIS aqua per-pass processing 
+!!! NOTE: this DAG is being replaced by modis_aqua_passes and remains here
+            only until the port is complete.
+
+airflow processing pipeline definition for MODIS aqua per-pass processing
 """
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator

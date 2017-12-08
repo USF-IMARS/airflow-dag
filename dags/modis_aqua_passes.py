@@ -7,7 +7,8 @@ from datetime import timedelta
 # deps
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
-from airflow.operators import BranchPythonOperator, DummyOperator
+from airflow.operators.python_operator import BranchPythonOperator
+from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.sensors import TimeDeltaSensor
 from pyCMR.pyCMR import CMR
 

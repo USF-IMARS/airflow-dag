@@ -54,18 +54,23 @@ def granule_in_roi(exec_datetime):
     we could end thinking granules are not in our ROI when actually they may
     just be late to publish.
     """
-    cmr=CMR("../cmr.cfg")
+    TIME_FMT = "%Y-%m-%dT%H:%M:%SZ"  # iso 8601
+    cmr = CMR("/root/airflow/dags/imars_dags/settings/cmr.cfg")
     time_range = str(
-        exec_datetime.strftime(iso8601) + ',' +
-        (exec_datetime + timedelta(minutes=4, seconds=59)).strftime(iso8601)
+        (exec_datetime + timedelta(           seconds=1 )).strftime(TIME_FMT) + ',' +
+        (exec_datetime + timedelta(minutes=4, seconds=59)).strftime(TIME_FMT)
     )
+    print(time_range)
     results = cmr.searchGranule(
         limit=10,
-        short_name="MOD09CMG",
+        short_name="MYD01",  # [M]odis (Y)aqua (D) (0) level [1]
+        # collection_data_type="NRT",  # this is not available for granules
+        provider="LANCEMODIS",  # lance modis is hopefullly only serving NRT
         temporal=time_range
     )
-    assert len(results) == 1
-
+    print(results)
+    assert(len(results) == 1)
+    # TODO: select NRT product
     # TODO: check if bounding box in res intersects with any of our ROIs
     return False
 

@@ -69,15 +69,16 @@ def granule_in_roi(exec_datetime):
     # TODO: check if bounding box in res intersects with any of our ROIs
     return False
 
-def decide_which_path():
-    if granule_in_roi(exec_datetime) is True:
+def decide_which_path(ds, **kwargs):
+    if granule_in_roi(kwargs['execution_date']) is True:
         return "download_granule"
     else:
         return "skip_granule"
 
 metadata_check = BranchPythonOperator(
     task_id='metadata_check',
-    python_callable=(decide_which_path),
+    python_callable=decide_which_path,
+    provide_context=True,
     trigger_rule="all_done",
     dag=this_dag
 )

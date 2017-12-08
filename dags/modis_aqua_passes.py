@@ -103,7 +103,7 @@ metadata_check = BranchPythonOperator(
     task_id='metadata_check',
     python_callable=decide_which_path,
     provide_context=True,
-    trigger_rule="all_done",
+    # trigger_rule="all_success",
     dag=this_dag
 )
 

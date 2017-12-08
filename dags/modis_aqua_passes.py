@@ -79,11 +79,9 @@ metadata_check = BranchPythonOperator(
     task_id='metadata_check',
     python_callable=(decide_which_path),
     trigger_rule="all_done",
-    dag=dag
+    dag=this_dag
 )
 
-metadata_check >> download_granule
-metadata_check >> skip_granule
 # =============================================================================
 # =============================================================================
 # === do nothing on this granule, just end the DAG
@@ -91,8 +89,10 @@ metadata_check >> skip_granule
 skip_granule = DummyOperator(
     task_id='skip_granule',
     trigger_rule='one_success',
-    dag=dag
+    dag=this_dag
 )
+metadata_check >> skip_granule
+
 # =============================================================================
 # =============================================================================
 # === Download the granule
@@ -101,8 +101,8 @@ skip_granule = DummyOperator(
 download_granule = DummyOperator(
     task_id='download_granule',
     trigger_rule='one_success',
-    dag=dag
+    dag=this_dag
 )
-
+metadata_check >> download_granule
 # =============================================================================
 # TODO: continue processing here...

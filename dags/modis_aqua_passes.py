@@ -122,7 +122,22 @@ metadata_check >> skip_granule
 # =============================================================================
 # === Download the granule
 # =============================================================================
-# TODO: make this actually do stuff (dl w/ pycmr?)
+# TODO: make this actually do stuff
+#   The href below can be pulled out of the CMR response (below) & d/l w/ wget,
+#   or the CMR response itself can be passed here using an
+#   [XComs](https://airflow.apache.org/concepts.html#xcoms) and pycmr should let
+#   you do result.download(). Note however, that my tests show this function is
+#   currently not working.
+#
+# d/l url in CMR response looks something like this:
+# ```
+# links
+#   0
+#       rel	"http://esipfed.org/ns/fedsearch/1.1/data#"
+#       type	"application/x-hdfeos"
+#       hreflang	"en-US"
+#       href	"ftp://nrt3.modaps.eosdis.nasa.gov/allData/61/MYD01/2017/338/MYD01.A2017338.1915.061.NRT.hdf"
+# ```
 download_granule = DummyOperator(
     task_id='download_granule',
     trigger_rule='one_success',

@@ -44,35 +44,54 @@ wait_for_data_delay = TimeDeltaSensor(
 # =============================================================================
 # === check if this granule covers our ROIs using metadata from CMR
 # =============================================================================
+
 def granule_in_roi(exec_datetime):
     """
     returns true if granule for given datetime is in one of our ROIs
 
-    NOTE: we get the granule metadata *without* server-side ROI check
-    & do ROI check locally instead so we can be sure that the data
+    NOTE: we get the granule metadata *without* server-side ROI check first
+    & then do ROI check so we can be sure that the data
     has published. We want this to fail if we can't find the metadata, else
-    we could end thinking granules are not in our ROI when actually they may
+    we could end up thinking granules are not in our ROI when actually they may
     just be late to publish.
     """
+    # === set up basic query for CMR
     TIME_FMT = "%Y-%m-%dT%H:%M:%SZ"  # iso 8601
     cmr = CMR("/root/airflow/dags/imars_dags/settings/cmr.cfg")
     time_range = str(
         (exec_datetime + timedelta(           seconds=1 )).strftime(TIME_FMT) + ',' +
         (exec_datetime + timedelta(minutes=4, seconds=59)).strftime(TIME_FMT)
     )
-    print(time_range)
-    results = cmr.searchGranule(
-        limit=10,
-        short_name="MYD01",  # [M]odis (Y)aqua (D) (0) level [1]
-        # collection_data_type="NRT",  # this is not available for granules
-        provider="LANCEMODIS",  # lance modis is hopefullly only serving NRT
-        temporal=time_range
-    )
+    search_kwargs={
+        'limit':10,
+        'short_name':"MYD01",  # [M]odis (Y)aqua (D) (0) level [1]
+        # 'collection_data_type':"NRT",  # this is not available for granules
+        'provider':"LANCEMODIS",  # lance modis is hopefullly only serving NRT
+        'temporal':time_range
+    }
+    print(search_kwargs)
+    # === initial metadata check
+    results = cmr.searchGranule(**search_kwargs)
     print(results)
     assert(len(results) == 1)
-    # TODO: select NRT product
-    # TODO: check if bounding box in res intersects with any of our ROIs
-    return False
+
+    # === check if bounding box in res intersects with any of our ROIs
+    # we do this w/ another CMR call so we don't have to do the math.
+    roi = REGIONS[0]  # we only have one region right now
+    # re-use the original search_kwargs, but add bounding box
+    search_kwargs['bounding_box']="{},{},{},{}".format(
+        roi['lonmin'],  # low l long
+        roi['latmin'],  # low l lat
+        roi['lonmax'],  # up r long
+        roi['latmax']   # up r lat
+    )
+    bounded_results = cmr.searchGranule(**search_kwargs)
+    if (len(bounded_results) == 1):  # granule intersects our ROI
+        return True
+    elif (len(bounded_results) == 0):  # granule does not intersect our ROI
+        return False
+    else:
+        raise ValueError("unexpected # of results from ROI CMR search:"+str(len(bounded_results)))
 
 def decide_which_path(ds, **kwargs):
     if granule_in_roi(kwargs['execution_date']) is True:

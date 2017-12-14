@@ -138,9 +138,22 @@ metadata_check >> skip_granule
 #       hreflang	"en-US"
 #       href	"ftp://nrt3.modaps.eosdis.nasa.gov/allData/61/MYD01/2017/338/MYD01.A2017338.1915.061.NRT.hdf"
 # ```
+def esdis_path(exec_date):
+    return exec_date.strfmt(
+     "ftp://nrt3.modaps.eosdis.nasa.gov/allData/61/MYD01/%Y/%j/MYD01.A%Y%j.%H%M.061.NRT.hdf"
+     )
+
 download_granule = DummyOperator(
     task_id='download_granule',
     trigger_rule='one_success',
+    bash_command="""
+        wget -O {{ params.filepather.myd01(execution_date) }}
+        {{ params.esdis_pather(execution_date) }}
+    """,
+    params={
+        "filepather": satfile,
+        "esdis_path": esdis_pather
+    }
     dag=this_dag
 )
 metadata_check >> download_granule

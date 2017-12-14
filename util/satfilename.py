@@ -35,7 +35,7 @@ def myd01(product_datetime):
     """
     return (
         "/srv/imars-objects/modis_aqua_gom/myd01/" +
-        product_datetime.strftime("A%Y%j.%H%M.061.NRT.hdf")
+        product_datetime.strftime("A%Y%j.%H%M.hdf")
     )
 
 def l1a_LAC(

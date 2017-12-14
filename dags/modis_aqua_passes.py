@@ -67,14 +67,15 @@ def granule_in_roi(exec_datetime):
         'limit':10,
         'short_name':"MYD01",  # [M]odis (Y)aqua (D) (0) level [1]
         # 'collection_data_type':"NRT",  # this is not available for granules
-        'provider':"LANCEMODIS",  # lance modis is hopefullly only serving NRT
+        # 'provider':"LANCEMODIS",  # lance modis is hopefullly only serving NRT
         'temporal':time_range
     }
     print(search_kwargs)
     # === initial metadata check
     results = cmr.searchGranule(**search_kwargs)
+    print("results:")
     print(results)
-    assert(len(results) == 1)
+    assert(len(results) > 0)
 
     # === check if bounding box in res intersects with any of our ROIs
     # we do this w/ another CMR call so we don't have to do the math.

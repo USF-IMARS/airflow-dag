@@ -16,6 +16,7 @@ from pyCMR.pyCMR import CMR
 from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, POOL
 from imars_dags.util import satfilename
 from imars_dags.settings.regions import REGIONS
+from imars_dags.settings import secrets  # NOTE: this file not in public repo!
 
 
 # one DAG for each pass
@@ -138,22 +139,27 @@ metadata_check >> skip_granule
 #       hreflang	"en-US"
 #       href	"ftp://nrt3.modaps.eosdis.nasa.gov/allData/61/MYD01/2017/338/MYD01.A2017338.1915.061.NRT.hdf"
 # ```
-def esdis_path(exec_date):
+def get_esdis_path(exec_date):
     return exec_date.strfmt(
      "ftp://nrt3.modaps.eosdis.nasa.gov/allData/61/MYD01/%Y/%j/MYD01.A%Y%j.%H%M.061.NRT.hdf"
      )
 
-download_granule = DummyOperator(
+download_granule = BashOperator(
     task_id='download_granule',
-    trigger_rule='one_success',
+    # trigger_rule='one_success',
     bash_command="""
-        wget -O {{ params.filepather.myd01(execution_date) }}
+        wget
+        --user {username}
+        --password={password}
+        -O {{ params.filepather.myd01(execution_date) }}
         {{ params.esdis_pather(execution_date) }}
     """,
     params={
-        "filepather": satfile,
-        "esdis_path": esdis_pather
-    }
+        "filepather": satfilename,
+        "esdis_path": get_esdis_path,
+        "username": secrets.ESDIS_USER,
+        "password": secrets.ESDIS_PASS
+    },
     dag=this_dag
 )
 metadata_check >> download_granule

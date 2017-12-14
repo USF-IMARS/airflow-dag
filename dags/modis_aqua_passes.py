@@ -185,6 +185,7 @@ metadata_check = BranchPythonOperator(
     dag=this_dag
 )
 
+wait_for_data_delay >> metadata_check
 # =============================================================================
 # =============================================================================
 # === do nothing on this granule, just end the DAG

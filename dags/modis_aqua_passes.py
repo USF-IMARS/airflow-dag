@@ -141,7 +141,7 @@ metadata_check >> skip_granule
 #       href	"ftp://nrt3.modaps.eosdis.nasa.gov/allData/61/MYD01/2017/338/MYD01.A2017338.1915.061.NRT.hdf"
 # ```
 def get_esdis_path(exec_date):
-    return exec_date.strfmt(
+    return exec_date.strftime(
      "ftp://nrt3.modaps.eosdis.nasa.gov/allData/61/MYD01/%Y/%j/MYD01.A%Y%j.%H%M.061.NRT.hdf"
      )
 
@@ -157,7 +157,7 @@ download_granule = BashOperator(
     """,
     params={
         "filepather": satfilename,
-        "esdis_path": get_esdis_path,
+        "esdis_pather": get_esdis_path,
         "username": secrets.ESDIS_USER,
         "password": secrets.ESDIS_PASS
     },

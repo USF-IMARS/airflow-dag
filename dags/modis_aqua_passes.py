@@ -3,6 +3,7 @@ airflow processing pipeline definition for MODIS aqua per-pass processing
 """
 # std libs
 from datetime import timedelta
+import subprocess
 
 # deps
 from airflow import DAG
@@ -46,9 +47,10 @@ wait_for_data_delay = TimeDeltaSensor(
 # === check if this granule covers our ROIs using metadata from CMR
 # =============================================================================
 
-def granule_in_roi(exec_datetime):
+def get_granule_in_roi(exec_datetime):
     """
-    returns true if granule for given datetime is in one of our ROIs
+    returns pyCMR.Result if granule for given datetime is in one of our ROIs,
+    else returns None
 
     NOTE: we get the granule metadata *without* server-side ROI check first
     & then do ROI check so we can be sure that the data
@@ -68,7 +70,8 @@ def granule_in_roi(exec_datetime):
         'short_name':"MYD01",  # [M]odis (Y)aqua (D) (0) level [1]
         # 'collection_data_type':"NRT",  # this is not available for granules
         # 'provider':"LANCEMODIS",  # lance modis is hopefullly only serving NRT
-        'temporal':time_range
+        'temporal':time_range,
+        'sort_key': "-revision_date"  # this puts most recently updated first
     }
     print(search_kwargs)
     # === initial metadata check
@@ -89,21 +92,94 @@ def granule_in_roi(exec_datetime):
     )
     bounded_results = cmr.searchGranule(**search_kwargs)
     if (len(bounded_results) == 1):  # granule intersects our ROI
-        return True
+        return bounded_results[0]  # use first granule TODO: choose more cleverly
     elif (len(bounded_results) == 0):  # granule does not intersect our ROI
-        return False
+        return None
     else:
         raise ValueError("unexpected # of results from ROI CMR search:"+str(len(bounded_results)))
 
-def decide_which_path(ds, **kwargs):
-    if granule_in_roi(kwargs['execution_date']) is True:
-        return "download_granule"
-    else:
+def _metadata_check(ds, **kwargs):
+    """
+    Performs metadata check using pyCMR to decide which path the DAG should
+    take. If the metadata shows the granule is in our ROI then the granule
+    is downloaded and the processing branch is followed, else the skip branch
+    is followed.
+
+    Parameters
+    -----------
+    ds : datetime?
+        *I think* this is the execution_date for the operator instance
+    kwargs['execution_date'] : datetime.datetime
+        the execution_date for the operator instance (same as `ds`?)
+    kwargs['ti'] : task-instance?
+        something that we use to push/pull xcoms?
+
+    Returns
+    -----------
+    str
+        name of the next operator that should trigger (ie the first in the
+        branch that we want to follow)
+    """
+    exec_date = kwargs['execution_date']
+    granule_result = get_granule_in_roi(exec_date)
+    if granule_result is None:
         return "skip_granule"
+    else:
+        # granule_result.download()
+        # NOTE: pyCMR downloading is borked at the moment and fails silently
+        # https://github.com/7yl4r/pyCMR/commit/0ae16d40df1abd1eb6250b4326104e33937b3537
+        # https://github.com/7yl4r/pyCMR/commit/645561fd4730f0f4c2572fe20f44e0a6790e7dc0
+        # so let's download it manually...
+        #
+        # since we can't get the url using pyCMR (see
+        # https://github.com/nasa/pyCMR/issues/41 and #27), let's try
+        # guessing some URLs! :grimacing:
+        urls_to_try=[  # in order of preference...
+            "ftp://ladsweb.nascom.nasa.gov/allData/{version}/MYD01/%Y/%j/MYD01.A%Y%j.%H%M.{version_zfilled}.%Y{last_modified_time}.hdf",  # std product
+            "ftp://nrt3.modaps.eosdis.nasa.gov/allData/{version}/MYD01/%Y/%j/MYD01.A%Y%j.%H%M.{version_zfilled}.NRT.hdf",  # nrt
+            "ftp://nrt4.modaps.eosdis.nasa.gov/allData/{version}/MYD01/%Y/%j/MYD01.A%Y%j.%H%M.{version_zfilled}.NRT.hdf",  # nrt
+            "ftp://nrt1.modaps.eosdis.nasa.gov/allData/{version}/MYD01/%Y/%j/MYD01.A%Y%j.%H%M.{version_zfilled}.NRT.hdf",  # nrt
+            "ftp://nrt2.modaps.eosdis.nasa.gov/allData/{version}/MYD01/%Y/%j/MYD01.A%Y%j.%H%M.{version_zfilled}.NRT.hdf"  # nrt
+        ]
+        versions=['61','6']  # also in order of preference
+        for vers in versions:
+            for url in urls_to_try:
+                source = exec_date.strftime(url.format(
+                    version=vers,
+                    version_zfilled=vers.zfill(3),
+                    last_modified_time="[000000000,999999999]"  # this is the time the file was last modified on the ftp server
+                    # we have no way of knowing this, so we have to use regex with wget's -A option
+                    # https://unix.stackexchange.com/a/117998/122077
+                ))
+                target = satfilename.myd01(exec_date)
+                try:
+                    url_parts = source.split('/')
+                    filename = url_parts[-1]
+                    url_dir = '/'.join(url_parts[:-1])
+                    returncode = subprocess.call(
+                        "wget -A={fname} --user={username} --password={password} --tries=1 --output-document={tgt} {src}".format(
+                            username=secrets.ESDIS_USER,
+                            password=secrets.ESDIS_PASS,
+                            src=url_dir,
+                            tgt=target,
+                            fname=filename
+                        ),
+                        shell=True
+                    )
+                    if returncode == 0:  # download was successful!
+                        return "process_granule"
+                except FileNotFoundError as f_err:
+                    # NOTE: [docs](https://docs.python.org/3/library/subprocess.html#call-function-trio)
+                    # say that subprocess.call does not throw errors... but... it does. :shrug:
+                    print('subprocess call throws error:')
+                    print(f_err)
+        # if we didn't return yet then we couldn't download any of them
+        raise FileNotFoundError("could not get granule from any urls")
+
 
 metadata_check = BranchPythonOperator(
     task_id='metadata_check',
-    python_callable=decide_which_path,
+    python_callable=_metadata_check,
     provide_context=True,
     # trigger_rule="all_success",
     dag=this_dag
@@ -122,47 +198,13 @@ metadata_check >> skip_granule
 
 # =============================================================================
 # =============================================================================
-# === Download the granule
+# === process the granule
 # =============================================================================
-# TODO: make this actually do stuff
-#   The href below can be pulled out of the CMR response (below) & d/l w/ wget,
-#   or the CMR response itself can be passed here using an
-#   [XComs](https://airflow.apache.org/concepts.html#xcoms) and pycmr should let
-#   you do result.download(). Note however, that my tests show this function is
-#   currently not working.
-#
-# d/l url in CMR response looks something like this:
-# ```
-# links
-#   0
-#       rel	"http://esipfed.org/ns/fedsearch/1.1/data#"
-#       type	"application/x-hdfeos"
-#       hreflang	"en-US"
-#       href	"ftp://nrt3.modaps.eosdis.nasa.gov/allData/61/MYD01/2017/338/MYD01.A2017338.1915.061.NRT.hdf"
-# ```
-def get_esdis_path(exec_date):
-    return exec_date.strftime(
-     "ftp://nrt3.modaps.eosdis.nasa.gov/allData/61/MYD01/%Y/%j/MYD01.A%Y%j.%H%M.061.NRT.hdf"
-     )
-
-download_granule = BashOperator(
-    task_id='download_granule',
-    # trigger_rule='one_success',
-    bash_command="""
-        wget
-        --user {username}
-        --password={password}
-        -O {{ params.filepather.myd01(execution_date) }}
-        {{ params.esdis_pather(execution_date) }}
-    """,
-    params={
-        "filepather": satfilename,
-        "esdis_pather": get_esdis_path,
-        "username": secrets.ESDIS_USER,
-        "password": secrets.ESDIS_PASS
-    },
+process_granule = DummyOperator(  # TODO: cp processing tasks from modis_aqua_processing
+    task_id='process_granule',
+    trigger_rule='one_success',
     dag=this_dag
 )
-metadata_check >> download_granule
-# =============================================================================
+metadata_check >> process_granule
+
 # TODO: continue processing here...

@@ -95,15 +95,35 @@ def granule_in_roi(exec_datetime):
     else:
         raise ValueError("unexpected # of results from ROI CMR search:"+str(len(bounded_results)))
 
-def decide_which_path(ds, **kwargs):
+def _metadata_check(ds, **kwargs):
+    """
+    Performs metadata_check to decide which path the DAG should take.
+
+    Parameters
+    -----------
+    ds : datetime?
+        *I think* this is the execution_date for the operator instance
+    kwargs['execution_date'] : datetime.datetime
+        the execution_date for the operator instance (same as `ds`?)
+    kwargs['ti'] : task-instance?
+        something that we use to push/pull xcoms
+
+    Returns
+    -----------
+    str
+        name of the next operator that should trigger (ie the first in the
+        branch that we want to follow)
+    """
     if granule_in_roi(kwargs['execution_date']) is True:
+        # TODO: use real dl url here
+        kwargs['ti'].xcom_push(key='download_url', value="ftp://test.test?test=test&test")
         return "download_granule"
     else:
         return "skip_granule"
 
 metadata_check = BranchPythonOperator(
     task_id='metadata_check',
-    python_callable=decide_which_path,
+    python_callable=_metadata_check,
     provide_context=True,
     # trigger_rule="all_success",
     dag=this_dag
@@ -145,6 +165,9 @@ def get_esdis_path(exec_date):
      "ftp://nrt3.modaps.eosdis.nasa.gov/allData/61/MYD01/%Y/%j/MYD01.A%Y%j.%H%M.061.NRT.hdf"
      )
 
+# TODO: replace this with PythonOperator that does
+# kwargs['ti'].xcom_pull(key='download_url', task_ids='metadata_check')
+# to get the the download url from upstream operator
 download_granule = BashOperator(
     task_id='download_granule',
     # trigger_rule='one_success',

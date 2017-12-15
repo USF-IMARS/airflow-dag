@@ -35,6 +35,7 @@ Some general rules/assumptions that summarize behavior here:
 ```
 Note the common product directories and the two `geo` directories where a new version was separated out into a new product. Filenames in `geo` and `geo_v2` are probably similar, but shoud not be identical.
 """
+ISO_8601_FMT="%Y-%m-%dT%H:%M:%SZ"
 
 def mxd03(
     product_datetime,
@@ -117,4 +118,7 @@ def png(product_datetime, region_name):
 
 def metadata(prod_datetime):
     """ path to flat-file metadata key-value store """
-    return "/srv/imars-objects/modis_aqua_gom/metadata/imars-meta" + str(product_datetime) + ".txt"
+    return (
+        "/srv/imars-objects/modis_aqua_gom/metadata-ini/metadata_" +
+        prod_datetime.strftime(ISO_8601_FMT) + ".ini"
+    )

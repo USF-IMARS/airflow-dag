@@ -4,6 +4,7 @@ airflow processing pipeline definition for MODIS aqua per-pass processing
 # std libs
 from datetime import timedelta
 import subprocess
+import configparser
 
 # deps
 from airflow import DAG
@@ -47,10 +48,10 @@ wait_for_data_delay = TimeDeltaSensor(
 # === check if this granule covers our ROIs using metadata from CMR
 # =============================================================================
 
-def get_granule_in_roi(exec_datetime):
+def get_downloadable_granule_in_roi(exec_datetime):
     """
-    returns pyCMR.Result if granule for given datetime is in one of our ROIs,
-    else returns None
+    returns pyCMR.Result if granule for given datetime is in one of our ROIs
+    and is downloadable, else returns None
 
     NOTE: we get the granule metadata *without* server-side ROI check first
     & then do ROI check so we can be sure that the data
@@ -59,18 +60,16 @@ def get_granule_in_roi(exec_datetime):
     just be late to publish.
     """
     # === set up basic query for CMR
+    # this basic query should ALWAYS return at least 1 result
     TIME_FMT = "%Y-%m-%dT%H:%M:%SZ"  # iso 8601
     cmr = CMR("/root/airflow/dags/imars_dags/settings/cmr.cfg")
     time_range = str(
         (exec_datetime + timedelta(           seconds=1 )).strftime(TIME_FMT) + ',' +
         (exec_datetime + timedelta(minutes=4, seconds=59)).strftime(TIME_FMT)
     )
-    # TODO: add downloadable='true' here!
     search_kwargs={
         'limit':10,
         'short_name':"MYD01",  # [M]odis (Y)aqua (D) (0) level [1]
-        # 'collection_data_type':"NRT",  # this is not available for granules
-        # 'provider':"LANCEMODIS",  # lance modis is hopefullly only serving NRT
         'temporal':time_range,
         'sort_key': "-revision_date"  # this puts most recently updated first
     }
@@ -81,8 +80,8 @@ def get_granule_in_roi(exec_datetime):
     print(results)
     assert(len(results) > 0)
 
-    # === check if bounding box in res intersects with any of our ROIs
-    # we do this w/ another CMR call so we don't have to do the math.
+    # === check if bounding box in res intersects with any of our ROIs and
+    # === that the granule is downloadable
     roi = REGIONS[0]  # we only have one region right now
     # re-use the original search_kwargs, but add bounding box
     search_kwargs['bounding_box']="{},{},{},{}".format(
@@ -91,9 +90,11 @@ def get_granule_in_roi(exec_datetime):
         roi['lonmax'],  # up r long
         roi['latmax']   # up r lat
     )
+    # also add the downloadable=true criteria
+    search_kwargs['downloadable']='true'
     bounded_results = cmr.searchGranule(**search_kwargs)
-    if (len(bounded_results) == 1):  # granule intersects our ROI
-        return bounded_results[0]  # use first granule TODO: choose more cleverly
+    if (len(bounded_results) > 0):  # granule intersects our ROI
+        return bounded_results[0]  # use first granule (should be most recently updated)
     elif (len(bounded_results) == 0):  # granule does not intersect our ROI
         return None
     else:
@@ -102,9 +103,9 @@ def get_granule_in_roi(exec_datetime):
 def _coverage_check(ds, **kwargs):
     """
     Performs metadata check using pyCMR to decide which path the DAG should
-    take. If the metadata shows the granule is in our ROI then the granule
-    is downloaded and the processing branch is followed, else the skip branch
-    is followed.
+    take. If the metadata shows the granule is in our ROI then the download
+    url is written to a metadata ini file and the processing branch is followed,
+    else the skip branch is followed.
 
     Parameters
     -----------
@@ -112,8 +113,6 @@ def _coverage_check(ds, **kwargs):
         *I think* this is the execution_date for the operator instance
     kwargs['execution_date'] : datetime.datetime
         the execution_date for the operator instance (same as `ds`?)
-    kwargs['ti'] : task-instance?
-        something that we use to push/pull xcoms?
 
     Returns
     -----------
@@ -122,11 +121,21 @@ def _coverage_check(ds, **kwargs):
         branch that we want to follow)
     """
     exec_date = kwargs['execution_date']
-    granule_result = get_granule_in_roi(exec_date)
+    granule_result = get_downloadable_granule_in_roi(exec_date)
     if granule_result is None:
+        # follow the skip branch
         return "skip_granule"
     else:
-        # TODO: write to metadata file
+        # update (or create) the metadata ini file
+        cfg_path = satfilename.metadata(exec_date)
+        cfg = configparser.ConfigParser()
+        cfg.read(cfg_path)  # returns empty config if no file
+        if 'myd01' not in cfg.sections():  # + section if not exists
+            cfg['myd01'] = {}
+        cfg['myd01']['upstream_download_link'] = granule_result.getDownloadUrl()
+        with open(cfg_path, 'w') as meta_file:
+            cfg.write(meta_file)
+        # follow the process branch
         return "process_granule"
 
 

@@ -1,6 +1,7 @@
 from airflow.operators.bash_operator import BashOperator
 
 from imars_dags.util.globals import QUEUE
+from imars_dags.util import satfilename
 
 # =============================================================================
 # === Check Day/Night Metadata for given pass mxd03 file
@@ -21,14 +22,17 @@ from imars_dags.util.globals import QUEUE
 #      errorFile="errfile_DayNightCheck">
 #      <env name="MODIS_DB_HOME" value="{algohome}" />
 
-myd03_day_night = BashOperator(
-    task_id='myd03_day_night',
-    bash_command="""/opt/sat-scripts/sat-scripts/DayNight.sh
-        {{params.root_path}}{{ params.pathbuilder(execution_date, "Y") }}
-    """,
-    params=myd03_params,
-    dag=modis_aqua_processing,
-    queue=QUEUE.SAT_SCRIPTS
-)
-myd03_filecheck >> myd03_day_night
+# myd03_day_night = BashOperator(
+#     task_id='myd03_day_night',
+#     bash_command="""/opt/sat-scripts/sat-scripts/DayNight.sh
+#         {{params.root_path}}{{ params.pathbuilder(execution_date, "Y") }}
+#     """,
+#     params={
+#         'root_path':'/TODO/update/this/',
+#         'pathbuilder': satfilename.myd03_day_night
+#     },
+#     dag=this_dag,
+#     queue=QUEUE.SAT_SCRIPTS
+# )
+# myd03_filecheck >> myd03_day_night
 # =============================================================================

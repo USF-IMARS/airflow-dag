@@ -21,15 +21,15 @@ from imars_dags.util.globals import QUEUE
 #        <env name="OCSSWROOT" value="{algohome}" />
 #        <env name="OCVARROOT" value="{algohome}{/}run{/}var" />
 #        <env name="PATH" value=".:{algohome}{/}run{/}bin{/}linux:${PATH}" />
-myd03_modis_oc_l2gen = BashOperator(
-    task_id='myd03_modis_oc_l2gen',
-    bash_command="""/opt/ocssw/bin/l2gen
-        ifile=$DATA_DIR/l1b/$FILENAME.L1B_LAC
-        ofile=$DATA_DIR/L2_gen/$FILENAME.L2
-        geofile={{params.root_path}}{{ params.pathbuilder(execution_date, "Y") }}
-        par=$DATA_DIR/generic_l2gen.par
-    """,
-    params=myd03_params,
-    dag=modis_aqua_processing,
-    queue=QUEUE.SAT_SCRIPTS
-)
+# myd03_modis_oc_l2gen = BashOperator(
+#     task_id='myd03_modis_oc_l2gen',
+#     bash_command="""/opt/ocssw/bin/l2gen
+#         ifile=$DATA_DIR/l1b/$FILENAME.L1B_LAC
+#         ofile=$DATA_DIR/L2_gen/$FILENAME.L2
+#         geofile={{params.root_path}}{{ params.pathbuilder(execution_date, "Y") }}
+#         par=$DATA_DIR/generic_l2gen.par
+#     """,
+#     params=myd03_params,
+#     dag=modis_aqua_processing,
+#     queue=QUEUE.SAT_SCRIPTS
+# )

@@ -1,13 +1,4 @@
-"""
-airflow processing pipeline definition for MODIS data
-"""
-from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
-from datetime import timedelta
-
-from imars_dags.util.globals import QUEUE, DEFAULT_ARGS
-
-modis_ingest = DAG('modis_ingest', default_args=DEFAULT_ARGS, schedule_interval=timedelta(hours=6))
 
 # =============================================================================
 # === Modis ingest subscription(s)

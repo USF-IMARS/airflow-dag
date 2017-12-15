@@ -4,16 +4,21 @@ airflow processing pipeline definition for MODIS aqua daily processing
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.sensors import TimeDeltaSensor
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 # === ./imars_dags/modis_aqua_processing.py :
 from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, POOL
 from imars_dags.util import satfilename
 from imars_dags.settings.regions import REGIONS
 
+default_args = DEFAULT_ARGS.copy()
+default_args.update({
+    'start_date': datetime(2017, 12, 10, 0, 0),
+    'retries': 1
+})
 this_dag = DAG(
     'modis_aqua_daily',
-    default_args=DEFAULT_ARGS,
+    default_args=default_args,
     schedule_interval=timedelta(days=1)
 )
 

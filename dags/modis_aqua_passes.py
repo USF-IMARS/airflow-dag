@@ -2,7 +2,7 @@
 airflow processing pipeline definition for MODIS aqua per-pass processing
 """
 # std libs
-from datetime import timedelta
+from datetime import timedelta, datetime
 import subprocess
 import configparser
 
@@ -22,9 +22,14 @@ from imars_dags.settings import secrets  # NOTE: this file not in public repo!
 
 
 # one DAG for each pass
+default_args = DEFAULT_ARGS.copy()
+default_args.update({
+    'start_date': datetime(2017, 12, 10, 0, 0),
+    'retries': 1
+})
 this_dag = DAG(
     'modis_aqua_passes',
-    default_args=DEFAULT_ARGS,
+    default_args=default_args,
     schedule_interval=timedelta(minutes=5)
 )
 

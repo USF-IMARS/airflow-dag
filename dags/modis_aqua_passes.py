@@ -136,7 +136,7 @@ def _coverage_check(ds, **kwargs):
         with open(cfg_path, 'w') as meta_file:
             cfg.write(meta_file)
         # follow the process branch
-        return "process_granule"
+        return "l1a_2_geo"
 
 
 
@@ -184,13 +184,71 @@ coverage_check >> skip_granule
 
 # =============================================================================
 # =============================================================================
-# === process the granule
+# === modis GEO
 # =============================================================================
-process_granule = DummyOperator(  # TODO: cp processing tasks from modis_aqua_processing
-    task_id='process_granule',
-    trigger_rule='one_success',
+l1a_2_geo = BashOperator(
+    task_id='l1a_2_geo',
+    bash_command="""
+        export OCSSWROOT=/opt/ocssw && source /opt/ocssw/OCSSW_bash.env && \
+        /opt/ocssw/run/scripts/modis_GEO.py \
+        --output={{params.geo_pather(execution_date)}} \
+        {{params.l1a_pather(execution_date)}}
+    """,
+    params={
+        'l1a_pather': satfilename.l1a_LAC,
+        'geo_pather': satfilename.l1a_geo
+    },
     dag=this_dag
 )
-coverage_check >> process_granule
-
-# TODO: continue processing here...
+download_granule >> l1a_2_geo
+# =============================================================================
+# =============================================================================
+# === modis l1a + geo -> l1b
+# =============================================================================
+make_l1b = BashOperator(
+    task_id='make_l1b',
+    bash_command="""
+        export OCSSWROOT=/opt/ocssw && source /opt/ocssw/OCSSW_bash.env && \
+        $OCSSWROOT/run/scripts/modis_L1B.py \
+        --okm={{params.okm_pather(execution_date)}} \
+        --hkm={{params.hkm_pather(execution_date)}} \
+        --qkm={{params.qkm_pather(execution_date)}} \
+        {{params.l1a_pather(execution_date)}} \
+        {{params.geo_pather(execution_date)}}
+    """,
+    params={
+        'l1a_pather': satfilename.l1a_LAC,
+        'geo_pather': satfilename.l1a_geo,
+        'okm_pather': satfilename.okm,
+        'hkm_pather': satfilename.hkm,
+        'qkm_pather': satfilename.qkm
+    },
+    dag=this_dag
+)
+l1a_2_geo >> make_l1b
+download_granule >> make_l1b
+# =============================================================================
+# =============================================================================
+# === l2gen l1b -> l2
+# =============================================================================
+l2gen = BashOperator(
+    task_id="l2gen",
+    bash_command="""
+        export OCSSWROOT=/opt/ocssw && source /opt/ocssw/OCSSW_bash.env && \
+        $OCSSWROOT/run/bin/linux_64/l2gen \
+        ifile={{params.l1b_pather(execution_date)}} \
+        ofile={{params.l2_pather(execution_date)}} \
+        geofile={{params.geo_pather(execution_date)}} \
+        par={{params.parfile}}
+    """,
+    params={
+        'l1b_pather': satfilename.okm,
+        'geo_pather': satfilename.l1a_geo,
+        'l2_pather':  satfilename.l2,
+        'parfile': "/root/airflow/dags/imars_dags/settings/generic_l2gen.par"
+    },
+    dag=this_dag
+)
+make_l1b >> l2gen
+l1a_2_geo >> l2gen
+# =============================================================================

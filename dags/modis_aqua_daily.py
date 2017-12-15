@@ -3,11 +3,12 @@ airflow processing pipeline definition for MODIS aqua daily processing
 """
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
-from airflow.operators.sensors import TimeDeltaSensor
+from airflow.operators.subdag_operator import SubDagOperator
+from airflow.operators.sensors import ExternalTaskSensor
 from datetime import timedelta, datetime
 
 # === ./imars_dags/modis_aqua_processing.py :
-from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, POOL
+from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, POOL, CMR_CFG_PATH
 from imars_dags.util import satfilename
 from imars_dags.settings.regions import REGIONS
 
@@ -22,31 +23,40 @@ this_dag = DAG(
     schedule_interval=timedelta(days=1)
 )
 
-def get_todays_l2s(todays_datetime):
-    """ returns a list of l2 files """
-    return []
-# TODO: query earthdata CMR to find what granules cover this day,
-# (for info see https://github.com/USF-IMARS/imars_dags/issues/2 )
-# then spin up an ExternalTaskSensor for each pass so that we wait for the
+# =============================================================================
+# === wait for pass-level processing
+# =============================================================================
+# spin up an ExternalTaskSensor for each pass so that we wait for the
 # pass-level processing to complete before continuing.
 # [ref](https://stackoverflow.com/a/38028511/1483986)
-# NOTE: we might be able to remove the delay below
+def _wait_for_passes_subdag(start_date, schedule_interval, def_args):
+    subdag = DAG(
+        'modis_aqua_daily.wait_for_passes',
+        schedule_interval=schedule_interval,
+        start_date=start_date,
+        default_args=def_args
+    )
+    # here we assume that the execution date is at time 00:00 for the day
+    for tdelta in range(0, 288):  # 288 5-minute dags per day (24*60/5=288)
+        ExternalTaskSensor(
+            task_id='wait_for_passes_'+str(tdelta),
+            external_dag_id='modis_aqua_passes',
+            external_task_id='l2gen',
+            allowed_states=['success','skipped'],  # skipped means granule not in ROI
+            execution_delta=timedelta(minutes=tdelta),
+            dag=subdag
+        )
+    return subdag
 
-# =============================================================================
-# === delay to wait for upstream data to become available.
-# =============================================================================
-# ie wait for generation of the full day's l2s to complete.
-# this makes sure that we don't try to run this DAG until `delta` amount of time
-# past the `execution_date` (which is the datetime of the satellite recording).
-#
-# `delta` is the amount of time we expect between satellite measurement and
-# the data being available on our server. Usually something like 48 hours.
-wait_for_data_delay = TimeDeltaSensor(
-    delta=timedelta(days=2),
-    task_id='wait_for_data_delay',
+wait_for_passes = SubDagOperator(
+    subdag=_wait_for_passes_subdag(
+        this_dag.start_date,
+        this_dag.schedule_interval,
+        this_dag.default_args
+    ),
+    task_id='wait_for_passes',
     dag=this_dag
 )
-# =============================================================================
 
 # =============================================================================
 # === L3 Generation using GPT graph
@@ -63,17 +73,26 @@ wait_for_data_delay = TimeDeltaSensor(
 #
 #     -t is the target (output) file, -f is the format
 
+def list_todays_l2s(exec_date):
+    """
+    returns an ls command that lists all l2 files using the path & file fmt,
+    but replaces hour/minute with wildcard *
+    """
+    satfilename.l2(exec_date)
+    fmt_str = satfilename.l2_filename_fmt.replace("%M", "*").replace("%H", "*")
+    return "ls " + satfilename.l2_basepath + exec_date.strftime(fmt_str)
+
 l3gen = BashOperator(
     task_id="l3gen",
     bash_command="""
-        /opt/snap/5.0.0/bin/gpt /root/airflow/dags/settings/L3G_MODA_GOM_vIMARS.xml
-        -t {{ params.satfilename.l3(execution_date) }}
+        {{ params.get_todays_l2s(execution_date) }} | \
+        /opt/snap/5.0.0/bin/gpt /root/airflow/dags/settings/L3G_MODA_GOM_vIMARS.xml \
+        -t {{ params.satfilename.l3(execution_date) }} \
         -f NetCDF-BEAM
-        {{ params.get_todays_l2s(execution_date) }}
     """,
     params={
         'satfilename': satfilename,
-        'get_todays_l2s':get_todays_l2s
+        'get_todays_l2s':list_todays_l2s
     },
     dag=this_dag
 )

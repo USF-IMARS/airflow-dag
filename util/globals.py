@@ -2,7 +2,7 @@
 these are constants that can be referenced from multiple DAGs.
 """
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 class QUEUE:
     """
@@ -56,3 +56,7 @@ DEFAULT_ARGS = {
     'pool': POOL.DEFAULT,
     # 'priority_weight': 10,
 }
+
+
+""" path to cmr.cfg file for accessing common metadata repository """
+CMR_CFG_PATH="/root/airflow/dags/imars_dags/settings/cmr.cfg"

@@ -15,7 +15,7 @@ from airflow.operators.sensors import TimeDeltaSensor
 from pyCMR.pyCMR import CMR
 
 # this package
-from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, POOL
+from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, POOL, CMR_CFG_PATH
 from imars_dags.util import satfilename
 from imars_dags.settings.regions import REGIONS
 from imars_dags.settings import secrets  # NOTE: this file not in public repo!
@@ -67,7 +67,7 @@ def get_downloadable_granule_in_roi(exec_datetime):
     # === set up basic query for CMR
     # this basic query should ALWAYS return at least 1 result
     TIME_FMT = "%Y-%m-%dT%H:%M:%SZ"  # iso 8601
-    cmr = CMR("/root/airflow/dags/imars_dags/settings/cmr.cfg")
+    cmr = CMR(CMR_CFG_PATH)
     time_range = str(
         (exec_datetime + timedelta(           seconds=1 )).strftime(TIME_FMT) + ',' +
         (exec_datetime + timedelta(minutes=4, seconds=59)).strftime(TIME_FMT)
@@ -208,6 +208,9 @@ l1a_2_geo = BashOperator(
 )
 download_granule >> l1a_2_geo
 # =============================================================================
+
+# TODO: insert day/night check branch operator here? else ocssw will run on night granules too
+
 # =============================================================================
 # === modis l1a + geo -> l1b
 # =============================================================================

@@ -108,10 +108,10 @@ def qkm(product_datetime):
         product_datetime.strftime("%Y%j%H%M")
     )
 
+l2_basepath="/srv/imars-objects/modis_aqua_gom/l2/"
+l2_filename_fmt="A%Y%j%H%M00.L2"
 def l2(product_datetime):
-    return "/srv/imars-objects/modis_aqua_gom/l2/" + "A{}00.L2".format(
-        product_datetime.strftime("%Y%j%H%M")
-    )
+    return l2_basepath + product_datetime.strftime(l2_filename_fmt)
 
 def png(product_datetime, region_name):
     return "/srv/imars-objects/modis_aqua_gom/png/" + region_name + "_" + str(product_datetime) + ".png"

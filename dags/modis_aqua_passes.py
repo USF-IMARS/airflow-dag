@@ -143,12 +143,13 @@ def _coverage_check(ds, **kwargs):
         # follow the process branch
         return "l1a_2_geo"
 
-
-
 coverage_check = BranchPythonOperator(
     task_id='coverage_check',
     python_callable=_coverage_check,
     provide_context=True,
+    retries=5,
+    retry_delay=timedelta(hours=3),
+    retry_exponential_backoff=True,
     # trigger_rule="all_success",
     dag=this_dag
 )

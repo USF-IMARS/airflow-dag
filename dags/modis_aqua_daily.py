@@ -73,7 +73,7 @@ wait_for_passes = SubDagOperator(
 #
 #     -t is the target (output) file, -f is the format
 
-def list_todays_l2s(exec_date):
+def get_list_todays_l2s_cmd(exec_date):
     """
     returns an ls command that lists all l2 files using the path & file fmt,
     but replaces hour/minute with wildcard *
@@ -85,14 +85,14 @@ def list_todays_l2s(exec_date):
 l3gen = BashOperator(
     task_id="l3gen",
     bash_command="""
-        {{ params.list_todays_l2s(execution_date) }} | \
-        /opt/snap/5.0.0/bin/gpt /root/airflow/dags/settings/L3G_MODA_GOM_vIMARS.xml \
+        /opt/snap/5.0.0/bin/gpt /root/airflow/dags/imars_dags/settings/L3G_MODA_GOM_vIMARS.xml \
         -t {{ params.satfilename.l3(execution_date) }} \
-        -f NetCDF-BEAM
+        -f NetCDF-BEAM \
+        `{{ params.get_list_todays_l2s_cmd(execution_date) }}`
     """,
     params={
         'satfilename': satfilename,
-        'get_todays_l2s':list_todays_l2s
+        'get_list_todays_l2s_cmd':get_list_todays_l2s_cmd
     },
     queue=QUEUE.SNAP,
     dag=this_dag

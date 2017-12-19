@@ -57,17 +57,6 @@ def mxd03(
         product_datetime.strftime("%y%j%H%M%S")
     )
 
-
-def l1a_LAC_bz2(
-    product_datetime
-):
-    """ Gets file path for 1a aqua modis files zipped together from OB.DAAC.
-    """
-    base_path="/srv/imars-objects/homes/scratch/epa/satellite/modis/GOM/L2G_MODA_sub1973_day/"
-    return base_path+"A{}00.L1A_LAC.bz2".format(
-        product_datetime.strftime("%Y%j%H%M")
-    )
-
 def myd01(product_datetime):
     """ modis aqua l1.
         I *think* these files are the same as l1a_LAC, but from LANCE.
@@ -75,16 +64,6 @@ def myd01(product_datetime):
     return (
         "/srv/imars-objects/modis_aqua_gom/myd01/" +
         product_datetime.strftime("A%Y%j.%H%M.hdf")
-    )
-
-def l1a_LAC(
-    product_datetime
-):
-    """ returns file path for unzipped modis aqua files (see also l1a_LAC_bz2)
-        I *think* these are myd01 files, same as myd01(), but from PO.DAAC.
-    """
-    return "/srv/imars-objects/modis_aqua_gom/l1a/" + "A{}00.L1A_LAC".format(
-        product_datetime.strftime("%Y%j%H%M")
     )
 
 def l1a_geo(
@@ -121,4 +100,28 @@ def metadata(prod_datetime):
     return (
         "/srv/imars-objects/modis_aqua_gom/metadata-ini/metadata_" +
         prod_datetime.strftime(ISO_8601_FMT) + ".ini"
+    )
+
+
+# === old & unused pathers:
+def l1a_LAC_bz2(
+    product_datetime
+):
+    """ DEPRECATED : myd01 should be used instead!
+    Gets file path for 1a aqua modis files zipped together from OB.DAAC.
+    """
+    base_path="/srv/imars-objects/homes/scratch/epa/satellite/modis/GOM/L2G_MODA_sub1973_day/"
+    return base_path+"A{}00.L1A_LAC.bz2".format(
+        product_datetime.strftime("%Y%j%H%M")
+    )
+
+def l1a_LAC(
+    product_datetime
+):
+    """ DEPRECATED : myd01 should be used instead!
+        returns file path for unzipped modis aqua files (see also l1a_LAC_bz2)
+        I *think* these are myd01 files, same as myd01(), but from PO.DAAC.
+    """
+    return "/srv/imars-objects/modis_aqua_gom/l1a/" + "A{}00.L1A_LAC".format(
+        product_datetime.strftime("%Y%j%H%M")
     )

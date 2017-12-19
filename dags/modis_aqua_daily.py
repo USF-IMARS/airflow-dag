@@ -94,6 +94,7 @@ l3gen = BashOperator(
         'satfilename': satfilename,
         'get_todays_l2s':list_todays_l2s
     },
+    queue=QUEUE.SNAP,
     dag=this_dag
 )
 # =============================================================================

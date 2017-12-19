@@ -150,7 +150,7 @@ coverage_check = BranchPythonOperator(
     retries=5,
     retry_delay=timedelta(hours=3),
     retry_exponential_backoff=True,
-    # trigger_rule="all_success",
+    queue=QUEUE.PYCMR,
     dag=this_dag
 )
 
@@ -204,6 +204,7 @@ l1a_2_geo = BashOperator(
         'l1a_pather': satfilename.myd01,
         'geo_pather': satfilename.l1a_geo
     },
+    queue=QUEUE.SAT_SCRIPTS,
     dag=this_dag
 )
 download_granule >> l1a_2_geo
@@ -232,6 +233,7 @@ make_l1b = BashOperator(
         'hkm_pather': satfilename.hkm,
         'qkm_pather': satfilename.qkm
     },
+    queue=QUEUE.SAT_SCRIPTS,
     dag=this_dag
 )
 l1a_2_geo >> make_l1b
@@ -256,6 +258,7 @@ l2gen = BashOperator(
         'l2_pather':  satfilename.l2,
         'parfile': "/root/airflow/dags/imars_dags/settings/generic_l2gen.par"
     },
+    queue=QUEUE.SAT_SCRIPTS,
     dag=this_dag
 )
 make_l1b >> l2gen

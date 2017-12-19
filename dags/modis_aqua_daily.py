@@ -14,7 +14,7 @@ from imars_dags.settings.regions import REGIONS
 
 default_args = DEFAULT_ARGS.copy()
 default_args.update({
-    'start_date': datetime(2017, 12, 10, 0, 0),
+    'start_date': datetime(2017, 12, 16, 19, 30),
     'retries': 1
 })
 this_dag = DAG(

@@ -14,8 +14,11 @@ Some general rules/assumptions that summarize behavior here:
 * empty directories should be deleted and created only when needed.
 
 ### filenames:
-* filenames should include the datetime of the product (preferably in ISO 8601 format) and identify the "product type"
 * filenames within a product directory should all conform to the same pattern
+* filenames should include:
+    - the datetime of the product (preferably in ISO 8601 format)
+    - something to identify the "product type"
+* the datetime should be the first part of the filename
 
 ### Example directory structure:
 ```
@@ -91,6 +94,9 @@ l2_basepath="/srv/imars-objects/modis_aqua_gom/l2/"
 l2_filename_fmt="A%Y%j%H%M00.L2"
 def l2(product_datetime):
     return l2_basepath + product_datetime.strftime(l2_filename_fmt)
+
+def l3(prod_dat):
+    return "/srv/imars-objects/modis_aqua_gom/l3/" + prod_dat.strftime(ISO_8601_FMT) + "_l3.nc"
 
 def png(product_datetime, region_name):
     return "/srv/imars-objects/modis_aqua_gom/png/" + region_name + "_" + str(product_datetime) + ".png"

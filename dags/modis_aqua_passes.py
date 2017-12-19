@@ -201,7 +201,7 @@ l1a_2_geo = BashOperator(
         {{params.l1a_pather(execution_date)}}
     """,
     params={
-        'l1a_pather': satfilename.l1a_LAC,
+        'l1a_pather': satfilename.myd01,
         'geo_pather': satfilename.l1a_geo
     },
     dag=this_dag
@@ -226,7 +226,7 @@ make_l1b = BashOperator(
         {{params.geo_pather(execution_date)}}
     """,
     params={
-        'l1a_pather': satfilename.l1a_LAC,
+        'l1a_pather': satfilename.myd01,
         'geo_pather': satfilename.l1a_geo,
         'okm_pather': satfilename.okm,
         'hkm_pather': satfilename.hkm,

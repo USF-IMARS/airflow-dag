@@ -11,10 +11,13 @@ class QUEUE:
 
     Queues are used to limit job allocation to certain workers. Useful when
     a task has specific software requriments that may not be met on all users.
+    For example: Only workers with sat-scripts installed & functioning can 
+    pick up tasks from the SAT_SCRIPTS queue.
     """
     DEFAULT = 'default'  # default queue any worker can pick up tasks from
-    SAT_SCRIPTS = 'sat_scripts'  # only workers with sat-scripts installed &
-    # functioning can pick up tasks from SAT_SCRIPTS
+    SAT_SCRIPTS = 'sat_scripts'  # https://github.com/USF-IMARS/sat-scripts/
+    PYCMR = 'pycmr'  # https://github.com/7yl4r/pyCMR
+    SNAP = 'snap'  # https://github.com/USF-IMARS/snap-puppet
 
 
 class POOL:

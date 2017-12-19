@@ -85,7 +85,7 @@ def list_todays_l2s(exec_date):
 l3gen = BashOperator(
     task_id="l3gen",
     bash_command="""
-        {{ params.get_todays_l2s(execution_date) }} | \
+        {{ params.list_todays_l2s(execution_date) }} | \
         /opt/snap/5.0.0/bin/gpt /root/airflow/dags/settings/L3G_MODA_GOM_vIMARS.xml \
         -t {{ params.satfilename.l3(execution_date) }} \
         -f NetCDF-BEAM

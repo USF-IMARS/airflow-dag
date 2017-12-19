@@ -141,7 +141,7 @@ def _coverage_check(ds, **kwargs):
         with open(cfg_path, 'w') as meta_file:
             cfg.write(meta_file)
         # follow the process branch
-        return "l1a_2_geo"
+        return "download_granule"
 
 coverage_check = BranchPythonOperator(
     task_id='coverage_check',

@@ -44,7 +44,7 @@ this_dag = DAG(
 # `delta` is the amount of time we expect between satellite measurement and
 # the metadata being available in the CMR. Usually something like 2-48 hours.
 wait_for_data_delay = TimeDeltaSensor(
-    delta=timedelta(hours=2),
+    delta=timedelta(hours=3),
     task_id='wait_for_data_delay',
     dag=this_dag
 )
@@ -148,7 +148,7 @@ coverage_check = BranchPythonOperator(
     python_callable=_coverage_check,
     provide_context=True,
     retries=5,
-    retry_delay=timedelta(hours=3),
+    retry_delay=timedelta(hours=1),
     retry_exponential_backoff=True,
     queue=QUEUE.PYCMR,
     dag=this_dag

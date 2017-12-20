@@ -8,7 +8,7 @@ from airflow.operators.sensors import ExternalTaskSensor
 from datetime import timedelta, datetime
 
 # === ./imars_dags/modis_aqua_processing.py :
-from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, POOL, CMR_CFG_PATH
+from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, POOL, CMR_CFG_PATH, PRIORITY
 from imars_dags.util import satfilename
 from imars_dags.settings.regions import REGIONS
 
@@ -44,7 +44,7 @@ def _wait_for_passes_subdag(start_date, schedule_interval, def_args):
             external_task_id='l2gen',
             allowed_states=['success','skipped'],  # skipped means granule not in ROI
             execution_delta=timedelta(minutes=tdelta),
-            priority_weight=-10,
+            priority_weight=PRIORITY.SLEEP,
             dag=subdag
         )
     return subdag
@@ -56,7 +56,7 @@ wait_for_passes = SubDagOperator(
         this_dag.default_args
     ),
     task_id='wait_for_passes',
-    priority_weight=-10,
+    priority_weight=PRIORITY.SLEEP,
     dag=this_dag
 )
 

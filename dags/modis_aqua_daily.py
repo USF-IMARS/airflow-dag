@@ -101,4 +101,5 @@ l3gen = BashOperator(
     queue=QUEUE.SNAP,
     dag=this_dag
 )
+wait_for_passes >> l3gen
 # =============================================================================

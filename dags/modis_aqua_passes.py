@@ -15,7 +15,7 @@ from airflow.operators.sensors import TimeDeltaSensor
 from pyCMR.pyCMR import CMR
 
 # this package
-from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, POOL, CMR_CFG_PATH
+from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, POOL, CMR_CFG_PATH, PRIORITY
 from imars_dags.util import satfilename
 from imars_dags.settings.regions import REGIONS
 from imars_dags.settings import secrets  # NOTE: this file not in public repo!
@@ -46,7 +46,7 @@ this_dag = DAG(
 wait_for_data_delay = TimeDeltaSensor(
     delta=timedelta(hours=3),
     task_id='wait_for_data_delay',
-    priority_weight=-10,
+    priority_weight=PRIORITY.SLEEP,
     dag=this_dag
 )
 # =============================================================================

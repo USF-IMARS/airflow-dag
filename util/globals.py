@@ -36,6 +36,15 @@ class POOL:
     DEFAULT = None  # default pool selected by not providing a value
 
 
+class PRIORITY:
+    """
+    priority_weight is used to prevent deadlock states like when daily
+    tasks can't run because a bunch of ExternalTaskSensors in the
+    monthly tasks dag are waiting for the daily tasks to finish.
+    """
+    DEFAULT = 1
+    SLEEP   = -10  # for delay, wait, etc
+
 
 """
 default arguments as a starting point for airflow dags. Extend this by doing
@@ -57,7 +66,7 @@ DEFAULT_ARGS = {
     'retry_delay': timedelta(hours=24, minutes=1),  # +1m offset to stagger scheduling
     'queue': QUEUE.DEFAULT,
     'pool': POOL.DEFAULT,
-    'priority_weight': 1,
+    'priority_weight': PRIORITY.DEFAULT,
 }
 
 

@@ -148,9 +148,8 @@ coverage_check = BranchPythonOperator(
     task_id='coverage_check',
     python_callable=_coverage_check,
     provide_context=True,
-    retries=5,
-    retry_delay=timedelta(hours=1),
-    retry_exponential_backoff=True,
+    retries=10,
+    retry_delay=timedelta(hours=3),
     queue=QUEUE.PYCMR,
     dag=this_dag
 )

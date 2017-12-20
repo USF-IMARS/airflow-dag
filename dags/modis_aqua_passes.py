@@ -47,6 +47,7 @@ wait_for_data_delay = TimeDeltaSensor(
     delta=timedelta(hours=3),
     task_id='wait_for_data_delay',
     priority_weight=PRIORITY.SLEEP,
+    pool=POOL.SLEEP,
     dag=this_dag
 )
 # =============================================================================

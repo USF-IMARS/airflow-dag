@@ -33,8 +33,9 @@ class POOL:
     Pools with the names below must be created there before using else your
     scheduler will get confused.
     """
-    DEFAULT = None  # default pool selected by not providing a value
-
+    DEFAULT = None    # default pool selected by not providing a value
+    SLEEP   = "sleep" # pool for tasks that are just waiting / sleeping / delay
+    # ^ this is used to reduce # of concurrency slots wasted just waiting.
 
 class PRIORITY:
     """

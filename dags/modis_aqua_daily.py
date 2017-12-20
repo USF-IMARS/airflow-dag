@@ -45,6 +45,7 @@ def _wait_for_passes_subdag(start_date, schedule_interval, def_args):
             allowed_states=['success','skipped'],  # skipped means granule not in ROI
             execution_delta=timedelta(minutes=tdelta),
             priority_weight=PRIORITY.SLEEP,
+            pool=POOL.SLEEP,
             dag=subdag
         )
     return subdag
@@ -57,6 +58,7 @@ wait_for_passes = SubDagOperator(
     ),
     task_id='wait_for_passes',
     priority_weight=PRIORITY.SLEEP,
+    pool=POOL.SLEEP,
     dag=this_dag
 )
 

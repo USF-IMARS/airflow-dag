@@ -46,6 +46,7 @@ this_dag = DAG(
 wait_for_data_delay = TimeDeltaSensor(
     delta=timedelta(hours=3),
     task_id='wait_for_data_delay',
+    priority_weight=-10,
     dag=this_dag
 )
 # =============================================================================

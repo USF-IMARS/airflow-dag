@@ -44,6 +44,7 @@ def _wait_for_passes_subdag(start_date, schedule_interval, def_args):
             external_task_id='l2gen',
             allowed_states=['success','skipped'],  # skipped means granule not in ROI
             execution_delta=timedelta(minutes=tdelta),
+            priority_weight=-10,
             dag=subdag
         )
     return subdag
@@ -55,6 +56,7 @@ wait_for_passes = SubDagOperator(
         this_dag.default_args
     ),
     task_id='wait_for_passes',
+    priority_weight=-10,
     dag=this_dag
 )
 

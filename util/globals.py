@@ -11,7 +11,7 @@ class QUEUE:
 
     Queues are used to limit job allocation to certain workers. Useful when
     a task has specific software requriments that may not be met on all users.
-    For example: Only workers with sat-scripts installed & functioning can 
+    For example: Only workers with sat-scripts installed & functioning can
     pick up tasks from the SAT_SCRIPTS queue.
     """
     DEFAULT = 'default'  # default queue any worker can pick up tasks from
@@ -57,7 +57,7 @@ DEFAULT_ARGS = {
     'retry_delay': timedelta(hours=24, minutes=1),  # +1m offset to stagger scheduling
     'queue': QUEUE.DEFAULT,
     'pool': POOL.DEFAULT,
-    # 'priority_weight': 10,
+    'priority_weight': 1,
 }
 
 

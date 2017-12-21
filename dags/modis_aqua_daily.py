@@ -4,7 +4,7 @@ airflow processing pipeline definition for MODIS aqua daily processing
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.subdag_operator import SubDagOperator
-from airflow.operators.sensors import ExternalTaskSensor
+from airflow.operators.sensors import ExternalTaskSensor, TimeDeltaSensor
 from datetime import timedelta, datetime
 
 # === ./imars_dags/modis_aqua_processing.py :
@@ -26,6 +26,17 @@ this_dag = DAG(
                        # which can easily lead to deadlocks.
 )
 
+
+# =============================================================================
+# === delay to wait for day to end, so all passes that day are done.
+# =============================================================================
+wait_for_day_end = TimeDeltaSensor(
+    delta=timedelta(hours=18),  # 12 hrs to midnight + 6 hrs just in case
+    task_id='wait_for_data_delay',
+    dag=this_dag,
+    **SLEEP_ARGS
+)
+# =============================================================================
 # =============================================================================
 # === wait for pass-level processing
 # =============================================================================
@@ -68,7 +79,7 @@ wait_for_passes = SubDagOperator(
     dag=this_dag,
     **pass_wait_args
 )
-
+wait_for_day_end >> wait_for_passes
 # =============================================================================
 # === L3 Generation using GPT graph
 # =============================================================================

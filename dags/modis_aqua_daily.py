@@ -21,7 +21,9 @@ default_args.update({
 this_dag = DAG(
     'modis_aqua_daily',
     default_args=default_args,
-    schedule_interval=timedelta(days=1)
+    schedule_interval=timedelta(days=1),
+    max_active_runs=1  # this must be limited b/c the subdag spawns 288 tasks,
+                       # which can easily lead to deadlocks.
 )
 
 # =============================================================================
@@ -107,4 +109,31 @@ l3gen = BashOperator(
     dag=this_dag
 )
 wait_for_passes >> l3gen
+# =============================================================================
+# =============================================================================
+# === export png(s) from l3 netCDF4 file
+# =============================================================================
+# vars we *could* export from the l3 generated earlier:
+var_list = [
+    "chlor_a",
+    "nflh",
+    "adg_443_giop",
+    "Rrs_667"
+#   lat
+#   lon
+]
+for variable_name in var_list:
+    l3_to_png = BashOperator(
+        task_id="l3_to_png",
+        bash_command="""
+        /opt/sat-scripts/sat-scripts/netcdf4_to_png.py
+        {{params.satfilename.l3(execution_date)}}
+        {{params.satfilename.png(execution_date, params.variable_name)}}
+        {{params.variable_name}}
+        """,
+        params={
+            'satfilename': satfilename,
+            'variable_name': variable_name
+        }
+    )
 # =============================================================================

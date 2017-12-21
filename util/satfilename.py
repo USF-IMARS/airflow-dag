@@ -98,8 +98,12 @@ def l2(product_datetime):
 def l3(prod_dat):
     return "/srv/imars-objects/modis_aqua_gom/l3/" + prod_dat.strftime(ISO_8601_FMT) + "_l3.nc"
 
-def png(product_datetime, region_name):
-    return "/srv/imars-objects/modis_aqua_gom/png/" + region_name + "_" + str(product_datetime) + ".png"
+def png(product_datetime, variable_name):
+    return (
+        "/srv/imars-objects/modis_aqua_gom/png/" +
+        str(product_datetime) +
+        "_" + variable_name + ".png"
+    )
 
 def metadata(prod_datetime):
     """ path to flat-file metadata key-value store """

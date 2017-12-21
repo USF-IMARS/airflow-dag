@@ -120,9 +120,9 @@ for variable_name in var_list:
     l3_to_png = BashOperator(
         task_id="l3_to_png_"+variable_name,
         bash_command="""
-        /opt/sat-scripts/sat-scripts/netcdf4_to_png.py
-        {{params.satfilename.l3(execution_date)}}
-        {{params.satfilename.png(execution_date, params.variable_name)}}
+        /opt/sat-scripts/sat-scripts/netcdf4_to_png.py \
+        {{params.satfilename.l3(execution_date)}} \
+        {{params.satfilename.png(execution_date, params.variable_name)}} \
         {{params.variable_name}}
         """,
         params={

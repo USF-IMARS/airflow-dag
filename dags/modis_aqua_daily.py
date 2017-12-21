@@ -41,7 +41,7 @@ def _wait_for_passes_subdag(start_date, schedule_interval, def_args):
     # 144*2=288 5-minute dags per day (24*60/5=288)
     for tdelta in range(-144, 144):
         net_minutes = 12*60 + tdelta*5
-        hr = net_minutes/60
+        hr = int(net_minutes/60)
         mn = net_minutes%60
         ExternalTaskSensor(
             task_id='wait_for_passes_{}_{}'.format(hr,mn),

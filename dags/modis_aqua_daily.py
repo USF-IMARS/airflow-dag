@@ -94,7 +94,7 @@ for tdelta in range(-108, 108):
     hr = int(net_minutes/60)
     mn = net_minutes%60
     pass_HH_MM = ExternalTaskSensor(
-        task_id='pass_{}_{}'.format(hr,mn),
+        task_id='pass_{}_{}'.format(str(hr).zfill(2), mn),
         external_dag_id='modis_aqua_passes',
         external_task_id='l2gen',
         allowed_states=['success','skipped'],  # skip means granule not in ROI

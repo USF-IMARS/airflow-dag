@@ -98,7 +98,7 @@ for tdelta in range(-108, 108):
         external_dag_id='modis_aqua_passes',
         external_task_id='l2gen',
         allowed_states=['success','skipped'],  # skip means granule not in ROI
-        execution_delta=timedelta(minutes=tdelta),
+        execution_delta=timedelta(minutes=tdelta*5),
         dag=this_dag,
         **SLEEP_ARGS
     )

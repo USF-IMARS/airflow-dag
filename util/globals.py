@@ -98,7 +98,7 @@ SLEEP_ARGS = {
     'retries': 168,  # 24*7
     'retry_delay': timedelta(hours=1),
     'retry_exponential_backoff': False,
-    'execution_timeout': timedelta(minutes=2),
+    'execution_timeout': timedelta(seconds=2),
     'priority_weight': PRIORITY.SLEEP,
     'pool': POOL.SLEEP
 }

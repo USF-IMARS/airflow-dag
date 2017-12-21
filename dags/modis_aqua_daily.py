@@ -134,7 +134,7 @@ for variable_name in var_list:
         params={
             'satfilename': satfilename,
             'variable_name': variable_name
-        }
+        },
         queue=QUEUE.SAT_SCRIPTS,
         dag=this_dag
     )

@@ -55,7 +55,7 @@ def _wait_for_passes_subdag(start_date, schedule_interval, def_args):
     return subdag
 
 pass_wait_args = SLEEP_ARGS.copy()
-pass_wait_args.update("execution_timeout": timedelta(minutes=10)})
+pass_wait_args.update({"execution_timeout": timedelta(minutes=10)})
 wait_for_passes = SubDagOperator(
     subdag=_wait_for_passes_subdag(
         this_dag.start_date,

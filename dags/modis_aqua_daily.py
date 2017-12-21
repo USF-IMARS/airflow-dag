@@ -13,8 +13,9 @@ from imars_dags.util import satfilename
 from imars_dags.settings.regions import REGIONS
 
 default_args = DEFAULT_ARGS.copy()
+# NOTE: start_date must be 12:00 (see _wait_for_passes_subdag)
 default_args.update({
-    'start_date': datetime(2017, 12, 16, 19, 30),
+    'start_date': datetime(2017, 12, 16, 12, 0),
     'retries': 1
 })
 this_dag = DAG(
@@ -36,13 +37,17 @@ def _wait_for_passes_subdag(start_date, schedule_interval, def_args):
         start_date=start_date,
         default_args=def_args
     )
-    # here we assume that the execution date is at time 00:00 for the day
-    for tdelta in range(0, 288):  # 288 5-minute dags per day (24*60/5=288)
+    # here we assume that the execution date is at time 12:00
+    # 144*2=288 5-minute dags per day (24*60/5=288)
+    for tdelta in range(-144, 144):
+        net_minutes = 12*60 + tdelta*5
+        hr = net_minutes/60
+        mn = net_minutes%60
         ExternalTaskSensor(
-            task_id='wait_for_passes_'+str(tdelta),
+            task_id='wait_for_passes_{}_{}'.format(hr,mn),
             external_dag_id='modis_aqua_passes',
             external_task_id='l2gen',
-            allowed_states=['success','skipped'],  # skipped means granule not in ROI
+            allowed_states=['success','skipped'],  # skip means granule not in ROI
             execution_delta=timedelta(minutes=tdelta),
             dag=subdag,
             **SLEEP_ARGS

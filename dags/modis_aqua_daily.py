@@ -52,7 +52,10 @@ def _wait_for_passes_subdag(start_date, schedule_interval, def_args):
     )
     # here we assume that the execution date is at time 12:00
     # 144*2=288 5-minute dags per day (24*60/5=288)
-    for tdelta in range(-144, 144):
+    # for tdelta in range(-144, 144):
+    # but since this is ocean color, we only really care about the "day" times
+    # let's call that 3:00-9:00 ie 12:00 +/- 108
+    for tdelta in range(-108, 108):
         net_minutes = 12*60 + tdelta*5
         hr = int(net_minutes/60)
         mn = net_minutes%60

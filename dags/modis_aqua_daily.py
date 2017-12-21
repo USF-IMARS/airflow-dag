@@ -124,7 +124,7 @@ var_list = [
 ]
 for variable_name in var_list:
     l3_to_png = BashOperator(
-        task_id="l3_to_png",
+        task_id="l3_to_png_"+variable_name,
         bash_command="""
         /opt/sat-scripts/sat-scripts/netcdf4_to_png.py
         {{params.satfilename.l3(execution_date)}}
@@ -135,5 +135,8 @@ for variable_name in var_list:
             'satfilename': satfilename,
             'variable_name': variable_name
         }
+        queue=QUEUE.SAT_SCRIPTS,
+        dag=this_dag
     )
+    l3gen >> l3_to_png
 # =============================================================================

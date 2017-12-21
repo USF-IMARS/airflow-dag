@@ -38,52 +38,6 @@ wait_for_day_end = TimeDeltaSensor(
 )
 # =============================================================================
 # =============================================================================
-# === wait for pass-level processing
-# =============================================================================
-# spin up an ExternalTaskSensor for each pass so that we wait for the
-# pass-level processing to complete before continuing.
-# [ref](https://stackoverflow.com/a/38028511/1483986)
-def _wait_for_passes_subdag(start_date, schedule_interval, def_args):
-    subdag = DAG(
-        'modis_aqua_daily.wait_for_passes',
-        schedule_interval=schedule_interval,
-        start_date=start_date,
-        default_args=def_args
-    )
-    # here we assume that the execution date is at time 12:00
-    # 144*2=288 5-minute dags per day (24*60/5=288)
-    # for tdelta in range(-144, 144):
-    # but since this is ocean color, we only really care about the "day" times
-    # let's call that 3:00-9:00 ie 12:00 +/- 108
-    for tdelta in range(-108, 108):
-        net_minutes = 12*60 + tdelta*5
-        hr = int(net_minutes/60)
-        mn = net_minutes%60
-        ExternalTaskSensor(
-            task_id='wait_for_passes_{}_{}'.format(hr,mn),
-            external_dag_id='modis_aqua_passes',
-            external_task_id='l2gen',
-            allowed_states=['success','skipped'],  # skip means granule not in ROI
-            execution_delta=timedelta(minutes=tdelta),
-            dag=subdag,
-            **SLEEP_ARGS
-        )
-    return subdag
-
-pass_wait_args = SLEEP_ARGS.copy()
-pass_wait_args.update({"execution_timeout": timedelta(minutes=10)})
-wait_for_passes = SubDagOperator(
-    subdag=_wait_for_passes_subdag(
-        this_dag.start_date,
-        this_dag.schedule_interval,
-        this_dag.default_args
-    ),
-    task_id='wait_for_passes',
-    dag=this_dag,
-    **pass_wait_args
-)
-wait_for_day_end >> wait_for_passes
-# =============================================================================
 # === L3 Generation using GPT graph
 # =============================================================================
 # this assumes the l2 files for the whole day have already been generated
@@ -122,7 +76,33 @@ l3gen = BashOperator(
     queue=QUEUE.SNAP,
     dag=this_dag
 )
-wait_for_passes >> l3gen
+# =============================================================================
+# =============================================================================
+# === wait for pass-level processing
+# =============================================================================
+# spin up an ExternalTaskSensor for each pass so that we wait for the
+# pass-level processing to complete before continuing.
+# [ref](https://stackoverflow.com/a/38028511/1483986)
+
+# here we assume that the execution date is at time 12:00
+# 144*2=288 5-minute dags per day (24*60/5=288)
+# for tdelta in range(-144, 144):
+# but since this is ocean color, we only really care about the "day" times
+# let's call that 3:00-9:00 ie 12:00 +/- 108
+for tdelta in range(-108, 108):
+    net_minutes = 12*60 + tdelta*5
+    hr = int(net_minutes/60)
+    mn = net_minutes%60
+    pass_HH_MM = ExternalTaskSensor(
+        task_id='pass_{}_{}'.format(hr,mn),
+        external_dag_id='modis_aqua_passes',
+        external_task_id='l2gen',
+        allowed_states=['success','skipped'],  # skip means granule not in ROI
+        execution_delta=timedelta(minutes=tdelta),
+        dag=this_dag,
+        **SLEEP_ARGS
+    )
+    wait_for_day_end >> pass_HH_MM >> l3gen
 # =============================================================================
 # =============================================================================
 # === export png(s) from l3 netCDF4 file

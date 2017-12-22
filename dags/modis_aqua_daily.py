@@ -131,7 +131,7 @@ for i, variable_name in enumerate(var_list):
         {{params.satfilename.l3(execution_date)}} \
         {{params.satfilename.png(execution_date, params.variable_name)}} \
         {{params.variable_name}}\
-        -t '{{params.tranform}}'
+        -t '{{params.transform}}'
         """,
         params={
             'satfilename': satfilename,

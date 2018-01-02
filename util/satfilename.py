@@ -100,7 +100,7 @@ def l3(prod_dat):
 
 def png(product_datetime, variable_name):
     return (
-        "/srv/imars-objects/modis_aqua_gom/png/" +
+        "/srv/imars-objects/modis_aqua_gom/png_" + variable_name + "/" +
         product_datetime.strftime(ISO_8601_FMT) +
         "_" + variable_name + ".png"
     )

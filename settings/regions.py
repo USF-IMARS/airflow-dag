@@ -1,3 +1,7 @@
+# latmin == south
+# latmax == north
+# lonmin == west
+# lonmax == east
 REGIONS = [
 {
     'place_name': 'gcoos',
@@ -6,6 +10,13 @@ REGIONS = [
     'lonmin': -98.0,
     'lonmax': -79.0,
     'area_description': 'This is the Gulf of Mexico mapped'
+},{
+    'place_name': 'fgbnms',
+    'latmin': 24.0,
+    'latmax': 31.0,
+    'lonmin': -98.0,
+    'lonmax': -88.0,
+    'area_description': 'Flower Garden Banks National Marine Sanctuary'
 }]
 #     {
 #         'place_name': 'amaz',

@@ -13,6 +13,8 @@ from airflow.operators.bash_operator import BashOperator
 # this package
 from imars_dags.util.globals import QUEUE, DEFAULT_ARGS
 from imars_dags.util import satfilename
+from imars_dags.settings import secrets  # NOTE: this file not in public repo!
+
 
 def get_modis_aqua_process_pass_dag(region):
 
@@ -27,6 +29,28 @@ def get_modis_aqua_process_pass_dag(region):
         schedule_interval=None  # manually triggered only
     )
 
+    # =============================================================================
+    # === download the granule
+    # =============================================================================
+    # reads the download url from a metadata file created in the last step and
+    # downloads the file.
+    download_granule = BashOperator(
+        task_id='download_granule',
+        # trigger_rule='one_success',
+        bash_command="""
+            METADATA_FILE={{ params.filepather.metadata(execution_date) }} &&
+            OUT_PATH={{ params.filepather.myd01(execution_date) }}         &&
+            FILE_URL=$(grep "^upstream_download_link" $METADATA_FILE | cut -d'=' -f2-) &&
+            wget --user={{params.username}} --password={{params.password}} --tries=1 --no-verbose --output-document=$OUT_PATH $FILE_URL
+        """,
+        params={
+            "filepather": satfilename,
+            "username": secrets.ESDIS_USER,
+            "password": secrets.ESDIS_PASS
+        },
+        dag=this_dag
+    )
+    # =============================================================================
     # =============================================================================
     # === modis GEO
     # =============================================================================
@@ -46,6 +70,7 @@ def get_modis_aqua_process_pass_dag(region):
         queue=QUEUE.SAT_SCRIPTS,
         dag=this_dag
     )
+    download_granule >> l1a_2_geo
     # =============================================================================
 
     # TODO: insert day/night check branch operator here? else ocssw will run on night granules too
@@ -76,6 +101,7 @@ def get_modis_aqua_process_pass_dag(region):
         dag=this_dag
     )
     l1a_2_geo >> make_l1b
+    download_granule >> make_l1b
     # =============================================================================
     # =============================================================================
     # === l2gen l1b -> l2
@@ -103,3 +129,4 @@ def get_modis_aqua_process_pass_dag(region):
     make_l1b >> l2gen
     l1a_2_geo >> l2gen
     # =============================================================================
+    return this_dag

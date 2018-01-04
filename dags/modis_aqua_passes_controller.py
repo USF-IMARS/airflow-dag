@@ -30,7 +30,7 @@ default_args.update({
     'retries': 1
 })
 this_dag = DAG(
-    'modis_aqua_passes',
+    'modis_aqua_passes_controller',
     default_args=default_args,
     schedule_interval=timedelta(minutes=5)
 )
@@ -54,9 +54,9 @@ wait_for_data_delay = TimeDeltaSensor(
 # =============================================================================
 for region in REGIONS:
     # =============================================================================
-    # === check if this granule covers our ROIs using metadata from CMR
+    # === trigger a processing dag for the covered regions
+    # === checks if this granule covers our ROIs using metadata from CMR
     # =============================================================================
-
     def get_downloadable_granule_in_roi(exec_datetime, roi):
         """
         returns pyCMR.Result if granule for given datetime is in one of our ROIs
@@ -108,28 +108,16 @@ for region in REGIONS:
         else:
             raise ValueError("unexpected # of results from ROI CMR search:"+str(len(bounded_results)))
 
-    def _coverage_check(ds, **kwargs):
+    def _coverage_check(context, dag_run_obj):
         """
         Performs metadata check using pyCMR to decide which path the DAG should
         take. If the metadata shows the granule is in our ROI then the download
         url is written to a metadata ini file and the processing branch is followed,
         else the skip branch is followed.
 
-        Parameters
-        -----------
-        ds : datetime?
-            *I think* this is the execution_date for the operator instance
-        kwargs['execution_date'] : datetime.datetime
-            the execution_date for the operator instance (same as `ds`?)
-
-        Returns
-        -----------
-        str
-            name of the next operator that should trigger (ie the first in the
-            branch that we want to follow)
         """
-        check_region = kwargs['region']
-        exec_date = kwargs['execution_date']
+        check_region = dag_run_obj['params']['region']
+        exec_date = context['execution_date']
         granule_result = get_downloadable_granule_in_roi(exec_date, check_region)
         if granule_result is None:
             # follow the skip branch
@@ -147,63 +135,22 @@ for region in REGIONS:
             # follow the process branch
             return "download_granule_" + check_region['place_name']
 
-    coverage_check_REGION = BranchPythonOperator(
-        task_id='coverage_check_' + region['place_name'],
+    # we must put the dag object into globals so airflow can find it,
+    # and we kind of need to hack it in since we are generating variable names
+    # dynamically to create a DAG for each region
+    globals()['modis_aqua_process_pass_' +region['place_name']] = get_modis_aqua_process_pass_dag(region)
+
+    process_pass_REGION = TriggerDagRunOperator(
+        task_id='process_pass_'+region['place_name'],
+        trigger_dag_id="example_trigger_target_dag",
         python_callable=_coverage_check,
-        provide_context=True,
-        op_kwargs={'roi':region},
+        params={
+            'roi':region
+        },
         retries=10,
         retry_delay=timedelta(hours=3),
         queue=QUEUE.PYCMR,
         dag=this_dag
     )
-
-    wait_for_data_delay >> coverage_check_REGION
-    # =============================================================================
-    # === download the granule
-    # =============================================================================
-    # reads the download url from a metadata file created in the last step and
-    # downloads the file.
-    download_granule_REGION = BashOperator(
-        task_id='download_granule_'+region['place_name'],
-        # trigger_rule='one_success',
-        bash_command="""
-            METADATA_FILE={{ params.filepather.metadata(execution_date) }} &&
-            OUT_PATH={{ params.filepather.myd01(execution_date) }}         &&
-            FILE_URL=$(grep "^upstream_download_link" $METADATA_FILE | cut -d'=' -f2-) &&
-            wget --user={{params.username}} --password={{params.password}} --tries=1 --no-verbose --output-document=$OUT_PATH $FILE_URL
-        """,
-        params={
-            "filepather": satfilename,
-            "username": secrets.ESDIS_USER,
-            "password": secrets.ESDIS_PASS
-        },
-        dag=this_dag
-    )
-    coverage_check_REGION >> download_granule_REGION
-    # =============================================================================
-    # =============================================================================
-    # === do nothing on this granule, just end the DAG
-    # =============================================================================
-    skip_granule_REGION = DummyOperator(
-        task_id='skip_granule_'+region['place_name'],
-        trigger_rule='one_success',
-        dag=this_dag
-    )
-    coverage_check_REGION >> skip_granule_REGION
-
-    # =============================================================================
-    # =============================================================================
-    # === trigger a processing dag for the covered regions
-    # =============================================================================
-    modis_aqua_process_pass_REGION = get_modis_aqua_process_pass_dag(region)
-
-    process_pass_REGION = TriggerDagRunOperator(
-        task_id='process_pass_'+region['place_name'],
-        trigger_dag_id="example_trigger_target_dag",
-        python_callable=conditionally_trigger,
-        params={'condition_param': True,
-                'message': 'Hello World'},
-    dag=dag)
-    download_granule_REGION >> process_pass_REGION
+    wait_for_data_delay >> process_pass_REGION
     # =============================================================================

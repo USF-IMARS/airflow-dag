@@ -137,12 +137,14 @@ for region in REGIONS:
 
     # we must put the dag object into globals so airflow can find it,
     # and we kind of need to hack it in since we are generating variable names
-    # dynamically to create a DAG for each region
-    globals()['modis_aqua_process_pass_' +region['place_name']] = get_modis_aqua_process_pass_dag(region)
+    # dynamically to create a DAG for each region.
+    # NOTE: or... maybe we don't really want separate DAGs for each region?
+    #       Would it be bad to have them all lumped together? I'm not sure.
+    globals()['modis_aqua_process_pass_' + region['place_name']] = get_modis_aqua_process_pass_dag(region)
 
     process_pass_REGION = TriggerDagRunOperator(
         task_id='process_pass_'+region['place_name'],
-        trigger_dag_id="example_trigger_target_dag",
+        trigger_dag_id="modis_aqua_process_pass_" + region['place_name'],
         python_callable=_coverage_check,
         params={
             'roi':region

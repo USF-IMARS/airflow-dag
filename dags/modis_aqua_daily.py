@@ -58,8 +58,8 @@ def get_list_todays_l2s_cmd(exec_date):
     but replaces hour/minute with wildcard *
     """
     satfilename.l2(exec_date)
-    fmt_str = satfilename.l2_filename_fmt.replace("%M", "*").replace("%H", "*")
-    return "ls " + satfilename.l2_basepath + exec_date.strftime(fmt_str)
+    fmt_str = satfilename.l2.filename_fmt.replace("%M", "*").replace("%H", "*")
+    return "ls " + satfilename.l2.basepath() + exec_date.strftime(fmt_str)
 
 l3gen = BashOperator(
     task_id="l3gen",

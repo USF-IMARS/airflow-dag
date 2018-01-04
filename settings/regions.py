@@ -2,9 +2,10 @@
 # latmax == north
 # lonmin == west
 # lonmax == east
+
 REGIONS = [
 {
-    'place_name': 'gcoos',
+    'place_name': 'gom',
     'latmin': 18.0,
     'latmax': 31.0,
     'lonmin': -98.0,

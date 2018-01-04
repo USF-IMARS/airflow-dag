@@ -11,6 +11,7 @@ from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import BranchPythonOperator
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.dagrun_operator import TriggerDagRunOperator
 from airflow.operators.sensors import TimeDeltaSensor
 from pyCMR.pyCMR import CMR
 
@@ -18,6 +19,7 @@ from pyCMR.pyCMR import CMR
 from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, CMR_CFG_PATH, SLEEP_ARGS
 from imars_dags.util import satfilename
 from imars_dags.settings.regions import REGIONS
+from imars_dags.dags.modis_aqua_process_pass import get_modis_aqua_process_pass_dag
 from imars_dags.settings import secrets  # NOTE: this file not in public repo!
 
 
@@ -131,7 +133,7 @@ for region in REGIONS:
         granule_result = get_downloadable_granule_in_roi(exec_date, check_region)
         if granule_result is None:
             # follow the skip branch
-            return "skip_granule_" + check_region.place_name
+            return "skip_granule_" + check_region['place_name']
         else:
             # update (or create) the metadata ini file
             cfg_path = satfilename.metadata(exec_date)
@@ -143,13 +145,13 @@ for region in REGIONS:
             with open(cfg_path, 'w') as meta_file:
                 cfg.write(meta_file)
             # follow the process branch
-            return "download_granule_" + check_region.place_name
+            return "download_granule_" + check_region['place_name']
 
     coverage_check_REGION = BranchPythonOperator(
-        task_id='coverage_check_' + region.place_name,
+        task_id='coverage_check_' + region['place_name'],
         python_callable=_coverage_check,
         provide_context=True,
-        op_kwargs={'roi':region}
+        op_kwargs={'roi':region},
         retries=10,
         retry_delay=timedelta(hours=3),
         queue=QUEUE.PYCMR,
@@ -163,7 +165,7 @@ for region in REGIONS:
     # reads the download url from a metadata file created in the last step and
     # downloads the file.
     download_granule_REGION = BashOperator(
-        task_id='download_granule_'+region.place_name,
+        task_id='download_granule_'+region['place_name'],
         # trigger_rule='one_success',
         bash_command="""
             METADATA_FILE={{ params.filepather.metadata(execution_date) }} &&
@@ -184,7 +186,7 @@ for region in REGIONS:
     # === do nothing on this granule, just end the DAG
     # =============================================================================
     skip_granule_REGION = DummyOperator(
-        task_id='skip_granule_'+region.place_name,
+        task_id='skip_granule_'+region['place_name'],
         trigger_rule='one_success',
         dag=this_dag
     )
@@ -197,7 +199,7 @@ for region in REGIONS:
     modis_aqua_process_pass_REGION = get_modis_aqua_process_pass_dag(region)
 
     process_pass_REGION = TriggerDagRunOperator(
-        task_id='process_pass_'+region.place_name,
+        task_id='process_pass_'+region['place_name'],
         trigger_dag_id="example_trigger_target_dag",
         python_callable=conditionally_trigger,
         params={'condition_param': True,

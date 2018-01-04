@@ -22,7 +22,7 @@ def get_modis_aqua_process_pass_dag(region):
         'retries': 1
     })
     this_dag = DAG(
-        'modis_aqua_process_pass_'+region.place_name,
+        'modis_aqua_process_pass_'+region['place_name'],
         default_args=default_args,
         schedule_interval=None  # manually triggered only
     )
@@ -41,7 +41,7 @@ def get_modis_aqua_process_pass_dag(region):
         params={
             'l1a_pather': satfilename.myd01,
             'geo_pather': satfilename.l1a_geo,
-            'region': region
+            'region': region['place_name']
         },
         queue=QUEUE.SAT_SCRIPTS,
         dag=this_dag
@@ -70,7 +70,7 @@ def get_modis_aqua_process_pass_dag(region):
             'okm_pather': satfilename.okm,
             'hkm_pather': satfilename.hkm,
             'qkm_pather': satfilename.qkm,
-            'region': region
+            'region': region['place_name']
         },
         queue=QUEUE.SAT_SCRIPTS,
         dag=this_dag
@@ -95,7 +95,7 @@ def get_modis_aqua_process_pass_dag(region):
             'geo_pather': satfilename.l1a_geo,
             'l2_pather':  satfilename.l2,
             'parfile': "/root/airflow/dags/imars_dags/settings/generic_l2gen.par",
-            'region': params.region
+            'region': region['place_name']
         },
         queue=QUEUE.SAT_SCRIPTS,
         dag=this_dag

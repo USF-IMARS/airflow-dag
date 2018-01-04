@@ -64,55 +64,63 @@ def mxd03(
         product_datetime.strftime("%y%j%H%M%S")
     )
 
-def myd01(product_datetime):
+def myd01(product_datetime, region_id):
     """ modis aqua l1.
         I *think* these files are the same as l1a_LAC, but from LANCE.
     """
     return (
-        "/srv/imars-objects/modis_aqua_gom/myd01/" +
+        "/srv/imars-objects/modis_aqua_" + region_id + "/myd01/" +
         product_datetime.strftime("A%Y%j.%H%M.hdf")
     )
 
 def l1a_geo(
-    product_datetime
+    product_datetime, region_id
 ):
-    return "/srv/imars-objects/modis_aqua_gom/geo/" + "A{}00.GEO".format(
+    return "/srv/imars-objects/modis_aqua_" + region_id + "/geo/" + "A{}00.GEO".format(
         product_datetime.strftime("%Y%j%H%M")
     )
 
-def okm(product_datetime):
-    return "/srv/imars-objects/modis_aqua_gom/l1b/" + "A{}00.L1B_LAC".format(
+def okm(product_datetime, region_id):
+    return "/srv/imars-objects/modis_aqua_" + region_id + "/l1b/" + "A{}00.L1B_LAC".format(
         product_datetime.strftime("%Y%j%H%M")
     )
 
-def hkm(product_datetime):
-    return "/srv/imars-objects/modis_aqua_gom/hkm/" + "A{}00.L1B_HKM".format(
+def hkm(product_datetime, region_id):
+    return "/srv/imars-objects/modis_aqua_" + region_id + "/hkm/" + "A{}00.L1B_HKM".format(
         product_datetime.strftime("%Y%j%H%M")
     )
-def qkm(product_datetime):
-    return "/srv/imars-objects/modis_aqua_gom/qkm/" + "A{}00.L1B_QKM".format(
+def qkm(product_datetime, region_id):
+    return "/srv/imars-objects/modis_aqua_" + region_id + "/qkm/" + "A{}00.L1B_QKM".format(
         product_datetime.strftime("%Y%j%H%M")
     )
 
-l2_basepath="/srv/imars-objects/modis_aqua_gom/l2/"
-l2_filename_fmt="A%Y%j%H%M00.L2"
-def l2(product_datetime):
-    return l2_basepath + product_datetime.strftime(l2_filename_fmt)
+class BaseSatFilepath():
+    def __init__(self, filename_fmt, product_id):
+        self.filename_fmt = filename_fmt
+        self.product_id=product_id
 
-def l3(prod_dat):
-    return "/srv/imars-objects/modis_aqua_gom/l3/" + prod_dat.strftime(ISO_8601_FMT) + "_l3.nc"
+    def basepath(self, region):
+        return "/srv/imars-objects/modis_aqua_{}/{}/".format(self.region, self.product_id)
 
-def png(product_datetime, variable_name):
+    def __call__(self, exec_time, region_id):
+        return self.basepath(region_id) + exec_time.strftime(self.filename_fmt)
+
+l2 = BaseSatFilepath("A%Y%j%H%M00.L2", "l2")
+
+def l3(prod_dat, region_id):
+    return "/srv/imars-objects/modis_aqua_" + region_id + "/l3/" + prod_dat.strftime(ISO_8601_FMT) + "_l3.nc"
+
+def png(product_datetime, variable_name, region_id):
     return (
-        "/srv/imars-objects/modis_aqua_gom/png_" + variable_name + "/" +
+        "/srv/imars-objects/modis_aqua_" + region_id + "/png_" + variable_name + "/" +
         product_datetime.strftime(ISO_8601_FMT) +
         "_" + variable_name + ".png"
     )
 
-def metadata(prod_datetime):
+def metadata(prod_datetime, region_id):
     """ path to flat-file metadata key-value store """
     return (
-        "/srv/imars-objects/modis_aqua_gom/metadata-ini/metadata_" +
+        "/srv/imars-objects/modis_aqua_" + region_id + "/metadata-ini/metadata_" +
         prod_datetime.strftime(ISO_8601_FMT) + ".ini"
     )
 
@@ -130,12 +138,12 @@ def l1a_LAC_bz2(
     )
 
 def l1a_LAC(
-    product_datetime
+    product_datetime, region_id
 ):
     """ DEPRECATED : myd01 should be used instead!
         returns file path for unzipped modis aqua files (see also l1a_LAC_bz2)
         I *think* these are myd01 files, same as myd01(), but from PO.DAAC.
     """
-    return "/srv/imars-objects/modis_aqua_gom/l1a/" + "A{}00.L1A_LAC".format(
+    return "/srv/imars-objects/modis_aqua_" + region_id + "/l1a/" + "A{}00.L1A_LAC".format(
         product_datetime.strftime("%Y%j%H%M")
     )

@@ -38,8 +38,8 @@ def get_modis_aqua_process_pass_dag(region):
         task_id='download_granule',
         # trigger_rule='one_success',
         bash_command="""
-            METADATA_FILE={{ params.filepather.metadata(execution_date, region_id) }} &&
-            OUT_PATH={{ params.filepather.myd01(execution_date) }}         &&
+            METADATA_FILE={{ params.filepather.metadata(execution_date, params.region_id) }} &&
+            OUT_PATH={{ params.filepather.myd01(execution_date, params.region_id) }}         &&
             FILE_URL=$(grep "^upstream_download_link" $METADATA_FILE | cut -d'=' -f2-) &&
             wget --user={{params.username}} --password={{params.password}} --tries=1 --no-verbose --output-document=$OUT_PATH $FILE_URL
         """,

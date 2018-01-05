@@ -116,15 +116,14 @@ for region in REGIONS:
         else the skip branch is followed.
 
         """
-        check_region = dag_run_obj['params']['region']
+        check_region = context['params']['roi']
         exec_date = context['execution_date']
         granule_result = get_downloadable_granule_in_roi(exec_date, check_region)
         if granule_result is None:
-            # follow the skip branch
-            return "skip_granule_" + check_region['place_name']
+            return None  # skip granule
         else:
             # update (or create) the metadata ini file
-            cfg_path = satfilename.metadata(exec_date)
+            cfg_path = satfilename.metadata(exec_date, check_region['place_name'])
             cfg = configparser.ConfigParser()
             cfg.read(cfg_path)  # returns empty config if no file
             if 'myd01' not in cfg.sections():  # + section if not exists
@@ -132,8 +131,8 @@ for region in REGIONS:
             cfg['myd01']['upstream_download_link'] = granule_result.getDownloadUrl()
             with open(cfg_path, 'w') as meta_file:
                 cfg.write(meta_file)
-            # follow the process branch
-            return "download_granule_" + check_region['place_name']
+            # execute the processing dag for this granule & ROI
+            return dag_run_obj
 
     # we must put the dag object into globals so airflow can find it,
     # and we kind of need to hack it in since we are generating variable names

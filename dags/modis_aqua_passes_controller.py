@@ -26,7 +26,7 @@ from imars_dags.settings import secrets  # NOTE: this file not in public repo!
 # one DAG for each pass
 default_args = DEFAULT_ARGS.copy()
 default_args.update({
-    'start_date': datetime(2017, 12, 16, 19, 30),
+    'start_date': datetime(2018, 1, 2, 13, 0),
     'retries': 1
 })
 this_dag = DAG(

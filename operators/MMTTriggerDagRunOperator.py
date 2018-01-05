@@ -1,5 +1,10 @@
-from airflow.operators.dagrun_operator import TriggerDagRunOperator, DagRunOrder
+from datetime import datetime
+import logging
+
+from airflow import settings
+from airflow.utils.state import State
 from airflow.models import DagBag
+from airflow.operators.dagrun_operator import TriggerDagRunOperator, DagRunOrder
 
 class MMTTriggerDagRunOperator(TriggerDagRunOperator):
     """
@@ -40,7 +45,7 @@ class MMTTriggerDagRunOperator(TriggerDagRunOperator):
        )
 
     def execute(self, context):
-        run_id_dt = dt.strptime(self.execution_date, '%Y-%m-%d')
+        run_id_dt = datetime.strptime(self.execution_date, '%Y-%m-%d %H:%M:%S')
         dro = DagRunOrder(run_id='trig__' + run_id_dt.isoformat())
         dro = self.python_callable(context, dro)
         if dro:

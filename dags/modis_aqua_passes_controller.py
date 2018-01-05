@@ -19,7 +19,6 @@ from imars_dags.operators.MMTTriggerDagRunOperator import MMTTriggerDagRunOperat
 from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, CMR_CFG_PATH, SLEEP_ARGS
 from imars_dags.util import satfilename
 from imars_dags.settings.regions import REGIONS
-from imars_dags.dags.modis_aqua_process_pass import get_modis_aqua_process_pass_dag
 from imars_dags.settings import secrets  # NOTE: this file not in public repo!
 
 
@@ -122,7 +121,7 @@ for region in REGIONS:
         if granule_result is None:
             return None  # skip granule
         else:
-            # update (or create) the metadata ini file
+            # === update (or create) the metadata ini file
             cfg_path = satfilename.metadata(exec_date, check_region['place_name'])
             cfg = configparser.ConfigParser()
             cfg.read(cfg_path)  # returns empty config if no file
@@ -131,20 +130,17 @@ for region in REGIONS:
             cfg['myd01']['upstream_download_link'] = granule_result.getDownloadUrl()
             with open(cfg_path, 'w') as meta_file:
                 cfg.write(meta_file)
-            # execute the processing dag for this granule & ROI
+
+            # === execute the processing dag for this granule & ROI
+            dag_run_obj.payload = {
+                'region': check_region
+            }
             return dag_run_obj
 
-    # we must put the dag object into globals so airflow can find it,
-    # and we kind of need to hack it in since we are generating variable names
-    # dynamically to create a DAG for each region.
-    # NOTE: or... maybe we don't really want separate DAGs for each region?
-    #       Would it be bad to have them all lumped together? I'm not sure.
-    globals()['modis_aqua_process_pass_' + region['place_name']] = get_modis_aqua_process_pass_dag(region)
-
-    process_pass_REGION = MMTTriggerDagRunOperator(
+    trigger_pass_processing_REGION = MMTTriggerDagRunOperator(
         execution_date="{{execution_date}}",
-        task_id='process_pass_'+region['place_name'],
-        trigger_dag_id="modis_aqua_process_pass_" + region['place_name'],
+        task_id='trigger_pass_processing_'+region['place_name'],
+        trigger_dag_id="modis_aqua_pass_processing",
         python_callable=_coverage_check,
         params={
             'roi':region
@@ -154,5 +150,5 @@ for region in REGIONS:
         queue=QUEUE.PYCMR,
         dag=this_dag
     )
-    wait_for_data_delay >> process_pass_REGION
+    wait_for_data_delay >> trigger_pass_processing_REGION
     # =============================================================================

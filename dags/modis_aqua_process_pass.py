@@ -2,6 +2,7 @@
 manually triggered dag that runs processing for one modis pass
 """
 # std libs
+from datetime import datetime
 import subprocess
 import configparser
 
@@ -19,6 +20,7 @@ def get_modis_aqua_process_pass_dag(region):
 
     default_args = DEFAULT_ARGS.copy()
     default_args.update({
+        'start_date': datetime.utcnow(),
         'retries': 1
     })
     this_dag = DAG(

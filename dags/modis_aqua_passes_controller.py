@@ -11,11 +11,11 @@ from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import BranchPythonOperator
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.dagrun_operator import TriggerDagRunOperator
 from airflow.operators.sensors import TimeDeltaSensor
 from pyCMR.pyCMR import CMR
 
 # this package
+from imars_dags.operators.MMTTriggerDagRunOperator import MMTTriggerDagRunOperator
 from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, CMR_CFG_PATH, SLEEP_ARGS
 from imars_dags.util import satfilename
 from imars_dags.settings.regions import REGIONS
@@ -141,7 +141,8 @@ for region in REGIONS:
     #       Would it be bad to have them all lumped together? I'm not sure.
     globals()['modis_aqua_process_pass_' + region['place_name']] = get_modis_aqua_process_pass_dag(region)
 
-    process_pass_REGION = TriggerDagRunOperator(
+    process_pass_REGION = MMTTriggerDagRunOperator(
+        execution_date="{{execution_date}}",
         task_id='process_pass_'+region['place_name'],
         trigger_dag_id="modis_aqua_process_pass_" + region['place_name'],
         python_callable=_coverage_check,

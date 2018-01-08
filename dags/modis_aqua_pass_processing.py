@@ -40,7 +40,7 @@ def get_modis_aqua_process_pass_dag(region):
             METADATA_FILE={{ params.filepather.metadata(execution_date, roi['place_name']) }} &&
             OUT_PATH={{ params.filepather.myd01(execution_date, roi['place_name']) }}         &&
             FILE_URL=$(grep "^upstream_download_link" $METADATA_FILE | cut -d'=' -f2-) &&
-            test -e OUT_PATH &&
+            ! test -e OUT_PATH &&
             wget --user={{params.username}} --password={{params.password}} --tries=1 --no-verbose --output-document=$OUT_PATH $FILE_URL
         """,
         params={

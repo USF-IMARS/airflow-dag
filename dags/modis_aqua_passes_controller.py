@@ -1,5 +1,7 @@
 """
-airflow processing pipeline definition for MODIS aqua per-pass processing
+Airflow processing pipeline definition for MODIS aqua per-pass processing.
+Checks the coverage of each granule and triggers pass-level processing for each
+region.
 """
 # std libs
 from datetime import timedelta, datetime
@@ -16,6 +18,7 @@ from pyCMR.pyCMR import CMR
 
 # this package
 from imars_dags.dags.modis_aqua_pass_processing import get_modis_aqua_process_pass_dag
+from imars_dags.dags.modis_aqua_daily import get_modis_aqua_daily_dag
 from imars_dags.operators.MMTTriggerDagRunOperator import MMTTriggerDagRunOperator
 from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, CMR_CFG_PATH, SLEEP_ARGS
 from imars_dags.util import satfilename
@@ -53,10 +56,27 @@ wait_for_data_delay = TimeDeltaSensor(
 )
 # =============================================================================
 for region in REGIONS:
-    # =============================================================================
-    # === trigger a processing dag for the covered regions
-    # === checks if this granule covers our ROIs using metadata from CMR
-    # =============================================================================
+    # =========================================================================
+    # === create processing DAGs for each Region of Interest (RoI)
+    # =========================================================================
+    # we must put the dag object into globals so airflow can find it,
+    # and we kind of need to hack it in since we are generating variable names
+    # dynamically to create a DAG for each region.
+    # We can not have these lumped together into a single DAG because of the
+    # possiblity a granule (execution_date) which covers more than one ROI.
+    # === pass-level
+    process_pass_dag_name = 'modis_aqua_pass_processing_' + region['place_name']
+    globals()[process_pass_dag_name] = get_modis_aqua_process_pass_dag(region)
+    # === daily
+    globals()['modis_aqua_daily_' + region['place_name']] = get_modis_aqua_daily_dag(region)
+    # =========================================================================
+    # =========================================================================
+    # === Trigger pass-level proc dag for the RoI if covered by the granule.
+    # === Checks if this granule covers our RoI using metadata from CMR.
+    # =========================================================================
+    # we must trigger these manually because pass-level processing is not run
+    # on a consistent schedule; it is only triggered when we have a granule
+    # that covers one of our RoIs.
     def get_downloadable_granule_in_roi(exec_datetime, roi):
         """
         returns pyCMR.Result if granule for given datetime is in one of our ROIs
@@ -138,14 +158,6 @@ for region in REGIONS:
             }
             return dag_run_obj
 
-    # we must put the dag object into globals so airflow can find it,
-    # and we kind of need to hack it in since we are generating variable names
-    # dynamically to create a DAG for each region.
-    # We can not have these lumped together into a single DAG because of the
-    # possiblity a granule (execution_date) which covers more than one ROI.
-    process_pass_dag_name = 'modis_aqua_pass_processing_' + region['place_name']
-    globals()[process_pass_dag_name] = get_modis_aqua_process_pass_dag(region)
-
     trigger_pass_processing_REGION = MMTTriggerDagRunOperator(
         trigger_dag_id=process_pass_dag_name,
         python_callable=_coverage_check,
@@ -160,4 +172,4 @@ for region in REGIONS:
         dag=this_dag
     )
     wait_for_data_delay >> trigger_pass_processing_REGION
-    # =============================================================================
+    # =========================================================================

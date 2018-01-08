@@ -100,7 +100,7 @@ class BaseSatFilepath():
         self.product_id=product_id
 
     def basepath(self, region):
-        return "/srv/imars-objects/modis_aqua_{}/{}/".format(self.region, self.product_id)
+        return "/srv/imars-objects/modis_aqua_{}/{}/".format(region, self.product_id)
 
     def __call__(self, exec_time, region_id):
         return self.basepath(region_id) + exec_time.strftime(self.filename_fmt)

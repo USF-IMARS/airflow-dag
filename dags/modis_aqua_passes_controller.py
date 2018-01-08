@@ -143,12 +143,13 @@ for region in REGIONS:
     # dynamically to create a DAG for each region.
     # We can not have these lumped together into a single DAG because of the
     # possiblity a granule (execution_date) which covers more than one ROI.
-    globals()['modis_aqua_process_pass_' + region['place_name']] = get_modis_aqua_process_pass_dag(region)
+    process_pass_dag_name = 'modis_aqua_process_pass_' + region['place_name']
+    globals()[process_pass_dag_name] = get_modis_aqua_process_pass_dag(region)
 
     trigger_pass_processing_REGION = MMTTriggerDagRunOperator(
         execution_date="{{execution_date}}",
-        task_id='trigger_pass_processing_'+region['place_name'],
-        trigger_dag_id="modis_aqua_pass_processing",
+        task_id='trigger_' + process_pass_dag_name,
+        trigger_dag_id=process_pass_dag_name,
         python_callable=_coverage_check,
         params={
             'roi':region

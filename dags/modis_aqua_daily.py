@@ -5,6 +5,7 @@ from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.subdag_operator import SubDagOperator
 from airflow.operators.sensors import ExternalTaskSensor, TimeDeltaSensor
+from airflow.utils.state import State
 from datetime import timedelta, datetime
 
 # === ./imars_dags/modis_aqua_processing.py :
@@ -98,7 +99,7 @@ def get_modis_aqua_daily_dag(region):
             task_id='pass_{}_{}_chek'.format(str(hr).zfill(2), str(mn).zfill(2)),
             external_dag_id='modis_aqua_passes_controller',
             external_task_id='trigger_modis_aqua_pass_processing_'+region['place_name'],
-            allowed_states=['success'],
+            allowed_states=[State.SUCCESS],
             execution_delta=timedelta(minutes=-tdelta*5),
             dag=this_dag,
             **SLEEP_ARGS
@@ -106,21 +107,24 @@ def get_modis_aqua_daily_dag(region):
         wait_for_day_end >> pass_HH_MM_chek >> l3gen
 
         # === wait for granules that were covered to finish processing
-        # rather than being clever we just try to add all granules and ignore
-        # ones that do not exist (those granules were skipped b/c no coverage).
-        # TODO: try:
+        # rather than being clever we just try to add all granules and accept
+        # ones that have a "None" state. We assume that these have not been
+        # instantiated because the granule was skipped (no RoI coverage).
+        # This ensures we wait if the processing is "running", "failed",
+        # "retry", "queued", or anything else.
+        # Think there is a delay between DAG instantiation and task queuing
+        # so it is possible for this to pass when the granule is not ready,
+        # but this is the best I could come up with.
         pass_HH_MM_proc = ExternalTaskSensor(
             task_id='pass_{}_{}_proc'.format(str(hr).zfill(2), str(mn).zfill(2)),
             external_dag_id='modis_aqua_pass_processing_'+region['place_name'],
             external_task_id='l2gen',
-            allowed_states=['success'],
+            allowed_states=[State.SUCCESS, State.NONE],
             execution_delta=timedelta(minutes=-tdelta*5),
             dag=this_dag,
             **SLEEP_ARGS
         )
         wait_for_day_end >> pass_HH_MM_proc >> l3gen
-        # TODO: except DAG_DNE_at_given_time_error:
-        # pass  # this means that the granule was not in this ROI
 
     # =========================================================================
     # =========================================================================

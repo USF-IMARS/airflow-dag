@@ -15,6 +15,7 @@ from airflow.operators.sensors import TimeDeltaSensor
 from pyCMR.pyCMR import CMR
 
 # this package
+from imars_dags.dags.modis_aqua_pass_processing import get_modis_aqua_process_pass_dag
 from imars_dags.operators.MMTTriggerDagRunOperator import MMTTriggerDagRunOperator
 from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, CMR_CFG_PATH, SLEEP_ARGS
 from imars_dags.util import satfilename
@@ -136,6 +137,13 @@ for region in REGIONS:
                 'region': check_region
             }
             return dag_run_obj
+
+    # we must put the dag object into globals so airflow can find it,
+    # and we kind of need to hack it in since we are generating variable names
+    # dynamically to create a DAG for each region.
+    # We can not have these lumped together into a single DAG because of the
+    # possiblity a granule (execution_date) which covers more than one ROI.
+    globals()['modis_aqua_process_pass_' + region['place_name']] = get_modis_aqua_process_pass_dag(region)
 
     trigger_pass_processing_REGION = MMTTriggerDagRunOperator(
         execution_date="{{execution_date}}",

@@ -37,8 +37,8 @@ def get_modis_aqua_process_pass_dag(region):
         task_id='download_granule',
         # trigger_rule='one_success',
         bash_command="""
-            METADATA_FILE={{ params.filepather.metadata(execution_date, roi['place_name']) }} &&
-            OUT_PATH={{ params.filepather.myd01(execution_date, roi['place_name']) }}         &&
+            METADATA_FILE={{ params.filepather.metadata(execution_date, params.roi['place_name']) }} &&
+            OUT_PATH={{ params.filepather.myd01(execution_date, params.roi['place_name']) }}         &&
             FILE_URL=$(grep "^upstream_download_link" $METADATA_FILE | cut -d'=' -f2-) &&
             ! test -e OUT_PATH &&
             wget --user={{params.username}} --password={{params.password}} --tries=1 --no-verbose --output-document=$OUT_PATH $FILE_URL
@@ -60,8 +60,8 @@ def get_modis_aqua_process_pass_dag(region):
         bash_command="""
             export OCSSWROOT=/opt/ocssw && source /opt/ocssw/OCSSW_bash.env && \
             /opt/ocssw/run/scripts/modis_GEO.py \
-            --output={{params.geo_pather(execution_date, roi['place_name'])}} \
-            {{params.l1a_pather(execution_date, roi['place_name'])}}
+            --output={{params.geo_pather(execution_date, params.roi['place_name'])}} \
+            {{params.l1a_pather(execution_date, params.roi['place_name'])}}
         """,
         params={
             'l1a_pather': satfilename.myd01,
@@ -84,11 +84,11 @@ def get_modis_aqua_process_pass_dag(region):
         bash_command="""
             export OCSSWROOT=/opt/ocssw && source /opt/ocssw/OCSSW_bash.env && \
             $OCSSWROOT/run/scripts/modis_L1B.py \
-            --okm={{params.okm_pather(execution_date, roi['place_name'])}} \
-            --hkm={{params.hkm_pather(execution_date, roi['place_name'])}} \
-            --qkm={{params.qkm_pather(execution_date, roi['place_name'])}} \
-            {{params.l1a_pather(execution_date, roi['place_name'])}} \
-            {{params.geo_pather(execution_date, roi['place_name'])}}
+            --okm={{params.okm_pather(execution_date, params.roi['place_name'])}} \
+            --hkm={{params.hkm_pather(execution_date, params.roi['place_name'])}} \
+            --qkm={{params.qkm_pather(execution_date, params.roi['place_name'])}} \
+            {{params.l1a_pather(execution_date, params.roi['place_name'])}} \
+            {{params.geo_pather(execution_date, params.roi['place_name'])}}
         """,
         params={
             'l1a_pather': satfilename.myd01,
@@ -112,9 +112,9 @@ def get_modis_aqua_process_pass_dag(region):
         bash_command="""
             export OCSSWROOT=/opt/ocssw && source /opt/ocssw/OCSSW_bash.env && \
             $OCSSWROOT/run/bin/linux_64/l2gen \
-            ifile={{params.l1b_pather(execution_date, roi['place_name'])}} \
-            ofile={{params.l2_pather(execution_date, roi['place_name'])}} \
-            geofile={{params.geo_pather(execution_date, roi['place_name'])}} \
+            ifile={{params.l1b_pather(execution_date, params.roi['place_name'])}} \
+            ofile={{params.l2_pather(execution_date, params.roi['place_name'])}} \
+            geofile={{params.geo_pather(execution_date, params.roi['place_name'])}} \
             par={{params.parfile}}
         """,
         params={

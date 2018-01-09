@@ -12,6 +12,7 @@ from datetime import timedelta, datetime
 from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, SLEEP_ARGS
 from imars_dags.util import satfilename
 from imars_dags.settings.regions import REGIONS
+from imars_dags.settings.png_export_transforms import png_export_transforms
 
 def get_modis_aqua_daily_dag(region):
     default_args = DEFAULT_ARGS.copy()
@@ -148,23 +149,13 @@ def get_modis_aqua_daily_dag(region):
     # =========================================================================
     # === export png(s) from l3 netCDF4 file
     # =========================================================================
-    # vars we *could* export from the l3 generated earlier:
-    var_list = [
-        "chlor_a",
-        "nflh",
-        "adg_443_giop",
-        "Rrs_667"
-    #   lat
-    #   lon
-    ]
-    # transforms for the vars above
-    transforms = [
-        "np.log10(data+1)/0.00519",
-        "250*np.log10((0.59*(data*5)**.86)+1.025)/np.log10(2)",
-        "data",
-        "data"
-    ]
-    for i, variable_name in enumerate(var_list):
+    for variable_name in region['png_exports']:
+        try:
+            var_transform = png_export_transforms[variable_name]
+        except KeyError as k_err:
+            # no transform found, passing data through w/o scaling
+            # NOTE: not recommended. data is expected to be range [0,255]
+            var_transform = "data"
         l3_to_png = BashOperator(
             task_id="l3_to_png_"+variable_name,
             bash_command="""
@@ -177,7 +168,7 @@ def get_modis_aqua_daily_dag(region):
             params={
                 'satfilename': satfilename,
                 'variable_name': variable_name,
-                'transform': transforms[i],
+                'transform': var_transform,
                 'roi_place_name': region['place_name']
             },
             queue=QUEUE.SAT_SCRIPTS,

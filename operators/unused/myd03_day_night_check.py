@@ -3,6 +3,26 @@ from airflow.operators.bash_operator import BashOperator
 from imars_dags.util.globals import QUEUE
 from imars_dags.util import satfilename
 
+# def mxd03(
+#     product_datetime,
+#     sat_char
+# ):
+#     """ builds a file path for M*D03.YYDDDHHMMSS.hdf formatted paths.
+#     These are level 1 GEO files for modis.
+#
+#     Parameters
+#     -----------------
+#     sat_char : char
+#         Y for Aqua, O for Terra
+#     root_path : str filepath
+#         path in which all files live
+#     """
+#     base_path="/srv/imars-objects/nrt-pub/data/aqua/modis/level1/"
+#     return base_path+"M{}D03.{}.hdf".format(
+#         sat_char,
+#         product_datetime.strftime("%y%j%H%M%S")
+#     )
+
 # =============================================================================
 # === Check Day/Night Metadata for given pass mxd03 file
 # =============================================================================

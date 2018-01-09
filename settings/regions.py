@@ -2,7 +2,9 @@
 # latmax == north
 # lonmin == west
 # lonmax == east
-
+#
+# png_exports : str[]
+#   List of variable names to export to png from l3 files.
 REGIONS = [
 {
     'place_name': 'gom',
@@ -10,14 +12,16 @@ REGIONS = [
     'latmax': 31.0,
     'lonmin': -98.0,
     'lonmax': -79.0,
-    'area_description': 'This is the Gulf of Mexico mapped'
+    'area_description': 'This is the Gulf of Mexico mapped',
+    'png_exports': ["chlor_a", "nflh"]
 },{
     'place_name': 'fgbnms',
     'latmin': 24.0,
     'latmax': 31.0,
     'lonmin': -98.0,
     'lonmax': -88.0,
-    'area_description': 'Flower Garden Banks National Marine Sanctuary'
+    'area_description': 'Flower Garden Banks National Marine Sanctuary',
+    'png_exports': ["chlor_a", "nflh"]
 }]
 #     {
 #         'place_name': 'amaz',

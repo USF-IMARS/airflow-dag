@@ -57,7 +57,7 @@ def get_modis_aqua_daily_dag(region):
                     AND state='success';
             """
         )
-        wait_for_day_end >> wait_for_all_day_ganules_checked >> l3gen
+        wait_for_day_end >> wait_for_all_day_granules_checked >> l3gen
 
         # === wait for granules that were covered to finish processing.
         # Here we use an SqlSensor to check the metadata db instead of trying

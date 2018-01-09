@@ -65,7 +65,7 @@ def get_modis_aqua_daily_dag(region):
     l3gen = BashOperator(
         task_id="l3gen",
         bash_command="""
-            /opt/snap/5.0.0/bin/gpt /root/airflow/dags/imars_dags/settings/regions/{{roi_place_name}}/moda_l3g.xml \
+            /opt/snap/5.0.0/bin/gpt /root/airflow/dags/imars_dags/settings/regions/{{params.roi_place_name}}/moda_l3g.xml \
             -t {{ params.satfilename.l3(execution_date, params.roi_place_name) }} \
             -f NetCDF-BEAM \
             `{{ params.get_list_todays_l2s_cmd(execution_date, params.roi_place_name) }}`

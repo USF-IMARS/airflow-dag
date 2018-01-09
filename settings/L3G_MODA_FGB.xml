@@ -1,0 +1,130 @@
+<graph id="mosaic_1km_IMaRS">
+<version>1.0</version>
+<node id="MosaicNode_OC">
+<operator>Mosaic</operator>
+<sources>
+<sourceProducts>${sourceProducts}</sourceProducts>
+</sources>
+<parameters>
+<variables>
+<variable>
+<name>Rrs_667</name>
+<expression>Rrs_667</expression>
+</variable>
+<variable>
+<name>chlor_a</name>
+<expression>chlor_a</expression>
+</variable>
+<variable>
+<name>nflh</name>
+<expression>nflh</expression>
+</variable>
+<variable>
+<name>adg_443_giop</name>
+<expression>adg_443_giop</expression>
+</variable>
+<variable>
+<name>cloud_albedo</name>
+<expression>cloud_albedo</expression>
+</variable>
+<variable>
+<name>l2_flags</name>
+<expression>l2_flags</expression>
+</variable>
+</variables>
+<conditions>
+<condition>
+<name>not_STRAYLIGHT</name>
+<expression>NOT l2_flags.STRAYLIGHT</expression>
+<output>false</output>
+</condition>
+</conditions>
+<combine>AND</combine>
+<crs>
+PROJCS["Equidistant_Cylindrical / World Geodetic System 1984", 
+GEOGCS["World Geodetic System 1984", 
+DATUM["World Geodetic System 1984", 
+SPHEROID["WGS 84", 6378137.0, 298.257223563, AUTHORITY["EPSG","7030"]], 
+AUTHORITY["EPSG","6326"]], 
+PRIMEM["Greenwich", 0.0, AUTHORITY["EPSG","8901"]], 
+UNIT["degree", 0.017453292519943295], 
+AXIS["Geodetic longitude", EAST], 
+AXIS["Geodetic latitude", NORTH]], 
+PROJECTION["Equidistant_Cylindrical"], 
+PARAMETER["central_meridian", 0.0], 
+PARAMETER["latitude_of_origin", 0.0], 
+PARAMETER["standard_parallel_1", 0.0], 
+PARAMETER["false_easting", 0.0], 
+PARAMETER["false_northing", 0.0], 
+UNIT["m", 1.0], 
+AXIS["Easting", EAST],
+AXIS["Northing", NORTH]] 
+</crs>
+<orthorectify>false</orthorectify>
+<elevationModelName>GETASSE30</elevationModelName>
+<resampling>Nearest</resampling>
+<westBound>-98.0</westBound>
+<northBound>31.0</northBound>
+<eastBound>-88.0</eastBound>
+<southBound>24.0</southBound>
+<pixelSizeX>1011.7</pixelSizeX>
+<pixelSizeY>1011.7</pixelSizeY>
+</parameters>
+</node>
+<node id="selectBandsNode">
+    <operator>BandMaths</operator>
+    	<sources>
+           <sourceProducts>MosaicNode_OC</sourceProducts>
+       </sources>
+       <parameters>
+           <targetBands>  
+                <targetBand>
+                   <name>chlor_a</name>
+                   <expression>chlor_a</expression>
+                   <description>Chlorophyll-a concentration, OCI Algorithm</description>
+                   <type>float32</type>
+                   <validExpression>(chlor_a > 0.001 and chlor_a &lt; 100)</validExpression>
+                   <noDataValue>NaN</noDataValue>
+                   <unit>mg m^-3</unit>                  
+                </targetBand>             
+                <targetBand>
+                   <name>nflh</name>
+                   <expression>nflh</expression>
+                   <description>Fluorescent Line Height (normalized)</description>
+                   <type>float32</type>
+                   <validExpression>(nflh > -0.5 and nflh &lt; 5 and nflh !=0)</validExpression>
+                   <noDataValue>NaN</noDataValue>
+                   <unit>W m^-2 um^-1 sr^-1</unit>                  
+                </targetBand> 
+                <targetBand>
+                   <name>adg_443_giop</name>
+                   <expression>adg_443_giop</expression>
+                   <description>Absorption due to detritus and CDOM, GIOP Algorithm</description>
+                   <type>float32</type>
+                   <validExpression>(adg_443_giop > -0.5 and adg_443_giop &lt; 5 and adg_443_giop != 0)</validExpression>
+                   <noDataValue>NaN</noDataValue>
+                   <unit>m^-1</unit>                  
+                </targetBand> 
+                <targetBand>
+                   <name>Rrs_667</name>
+                   <expression>Rrs_667</expression>
+                   <description>Remote sensing reflectance at 667 nm</description>
+                   <type>float32</type>
+                   <validExpression>(Rrs_667 > -0.01 and Rrs_667 &lt; 0.01 and Rrs_667 !=0)</validExpression>
+                   <noDataValue>NaN</noDataValue>
+                   <spectralWavelength>667.0</spectralWavelength>
+                   <unit>sr^-1</unit> 
+                </targetBand>
+                <targetBand>
+                   <name>cloud_albedo</name>
+                   <expression>cloud_albedo</expression>
+                   <description>Cloud albedo based on 865nm</description>
+                   <type>float32</type>
+                   <validExpression>(cloud_albedo > 0 and cloud_albedo &lt; 1.0)</validExpression>
+                   <noDataValue>NaN</noDataValue>
+                   <unit>sr^-1</unit> 
+                </targetBand>
+           </targetBands>
+       </parameters>
+   </node>
+</graph>

@@ -83,8 +83,8 @@ def get_modis_aqua_daily_dag(region):
         # === wait for every granule to be checked for coverage
         # Passes when # of "success" controller dags for today >= 288
         # ie, when the dag has run for every 5min granule today.
-        wait_for_all_day_ganules_checked = SqlSensor(
-            task_id='wait_for_all_day_ganules_checked',
+        wait_for_all_day_granules_checked = SqlSensor(
+            task_id='wait_for_all_day_granules_checked',
             conn_id='mysql_default',
             sql="""
             SELECT GREATEST(COUNT(state)-287, 0)

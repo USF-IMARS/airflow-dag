@@ -87,10 +87,10 @@ def get_modis_aqua_daily_dag(region):
         conn_id='mysql_default',
         # conn_id='sql_alchemy_conn',
         sql="""
-            SELECT execution_date,state
+            SELECT 1 - LEAST(COUNT(state),1)
                 FROM dag_run WHERE
                     (execution_date BETWEEN
-                        '2018-01-03 00:00' AND '2018-01-03 23:59')
+                        '{{execution_date.replace(hour=0,minute=0)}}' AND '{{execution_date.replace(hour=23,minute=59)}}')
                     AND dag_id='modis_aqua_pass_processing_gom'
                     AND state!='success'
             ;

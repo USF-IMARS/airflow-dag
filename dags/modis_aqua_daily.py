@@ -4,7 +4,7 @@ airflow processing pipeline definition for MODIS aqua daily processing
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.subdag_operator import SubDagOperator
-from airflow.operators.sensors import ExternalTaskSensor, TimeDeltaSensor, SqlSensor
+from airflow.operators.sensors import TimeDeltaSensor, SqlSensor
 from airflow.utils.state import State
 from datetime import timedelta, datetime
 
@@ -80,66 +80,40 @@ def get_modis_aqua_daily_dag(region):
         # =========================================================================
         # === wait for pass-level processing
         # =========================================================================
-        # TODO: use a SqlSensor instead of a ton of ExternalTaskSensor(s)?
+        # === wait for every granule to be checked for coverage
+        # Passes when # of "success" controller dags for today >= 288
+        # ie, when the dag has run for every 5min granule today.
+        wait_for_all_day_ganules_checked = SqlSensor(
+            task_id='wait_for_all_day_ganules_checked',
+            conn_id='mysql_default',
+            sql="""
+            SELECT GREATEST(COUNT(state)-287, 0)
+                FROM dag_run WHERE
+                    (execution_date BETWEEN
+                        '{{execution_date.replace(hour=0,minute=0)}}' AND '{{execution_date.replace(hour=23,minute=59)}}')
+                    AND dag_id='modis_aqua_passes_controller'
+                    AND state='success';
+            """
+        )
+        wait_for_day_end >> wait_for_all_day_ganules_checked >> l3gen
+
+        # === wait for granules that were covered to finish processing.
+        # Here we use an SqlSensor to check the metadata db instead of trying
+        # to generate a dynamic list of ExternalTaskSensors.
         wait_for_pass_processing_success = SqlSensor(
             task_id='wait_for_pass_processing_success',
             conn_id='mysql_default',
-            # conn_id='sql_alchemy_conn',
             sql="""
                 SELECT 1 - LEAST(COUNT(state),1)
                     FROM dag_run WHERE
                         (execution_date BETWEEN
                             '{{execution_date.replace(hour=0,minute=0)}}' AND '{{execution_date.replace(hour=23,minute=59)}}')
-                        AND dag_id='modis_aqua_pass_processing_gom'
+                        AND dag_id='modis_aqua_pass_processing_'"""+region['place_name']+"""
                         AND state!='success'
                 ;
                 """
         )
         wait_for_day_end >> wait_for_pass_processing_success >> l3gen
-
-        # spin up an ExternalTaskSensor for each pass so that we wait for the
-        # pass-level processing to complete before continuing.
-        # [ref](https://stackoverflow.com/a/38028511/1483986)
-
-        # here we assume that the execution date is at time 12:00
-        # 144*2=288 5-minute dags per day (24*60/5=288)
-        # for tdelta in range(-144, 144):
-        # but since this is ocean color, we only really care about the "day" times
-        # let's call that 3:00-9:00 ie 12:00 +/- 108
-        for tdelta in range(-108, 108):
-            net_minutes = 12*60 + tdelta*5
-            hr = int(net_minutes/60)
-            mn = net_minutes%60
-            # === wait for the controller to check all granules for this region
-            pass_HH_MM_chek = ExternalTaskSensor(
-                task_id='pass_{}_{}_chek'.format(str(hr).zfill(2), str(mn).zfill(2)),
-                external_dag_id='modis_aqua_passes_controller',
-                external_task_id='trigger_modis_aqua_pass_processing_'+region['place_name'],
-                allowed_states=[State.SUCCESS],
-                execution_delta=timedelta(minutes=-tdelta*5),
-                **SLEEP_ARGS
-            )
-            wait_for_day_end >> pass_HH_MM_chek >> l3gen
-
-        #     # === wait for granules that were covered to finish processing
-        #     # rather than being clever we just try to add all granules and accept
-        #     # ones that have a "None" state. We assume that these have not been
-        #     # instantiated because the granule was skipped (no RoI coverage).
-        #     # This ensures we wait if the processing is "running", "failed",
-        #     # "retry", "queued", or anything else.
-        #     # Think there is a delay between DAG instantiation and task queuing
-        #     # so it is possible for this to pass when the granule is not ready,
-        #     # but this is the best I could come up with.
-        #     pass_HH_MM_proc = ExternalTaskSensor(
-        #         task_id='pass_{}_{}_proc'.format(str(hr).zfill(2), str(mn).zfill(2)),
-        #         external_dag_id='modis_aqua_pass_processing_'+region['place_name'],
-        #         external_task_id='l2gen',
-        #         allowed_states=[State.SUCCESS, State.NONE],
-        #         execution_delta=timedelta(minutes=-tdelta*5)
-        #         **SLEEP_ARGS
-        #     )
-        #     wait_for_day_end >> pass_HH_MM_proc >> l3gen
-
         # =========================================================================
         # =========================================================================
         # === export png(s) from l3 netCDF4 file

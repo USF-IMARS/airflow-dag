@@ -4,7 +4,7 @@ airflow processing pipeline definition for MODIS aqua daily processing
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.subdag_operator import SubDagOperator
-from airflow.operators.sensors import ExternalTaskSensor, TimeDeltaSensor
+from airflow.operators.sensors import ExternalTaskSensor, TimeDeltaSensor, SqlSensor
 from airflow.utils.state import State
 from datetime import timedelta, datetime
 
@@ -17,7 +17,7 @@ def get_modis_aqua_daily_dag(region):
     default_args = DEFAULT_ARGS.copy()
     # NOTE: start_date must be 12:00 (see _wait_for_passes_subdag)
     default_args.update({
-        'start_date': datetime(2017, 12, 16, 12, 0),
+        'start_date': datetime(2018, 1, 3, 12, 0),
         'retries': 1
     })
     this_dag = DAG(
@@ -81,6 +81,24 @@ def get_modis_aqua_daily_dag(region):
     # =========================================================================
     # === wait for pass-level processing
     # =========================================================================
+    # TODO: use a SqlSensor instead of a ton of ExternalTaskSensor(s)?
+    wait_for_pass_processing_success = SqlSensor(
+        task_id='wait_for_pass_processing_success',
+        # conn_id='mysql_default',
+        conn_id='sql_alchemy_conn',
+        sql="""
+            SELECT execution_date,state
+                FROM dag_run WHERE
+                    (execution_date BETWEEN
+                        '2018-01-03 00:00' AND '2018-01-03 23:59')
+                    AND dag_id='modis_aqua_pass_processing_gom'
+                    AND state!='success'
+            ;
+            """,
+        dag=this_dag
+    )
+    wait_for_day_end >> wait_for_pass_processing_success >> l3gen
+
     # spin up an ExternalTaskSensor for each pass so that we wait for the
     # pass-level processing to complete before continuing.
     # [ref](https://stackoverflow.com/a/38028511/1483986)
@@ -106,25 +124,25 @@ def get_modis_aqua_daily_dag(region):
         )
         wait_for_day_end >> pass_HH_MM_chek >> l3gen
 
-        # === wait for granules that were covered to finish processing
-        # rather than being clever we just try to add all granules and accept
-        # ones that have a "None" state. We assume that these have not been
-        # instantiated because the granule was skipped (no RoI coverage).
-        # This ensures we wait if the processing is "running", "failed",
-        # "retry", "queued", or anything else.
-        # Think there is a delay between DAG instantiation and task queuing
-        # so it is possible for this to pass when the granule is not ready,
-        # but this is the best I could come up with.
-        pass_HH_MM_proc = ExternalTaskSensor(
-            task_id='pass_{}_{}_proc'.format(str(hr).zfill(2), str(mn).zfill(2)),
-            external_dag_id='modis_aqua_pass_processing_'+region['place_name'],
-            external_task_id='l2gen',
-            allowed_states=[State.SUCCESS, State.NONE],
-            execution_delta=timedelta(minutes=-tdelta*5),
-            dag=this_dag,
-            **SLEEP_ARGS
-        )
-        wait_for_day_end >> pass_HH_MM_proc >> l3gen
+    #     # === wait for granules that were covered to finish processing
+    #     # rather than being clever we just try to add all granules and accept
+    #     # ones that have a "None" state. We assume that these have not been
+    #     # instantiated because the granule was skipped (no RoI coverage).
+    #     # This ensures we wait if the processing is "running", "failed",
+    #     # "retry", "queued", or anything else.
+    #     # Think there is a delay between DAG instantiation and task queuing
+    #     # so it is possible for this to pass when the granule is not ready,
+    #     # but this is the best I could come up with.
+    #     pass_HH_MM_proc = ExternalTaskSensor(
+    #         task_id='pass_{}_{}_proc'.format(str(hr).zfill(2), str(mn).zfill(2)),
+    #         external_dag_id='modis_aqua_pass_processing_'+region['place_name'],
+    #         external_task_id='l2gen',
+    #         allowed_states=[State.SUCCESS, State.NONE],
+    #         execution_delta=timedelta(minutes=-tdelta*5),
+    #         dag=this_dag,
+    #         **SLEEP_ARGS
+    #     )
+    #     wait_for_day_end >> pass_HH_MM_proc >> l3gen
 
     # =========================================================================
     # =========================================================================

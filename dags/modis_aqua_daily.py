@@ -57,7 +57,7 @@ def get_modis_aqua_daily_dag(region):
         returns an ls command that lists all l2 files using the path & file fmt,
         but replaces hour/minute with wildcard *
         """
-        satfilename.l2(exec_date)
+        satfilename.l2(exec_date, region)
         fmt_str = satfilename.l2.filename_fmt.replace("%M", "*").replace("%H", "*")
         return "ls " + satfilename.l2.basepath(region) + exec_date.strftime(fmt_str)
 

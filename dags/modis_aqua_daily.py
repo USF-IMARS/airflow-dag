@@ -84,8 +84,8 @@ def get_modis_aqua_daily_dag(region):
     # TODO: use a SqlSensor instead of a ton of ExternalTaskSensor(s)?
     wait_for_pass_processing_success = SqlSensor(
         task_id='wait_for_pass_processing_success',
-        # conn_id='mysql_default',
-        conn_id='sql_alchemy_conn',
+        conn_id='mysql_default',
+        # conn_id='sql_alchemy_conn',
         sql="""
             SELECT execution_date,state
                 FROM dag_run WHERE

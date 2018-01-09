@@ -1,11 +1,12 @@
 # airflow-dag
 :blowfish: USF IMaRS Airflow DAGs
 
-## workflow
+## dev workflow
 0. edit DAG
 1. `airflow list_dags` to check for syntax errs
 2. `airflow test $dag_name $task_name 2017-07-07T07:07:07` to test operators
-3. 
+3. test in the LocalExecutor test environment if possible
+4. push to master & await production deployment (at next puppet run)
 
 ## organizational rules
 0. A DAG (Directed Acyclic Graph) defines a processing pipeline.

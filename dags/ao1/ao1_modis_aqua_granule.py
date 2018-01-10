@@ -1,6 +1,7 @@
 import os
 
 from airflow import DAG
+from airflow.operators.bash_operator import BashOperator
 
 from imars_dags.dags.builders import modis_aqua_granule
 from imars_dags.regions import ao1

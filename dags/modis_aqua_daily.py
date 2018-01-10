@@ -29,33 +29,26 @@ def get_modis_aqua_daily_dag(region):
         'modis_aqua_daily_' + region['place_name'],
         default_args=default_args,
         schedule_interval=timedelta(days=1),
-        max_active_runs=1  # this must be limited b/c the subdag spawns 288 tasks,
-                           # which can easily lead to deadlocks.
+        max_active_runs=1
     ) as dag:
-        # =========================================================================
         # === delay to wait for day to end, so all passes that day are done.
-        # =========================================================================
         wait_for_day_end = TimeDeltaSensor(
-            delta=timedelta(hours=18),  # 12 hrs to midnight + 6 hrs just in case
+            delta=timedelta(hours=18),  # 12 hrs to midnight + 6 hrs just b/c
             task_id='wait_for_data_delay',
             **SLEEP_ARGS
         )
-        # =========================================================================
+
         l3gen = get_l3gen(region)
-        # =========================================================================
+
         # === wait for pass-level processing
-        # =========================================================================
         wait_for_all_day_granules_checked = get_wait_for_all_day_granules_checked()
         wait_for_day_end >> wait_for_all_day_granules_checked >> l3gen
 
         wait_for_pass_processing_success = get_wait_for_pass_processing_success(region)
         wait_for_day_end >> wait_for_pass_processing_success >> l3gen
-        # =========================================================================
-        # =========================================================================
+
         # === export png(s) from l3 netCDF4 file
-        # =========================================================================
         for variable_name in region['png_exports']:
             l3_to_png = get_l3_to_png(variable_name, region)
             l3gen >> l3_to_png
-        # =========================================================================
         return dag

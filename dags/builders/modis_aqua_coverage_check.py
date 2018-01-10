@@ -101,10 +101,10 @@ def get_downloadable_granule_in_roi(exec_datetime, roi):
     # === that the granule is downloadable
     # re-use the original search_kwargs, but add bounding box
     search_kwargs['bounding_box']="{},{},{},{}".format(
-        roi['lonmin'],  # low l long
-        roi['latmin'],  # low l lat
-        roi['lonmax'],  # up r long
-        roi['latmax']   # up r lat
+        roi.lonmin,  # low l long
+        roi.latmin,  # low l lat
+        roi.lonmax,  # up r long
+        roi.latmax   # up r lat
     )
     # also add the downloadable=true criteria
     search_kwargs['downloadable']='true'

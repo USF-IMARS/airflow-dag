@@ -20,7 +20,6 @@ from pyCMR.pyCMR import CMR
 from imars_dags.operators.MMTTriggerDagRunOperator import MMTTriggerDagRunOperator
 from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, CMR_CFG_PATH, SLEEP_ARGS
 from imars_dags.util import satfilename
-from imars_dags.settings.regions import REGIONS
 from imars_dags.settings import secrets  # NOTE: this file not in public repo!
 
 

@@ -22,7 +22,7 @@ default_args.update({
 
 schedule_interval=None
 
-def add_tasks(dag, region):
+def add_tasks(dag, region, parfile):
     with dag as dag:
         # =========================================================================
         # === download the granule
@@ -114,7 +114,7 @@ def add_tasks(dag, region):
                 'l1b_pather': satfilename.okm,
                 'geo_pather': satfilename.l1a_geo,
                 'l2_pather':  satfilename.l2,
-                'parfile': "/root/airflow/dags/imars_dags/settings/regions/"+region.place_name+"/moda_l2gen.par",
+                'parfile': parfile,
                 'roi': region.place_name
             },
             queue=QUEUE.SAT_SCRIPTS

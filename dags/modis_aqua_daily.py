@@ -12,8 +12,8 @@ from imars_dags.util.globals import DEFAULT_ARGS, SLEEP_ARGS
 from imars_dags.util import satfilename
 from imars_dags.settings.regions import REGIONS
 from imars_dags.operators.L3Gen import L3Gen
-from imars_dags.operators.wait_for_all_day_granules_checked \
-    import get_wait_for_all_day_granules_checked
+from imars_dags.operators.WaitForAllDayGranulesChecked \
+    import                WaitForAllDayGranulesChecked
 from imars_dags.operators.wait_for_pass_processing_success \
     import get_wait_for_pass_processing_success
 from imars_dags.operators.l3_to_png import get_l3_to_png
@@ -41,7 +41,7 @@ def get_modis_aqua_daily_dag(region):
         l3gen = L3Gen(region)
 
         # === wait for pass-level processing
-        wait_for_all_day_granules_checked = get_wait_for_all_day_granules_checked()
+        wait_for_all_day_granules_checked = WaitForAllDayGranulesChecked()
         wait_for_day_end >> wait_for_all_day_granules_checked >> l3gen
 
         wait_for_pass_processing_success = get_wait_for_pass_processing_success(region)

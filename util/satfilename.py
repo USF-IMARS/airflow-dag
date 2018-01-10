@@ -98,6 +98,8 @@ l2 = BaseSatFilepath("A%Y%j%H%M00.L2", "l2")
 
 l3 = BaseSatFilepath("l3", ISO_8601_FMT+"_l3.nc")
 
+l3_pass = BaseSatFilepath("l3_pass", ISO_8601_FMT+"_l3.nc")
+
 def png(product_datetime, variable_name, region_id):
     """
     Returns path for png product with given attributes.

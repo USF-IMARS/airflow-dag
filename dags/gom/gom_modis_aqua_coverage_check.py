@@ -21,5 +21,5 @@ this_dag = DAG(
 modis_aqua_coverage_check.add_tasks(
     this_dag,
     region=gom,
-    process_pass_dag_name="modis_aqua_granule_gom"
+    process_pass_dag_name="gom_modis_aqua_granule"
 )

@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 
 from airflow import DAG
@@ -16,12 +17,16 @@ default_args.update({
 this_dag = DAG(
     dag_id="gom_modis_aqua_daily",
     default_args=default_args,
-    schedule_interval=modis_aqua_daily.schedule_interval
+    schedule_interval=modis_aqua_daily.schedule_interval,
 )
 
 modis_aqua_daily.add_tasks(
     this_dag,
-    region=gom
+    region=gom,
+    gpt_xml=os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),  # imars_dags/dags/gom/
+        "moda_l3g.xml"
+    )
 )
 modis_aqua_daily.add_png_exports(
     this_dag,

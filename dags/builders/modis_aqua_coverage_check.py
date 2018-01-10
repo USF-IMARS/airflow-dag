@@ -131,7 +131,7 @@ def _coverage_check(context, dag_run_obj):
         return None  # skip granule
     else:
         # === update (or create) the metadata ini file
-        cfg_path = satfilename.metadata(exec_date, check_region['place_name'])
+        cfg_path = satfilename.metadata(exec_date, check_region.place_name)
         cfg = configparser.ConfigParser()
         cfg.read(cfg_path)  # returns empty config if no file
         if 'myd01' not in cfg.sections():  # + section if not exists

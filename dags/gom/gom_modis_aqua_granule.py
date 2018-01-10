@@ -1,3 +1,5 @@
+import os
+
 from airflow import DAG
 
 from imars_dags.dags.builders import modis_aqua_granule
@@ -11,5 +13,9 @@ this_dag = DAG(
 
 modis_aqua_granule.add_tasks(
     this_dag,
-    region=gom
+    region=gom,
+    parfile=os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),  # /root/airflow/dags/imars_dags/dags/gom/
+        "moda_l3g.par"
+    )
 )

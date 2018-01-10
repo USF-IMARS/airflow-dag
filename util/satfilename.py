@@ -50,7 +50,7 @@ class BaseSatFilepath():
     Instantiate with the filename format string and product_id.
     Calls to instantiations of this class will return the path.
     """
-    def __init__(self, filename_fmt, product_id):
+    def __init__(self, product_id, filename_fmt):
         """
             Parameters
             --------------
@@ -94,7 +94,7 @@ hkm = BaseSatFilepath("hkm", "A%Y%j%H%M00.L1B_HKM")
 
 qkm = BaseSatFilepath("qkm", "A%Y%j%H%M00.L1B_QKM")
 
-l2 = BaseSatFilepath("A%Y%j%H%M00.L2", "l2")
+l2 = BaseSatFilepath("l2", "A%Y%j%H%M00.L2")
 
 l3 = BaseSatFilepath("l3", ISO_8601_FMT+"_l3.nc")
 

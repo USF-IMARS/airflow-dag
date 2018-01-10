@@ -1,7 +1,6 @@
 """
 airflow processing pipeline definition for MODIS aqua daily processing
 """
-from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.subdag_operator import SubDagOperator
 from airflow.operators.sensors import TimeDeltaSensor, SqlSensor
@@ -11,23 +10,12 @@ from datetime import timedelta, datetime
 # === ./imars_dags/modis_aqua_processing.py :
 from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, SLEEP_ARGS
 from imars_dags.util import satfilename
-from imars_dags.settings.regions import REGIONS
 from imars_dags.settings.png_export_transforms import png_export_transforms
 
-def get_modis_aqua_daily_dag(region):
-    default_args = DEFAULT_ARGS.copy()
-    # NOTE: start_date must be 12:00 (see _wait_for_passes_subdag)
-    default_args.update({
-        'start_date': datetime(2018, 1, 3, 12, 0),
-        'retries': 1
-    })
-    with DAG(
-        'modis_aqua_daily_' + region['place_name'],
-        default_args=default_args,
-        schedule_interval=timedelta(days=1),
-        max_active_runs=1  # this must be limited b/c the subdag spawns 288 tasks,
-                           # which can easily lead to deadlocks.
-    ) as dag:
+schedule_interval=timedelta(days=1)
+
+def add_tasks(dag, region):
+    with dag as dag:
         # =========================================================================
         # === delay to wait for day to end, so all passes that day are done.
         # =========================================================================
@@ -52,14 +40,14 @@ def get_modis_aqua_daily_dag(region):
         #
         #     -t is the target (output) file, -f is the format
 
-        def get_list_todays_l2s_cmd(exec_date, region):
+        def get_list_todays_l2s_cmd(exec_date, roi):
             """
             returns an ls command that lists all l2 files using the path & file fmt,
             but replaces hour/minute with wildcard *
             """
-            satfilename.l2(exec_date, region)
+            satfilename.l2(exec_date, roi)
             fmt_str = satfilename.l2.filename_fmt.replace("%M", "*").replace("%H", "*")
-            return "ls " + satfilename.l2.basepath(region) + exec_date.strftime(fmt_str)
+            return "ls " + satfilename.l2.basepath(roi) + exec_date.strftime(fmt_str)
 
         l3gen = BashOperator(
             task_id="l3gen",
@@ -72,7 +60,7 @@ def get_modis_aqua_daily_dag(region):
             params={
                 'satfilename': satfilename,
                 'get_list_todays_l2s_cmd':get_list_todays_l2s_cmd,
-                'roi_place_name': region['place_name']
+                'roi_place_name': region.place_name
             },
             queue=QUEUE.SNAP
         )
@@ -108,40 +96,42 @@ def get_modis_aqua_daily_dag(region):
                     FROM dag_run WHERE
                         (execution_date BETWEEN
                             '{{execution_date.replace(hour=0,minute=0)}}' AND '{{execution_date.replace(hour=23,minute=59)}}')
-                        AND dag_id='modis_aqua_pass_processing_'"""+region['place_name']+"""
+                        AND dag_id='modis_aqua_pass_processing_'"""+region.place_name+"""
                         AND state!='success'
                 ;
                 """
         )
         wait_for_day_end >> wait_for_pass_processing_success >> l3gen
         # =========================================================================
-        # =========================================================================
-        # === export png(s) from l3 netCDF4 file
-        # =========================================================================
-        for variable_name in region['png_exports']:
-            try:
-                var_transform = png_export_transforms[variable_name]
-            except KeyError as k_err:
-                # no transform found, passing data through w/o scaling
-                # NOTE: not recommended. data is expected to be range [0,255]
-                var_transform = "data"
-            l3_to_png = BashOperator(
-                task_id="l3_to_png_"+variable_name,
-                bash_command="""
-                /opt/sat-scripts/sat-scripts/netcdf4_to_png.py \
-                {{params.satfilename.l3(execution_date, params.roi_place_name)}} \
-                {{params.satfilename.png(execution_date, params.variable_name, params.roi_place_name)}} \
-                {{params.variable_name}}\
-                -t '{{params.transform}}'
-                """,
-                params={
-                    'satfilename': satfilename,
-                    'variable_name': variable_name,
-                    'transform': var_transform,
-                    'roi_place_name': region['place_name']
-                },
-                queue=QUEUE.SAT_SCRIPTS
-            )
-            l3gen >> l3_to_png
-        # =========================================================================
-        return dag
+
+def add_png_exports(dag, region, variable_names):
+    # =========================================================================
+    # === export png(s) from l3 netCDF4 file
+    # =========================================================================
+    for variable_name in variable_names:
+        try:
+            var_transform = png_export_transforms[variable_name]
+        except KeyError as k_err:
+            # no transform found, passing data through w/o scaling
+            # NOTE: not recommended. data is expected to be range [0,255]
+            var_transform = "data"
+        l3_to_png = BashOperator(
+            task_id="l3_to_png_"+variable_name,
+            bash_command="""
+            /opt/sat-scripts/sat-scripts/netcdf4_to_png.py \
+            {{params.satfilename.l3(execution_date, params.roi_place_name)}} \
+            {{params.satfilename.png(execution_date, params.variable_name, params.roi_place_name)}} \
+            {{params.variable_name}}\
+            -t '{{params.transform}}'
+            """,
+            params={
+                'satfilename': satfilename,
+                'variable_name': variable_name,
+                'transform': var_transform,
+                'roi_place_name': region.place_name
+            },
+            queue=QUEUE.SAT_SCRIPTS,
+            dag=dag
+        )
+        dag.get_task('l3gen') >> l3_to_png
+    # =========================================================================

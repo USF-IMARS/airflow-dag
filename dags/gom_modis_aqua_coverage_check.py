@@ -13,7 +13,7 @@ default_args.update({
 })
 
 this_dag = DAG(
-    dag_id="modis_aqua_coverage_check_gom",
+    dag_id="gom_modis_aqua_coverage_check",
     default_args=default_args,
     schedule_interval=modis_aqua_coverage_check.schedule_interval
 )

@@ -14,7 +14,7 @@ from imars_dags.settings.png_export_transforms import png_export_transforms
 
 schedule_interval=timedelta(days=1)
 
-def add_tasks(dag, region):
+def add_tasks(dag, region, gpt_xml):
     with dag as dag:
         # =========================================================================
         # === delay to wait for day to end, so all passes that day are done.
@@ -52,7 +52,7 @@ def add_tasks(dag, region):
         l3gen = BashOperator(
             task_id="l3gen",
             bash_command="""
-                /opt/snap/5.0.0/bin/gpt /root/airflow/dags/imars_dags/settings/regions/{{params.roi_place_name}}/moda_l3g.xml \
+                /opt/snap/5.0.0/bin/gpt {{params.gpt_xml_file}} \
                 -t {{ params.satfilename.l3(execution_date, params.roi_place_name) }} \
                 -f NetCDF-BEAM \
                 `{{ params.get_list_todays_l2s_cmd(execution_date, params.roi_place_name) }}`
@@ -60,7 +60,8 @@ def add_tasks(dag, region):
             params={
                 'satfilename': satfilename,
                 'get_list_todays_l2s_cmd':get_list_todays_l2s_cmd,
-                'roi_place_name': region.place_name
+                'roi_place_name': region.place_name,
+                'gpt_xml_file': gpt_xml
             },
             queue=QUEUE.SNAP
         )

@@ -15,7 +15,7 @@ modis_aqua_granule.add_tasks(
     this_dag,
     region=gom,
     parfile=os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),  # /root/airflow/dags/imars_dags/dags/gom/
+        os.path.dirname(os.path.realpath(__file__)),  # imars_dags/dags/gom/
         "moda_l3g.par"
     )
 )

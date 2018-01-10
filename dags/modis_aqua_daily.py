@@ -4,7 +4,7 @@ airflow processing pipeline definition for MODIS aqua daily processing
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.subdag_operator import SubDagOperator
-from airflow.operators.sensors import TimeDeltaSensor, SqlSensor
+from airflow.operators.sensors import TimeDeltaSensor
 from airflow.utils.state import State
 from datetime import timedelta, datetime
 
@@ -14,6 +14,10 @@ from imars_dags.util import satfilename
 from imars_dags.settings.regions import REGIONS
 from imars_dags.settings.png_export_transforms import png_export_transforms
 from imars_dags.operators.l3gen import get_l3gen
+from imars_dags.operators.wait_for_all_day_granules_checked \
+    import get_wait_for_all_day_granules_checked
+from imars_dags.operators.wait_for_pass_processing_success \
+    import get_wait_for_pass_processing_success
 
 def get_modis_aqua_daily_dag(region):
     default_args = DEFAULT_ARGS.copy()
@@ -42,39 +46,10 @@ def get_modis_aqua_daily_dag(region):
         # =========================================================================
         # === wait for pass-level processing
         # =========================================================================
-        # === wait for every granule to be checked for coverage
-        # Passes when # of "success" controller dags for today >= 288
-        # ie, when the dag has run for every 5min granule today.
-        wait_for_all_day_granules_checked = SqlSensor(
-            task_id='wait_for_all_day_granules_checked',
-            conn_id='mysql_default',
-            sql="""
-            SELECT GREATEST(COUNT(state)-287, 0)
-                FROM dag_run WHERE
-                    (execution_date BETWEEN
-                        '{{execution_date.replace(hour=0,minute=0)}}' AND '{{execution_date.replace(hour=23,minute=59)}}')
-                    AND dag_id='modis_aqua_passes_controller'
-                    AND state='success';
-            """
-        )
+        wait_for_all_day_granules_checked = get_wait_for_all_day_granules_checked()
         wait_for_day_end >> wait_for_all_day_granules_checked >> l3gen
 
-        # === wait for granules that were covered to finish processing.
-        # Here we use an SqlSensor to check the metadata db instead of trying
-        # to generate a dynamic list of ExternalTaskSensors.
-        wait_for_pass_processing_success = SqlSensor(
-            task_id='wait_for_pass_processing_success',
-            conn_id='mysql_default',
-            sql="""
-                SELECT 1 - LEAST(COUNT(state),1)
-                    FROM dag_run WHERE
-                        (execution_date BETWEEN
-                            '{{execution_date.replace(hour=0,minute=0)}}' AND '{{execution_date.replace(hour=23,minute=59)}}')
-                        AND dag_id='modis_aqua_pass_processing_'"""+region['place_name']+"""
-                        AND state!='success'
-                ;
-                """
-        )
+        wait_for_pass_processing_success = get_wait_for_pass_processing_success(region)
         wait_for_day_end >> wait_for_pass_processing_success >> l3gen
         # =========================================================================
         # =========================================================================

@@ -2,22 +2,21 @@
 airflow processing pipeline definition for MODIS aqua daily processing
 """
 from airflow import DAG
-from airflow.operators.bash_operator import BashOperator
 from airflow.operators.subdag_operator import SubDagOperator
 from airflow.operators.sensors import TimeDeltaSensor
 from airflow.utils.state import State
 from datetime import timedelta, datetime
 
 # === ./imars_dags/modis_aqua_processing.py :
-from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, SLEEP_ARGS
+from imars_dags.util.globals import DEFAULT_ARGS, SLEEP_ARGS
 from imars_dags.util import satfilename
 from imars_dags.settings.regions import REGIONS
-from imars_dags.settings.png_export_transforms import png_export_transforms
 from imars_dags.operators.l3gen import get_l3gen
 from imars_dags.operators.wait_for_all_day_granules_checked \
     import get_wait_for_all_day_granules_checked
 from imars_dags.operators.wait_for_pass_processing_success \
     import get_wait_for_pass_processing_success
+from imars_dags.operators.l3_to_png import get_l3_to_png
 
 def get_modis_aqua_daily_dag(region):
     default_args = DEFAULT_ARGS.copy()
@@ -56,29 +55,7 @@ def get_modis_aqua_daily_dag(region):
         # === export png(s) from l3 netCDF4 file
         # =========================================================================
         for variable_name in region['png_exports']:
-            try:
-                var_transform = png_export_transforms[variable_name]
-            except KeyError as k_err:
-                # no transform found, passing data through w/o scaling
-                # NOTE: not recommended. data is expected to be range [0,255]
-                var_transform = "data"
-            l3_to_png = BashOperator(
-                task_id="l3_to_png_"+variable_name,
-                bash_command="""
-                /opt/sat-scripts/sat-scripts/netcdf4_to_png.py \
-                {{params.satfilename.l3(execution_date, params.roi_place_name)}} \
-                {{params.satfilename.png(execution_date, params.variable_name, params.roi_place_name)}} \
-                {{params.variable_name}}\
-                -t '{{params.transform}}'
-                """,
-                params={
-                    'satfilename': satfilename,
-                    'variable_name': variable_name,
-                    'transform': var_transform,
-                    'roi_place_name': region['place_name']
-                },
-                queue=QUEUE.SAT_SCRIPTS
-            )
+            l3_to_png = get_l3_to_png(variable_name, region)
             l3gen >> l3_to_png
         # =========================================================================
         return dag

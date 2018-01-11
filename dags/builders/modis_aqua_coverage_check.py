@@ -141,7 +141,4 @@ def _coverage_check(context, dag_run_obj):
             cfg.write(meta_file)
 
         # === execute the processing dag for this granule & ROI
-        dag_run_obj.payload = {
-            'region': check_region
-        }
         return dag_run_obj

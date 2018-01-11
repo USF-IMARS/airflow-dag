@@ -21,7 +21,7 @@ def add_tasks(dag, region, gpt_xml):
         # =========================================================================
         wait_for_day_end = TimeDeltaSensor(
             delta=timedelta(hours=18),  # 12 hrs to midnight + 6 hrs just in case
-            task_id='wait_for_data_delay',
+            task_id='wait_for_day_end',
             **SLEEP_ARGS
         )
         # =========================================================================

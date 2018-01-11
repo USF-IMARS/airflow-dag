@@ -10,7 +10,7 @@ from imars_dags.regions import fgbnms
 default_args = DEFAULT_ARGS.copy()
 # NOTE: start_date must be 12:00 (see _wait_for_passes_subdag)
 default_args.update({
-    'start_date': datetime(2018, 1, 3, 12, 0),
+    'start_date': datetime(2018, 1, 8, 0, 0),
     'retries': 1
 })
 

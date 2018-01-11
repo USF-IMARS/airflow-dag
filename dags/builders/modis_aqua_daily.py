@@ -80,7 +80,7 @@ def add_tasks(dag, region, gpt_xml):
                 FROM dag_run WHERE
                     (execution_date BETWEEN
                         '{{execution_date.replace(hour=0,minute=0)}}' AND '{{execution_date.replace(hour=23,minute=59)}}')
-                    AND dag_id='modis_aqua_passes_controller'
+                    AND dag_id='"""+region.place_name+"""_modis_aqua_coverage_check'
                     AND state='success';
             """
         )
@@ -97,7 +97,7 @@ def add_tasks(dag, region, gpt_xml):
                     FROM dag_run WHERE
                         (execution_date BETWEEN
                             '{{execution_date.replace(hour=0,minute=0)}}' AND '{{execution_date.replace(hour=23,minute=59)}}')
-                        AND dag_id='modis_aqua_pass_processing_'"""+region.place_name+"""
+                        AND dag_id='"""+region.place_name+"""_modis_aqua_granule'
                         AND state!='success'
                 ;
                 """

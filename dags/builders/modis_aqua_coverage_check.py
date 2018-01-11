@@ -46,15 +46,30 @@ def add_tasks(dag, region, process_pass_dag_name):
         # === Trigger pass-level proc dag for the RoI if covered by the granule.
         # === Checks if this granule covers our RoI using metadata from CMR.
         # =========================================================================
+        trigger_granule_dag_id = 'trigger_' + process_pass_dag_name
+        coverage_check = BranchPythonOperator(
+            task_id='coverage_check',
+            python_callable=_coverage_check,
+            provide_context=True,
+            retries=10,
+            retry_delay=timedelta(hours=3),
+            queue=QUEUE.PYCMR,
+            op_kwargs={
+                'roi':region,
+                'success_branch_id': trigger_granule_dag_id
+            }
+        )
+        wait_for_data_delay >> coverage_check
+
         # we must trigger these manually because pass-level processing is not run
         # on a consistent schedule; it is only triggered when we have a granule
         # that covers one of our RoIs.
 
         trigger_pass_processing_REGION = MMTTriggerDagRunOperator(
             trigger_dag_id=process_pass_dag_name,
-            python_callable=_coverage_check,
+            python_callable=lambda context, dag_run_obj: dag_run_obj,
             execution_date="{{execution_date}}",
-            task_id='trigger_' + process_pass_dag_name,
+            task_id=trigger_granule_dag_id,
             params={
                 'roi':region
             },
@@ -62,8 +77,14 @@ def add_tasks(dag, region, process_pass_dag_name):
             retry_delay=timedelta(hours=3),
             queue=QUEUE.PYCMR
         )
-        wait_for_data_delay >> trigger_pass_processing_REGION
+        coverage_check >> trigger_pass_processing_REGION
         # =========================================================================
+
+        skip_granule = DummyOperator(
+            task_id='skip_granule',
+            trigger_rule='one_success'
+        )
+        coverage_check >> skip_granule
 
 def get_downloadable_granule_in_roi(exec_datetime, roi):
     """
@@ -116,19 +137,31 @@ def get_downloadable_granule_in_roi(exec_datetime, roi):
     else:
         raise ValueError("unexpected # of results from ROI CMR search:"+str(len(bounded_results)))
 
-def _coverage_check(context, dag_run_obj):
+def _coverage_check(ds, **kwargs):
     """
     Performs metadata check using pyCMR to decide which path the DAG should
     take. If the metadata shows the granule is in our ROI then the download
     url is written to a metadata ini file and the processing branch is followed,
     else the skip branch is followed.
 
+    Parameters
+    -----------
+    ds : datetime?
+        *I think* this is the execution_date for the operator instance
+    kwargs['execution_date'] : datetime.datetime
+        the execution_date for the operator instance (same as `ds`?)
+
+    Returns
+    -----------
+    str
+        name of the next operator that should trigger (ie the first in the
+        branch that we want to follow)
     """
-    check_region = context['params']['roi']
-    exec_date = context['execution_date']
+    check_region = kwargs['roi']
+    exec_date = kwargs['execution_date']
     granule_result = get_downloadable_granule_in_roi(exec_date, check_region)
     if granule_result is None:
-        return None  # skip granule
+        return 'skip_granule'  # skip granule
     else:
         # === update (or create) the metadata ini file
         cfg_path = satfilename.metadata(exec_date, check_region.place_name)
@@ -141,4 +174,4 @@ def _coverage_check(context, dag_run_obj):
             cfg.write(meta_file)
 
         # === execute the processing dag for this granule & ROI
-        return dag_run_obj
+        return kwargs['success_branch_id']

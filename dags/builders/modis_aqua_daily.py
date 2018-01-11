@@ -84,7 +84,7 @@ def add_tasks(dag, region, gpt_xml):
                     AND state='success';
             """
         )
-        wait_for_day_end >> wait_for_all_day_granules_checked >> l3gen
+        wait_for_day_end >> wait_for_all_day_granules_checked
 
         # === wait for granules that were covered to finish processing.
         # Here we use an SqlSensor to check the metadata db instead of trying
@@ -102,7 +102,7 @@ def add_tasks(dag, region, gpt_xml):
                 ;
                 """
         )
-        wait_for_day_end >> wait_for_pass_processing_success >> l3gen
+        wait_for_all_day_granules_checked >> wait_for_pass_processing_success >> l3gen
         # =========================================================================
 
 def add_png_exports(dag, region, variable_names):

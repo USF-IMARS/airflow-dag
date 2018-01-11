@@ -16,6 +16,6 @@ modis_aqua_granule.add_tasks(
     region=fgbnms,
     parfile=os.path.join(
         os.path.dirname(os.path.realpath(__file__)),  # imars_dags/dags/fgbnms/
-        "moda_l3g.par"
+        "moda_l2gen.par"
     )
 )

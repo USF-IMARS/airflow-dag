@@ -36,7 +36,7 @@ def add_tasks(dag, region, parfile):
                 METADATA_FILE={{ params.filepather.metadata(execution_date, params.roi) }} &&
                 OUT_PATH={{ params.filepather.myd01(execution_date, params.roi) }}         &&
                 FILE_URL=$(grep "^upstream_download_link" $METADATA_FILE | cut -d'=' -f2-) &&
-                ! test -e OUT_PATH &&
+                [[-f OUT_PATH ]] &&
                 wget --user={{params.username}} --password={{params.password}} --tries=1 --no-verbose --output-document=$OUT_PATH $FILE_URL
             """,
             params={

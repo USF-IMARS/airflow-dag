@@ -76,7 +76,7 @@ class BaseSatFilepath():
         exec_time : datetime.datetime
             execution_date for the product (eg the start_time of the granule)
         region_id : str
-            region['place_name'] from settings.regions used to create path
+            region.place_name from regions.<region_name> used to create path
             within imars-objects.
         """
         return self.basepath(region_id) + exec_time.strftime(self.filename_fmt)
@@ -97,6 +97,8 @@ qkm = BaseSatFilepath("qkm", "A%Y%j%H%M00.L1B_QKM")
 l2 = BaseSatFilepath("l2", "A%Y%j%H%M00.L2")
 
 l3 = BaseSatFilepath("l3", ISO_8601_FMT+"_l3.nc")
+
+l3_pass = BaseSatFilepath("l3_pass", ISO_8601_FMT+"_l3.nc")
 
 def png(product_datetime, variable_name, region_id):
     """

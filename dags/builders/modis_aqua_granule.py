@@ -7,7 +7,6 @@ import subprocess
 import configparser
 
 # deps
-from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 
 # this package
@@ -15,19 +14,16 @@ from imars_dags.util.globals import QUEUE, DEFAULT_ARGS
 from imars_dags.util import satfilename
 from imars_dags.settings import secrets  # NOTE: this file not in public repo!
 
+default_args = DEFAULT_ARGS.copy()
+default_args.update({
+    'start_date': datetime.utcnow(),
+    'retries': 1
+})
 
-def get_modis_aqua_process_pass_dag(region):
-    default_args = DEFAULT_ARGS.copy()
-    default_args.update({
-        'start_date': datetime.utcnow(),
-        'retries': 1
-    })
-    with DAG(
-        'modis_aqua_pass_processing_'+region['place_name'],
-        default_args=default_args,
-        schedule_interval=None  # manually triggered only
-    ) as dag:
+schedule_interval=None
 
+def add_tasks(dag, region, parfile):
+    with dag as dag:
         # =========================================================================
         # === download the granule
         # =========================================================================
@@ -37,8 +33,8 @@ def get_modis_aqua_process_pass_dag(region):
             task_id='download_granule',
             # trigger_rule='one_success',
             bash_command="""
-                METADATA_FILE={{ params.filepather.metadata(execution_date, params.roi['place_name']) }} &&
-                OUT_PATH={{ params.filepather.myd01(execution_date, params.roi['place_name']) }}         &&
+                METADATA_FILE={{ params.filepather.metadata(execution_date, params.roi) }} &&
+                OUT_PATH={{ params.filepather.myd01(execution_date, params.roi) }}         &&
                 FILE_URL=$(grep "^upstream_download_link" $METADATA_FILE | cut -d'=' -f2-) &&
                 ! test -e OUT_PATH &&
                 wget --user={{params.username}} --password={{params.password}} --tries=1 --no-verbose --output-document=$OUT_PATH $FILE_URL
@@ -47,7 +43,7 @@ def get_modis_aqua_process_pass_dag(region):
                 "filepather": satfilename,
                 "username": secrets.ESDIS_USER,
                 "password": secrets.ESDIS_PASS,
-                "roi": region
+                "roi": region.place_name
             }
         )
         # =========================================================================
@@ -59,13 +55,13 @@ def get_modis_aqua_process_pass_dag(region):
             bash_command="""
                 export OCSSWROOT=/opt/ocssw && source /opt/ocssw/OCSSW_bash.env && \
                 /opt/ocssw/run/scripts/modis_GEO.py \
-                --output={{params.geo_pather(execution_date, params.roi['place_name'])}} \
-                {{params.l1a_pather(execution_date, params.roi['place_name'])}}
+                --output={{params.geo_pather(execution_date, params.roi)}} \
+                {{params.l1a_pather(execution_date, params.roi)}}
             """,
             params={
                 'l1a_pather': satfilename.myd01,
                 'geo_pather': satfilename.l1a_geo,
-                'roi': region
+                'roi': region.place_name
             },
             queue=QUEUE.SAT_SCRIPTS
         )
@@ -82,11 +78,11 @@ def get_modis_aqua_process_pass_dag(region):
             bash_command="""
                 export OCSSWROOT=/opt/ocssw && source /opt/ocssw/OCSSW_bash.env && \
                 $OCSSWROOT/run/scripts/modis_L1B.py \
-                --okm={{params.okm_pather(execution_date, params.roi['place_name'])}} \
-                --hkm={{params.hkm_pather(execution_date, params.roi['place_name'])}} \
-                --qkm={{params.qkm_pather(execution_date, params.roi['place_name'])}} \
-                {{params.l1a_pather(execution_date, params.roi['place_name'])}} \
-                {{params.geo_pather(execution_date, params.roi['place_name'])}}
+                --okm={{params.okm_pather(execution_date, params.roi)}} \
+                --hkm={{params.hkm_pather(execution_date, params.roi)}} \
+                --qkm={{params.qkm_pather(execution_date, params.roi)}} \
+                {{params.l1a_pather(execution_date, params.roi)}} \
+                {{params.geo_pather(execution_date, params.roi)}}
             """,
             params={
                 'l1a_pather': satfilename.myd01,
@@ -94,7 +90,7 @@ def get_modis_aqua_process_pass_dag(region):
                 'okm_pather': satfilename.okm,
                 'hkm_pather': satfilename.hkm,
                 'qkm_pather': satfilename.qkm,
-                'roi': region
+                'roi': region.place_name
             },
             queue=QUEUE.SAT_SCRIPTS
         )
@@ -109,21 +105,20 @@ def get_modis_aqua_process_pass_dag(region):
             bash_command="""
                 export OCSSWROOT=/opt/ocssw && source /opt/ocssw/OCSSW_bash.env && \
                 $OCSSWROOT/run/bin/linux_64/l2gen \
-                ifile={{params.l1b_pather(execution_date, params.roi['place_name'])}} \
-                ofile={{params.l2_pather(execution_date, params.roi['place_name'])}} \
-                geofile={{params.geo_pather(execution_date, params.roi['place_name'])}} \
+                ifile={{params.l1b_pather(execution_date, params.roi)}} \
+                ofile={{params.l2_pather(execution_date, params.roi)}} \
+                geofile={{params.geo_pather(execution_date, params.roi)}} \
                 par={{params.parfile}}
             """,
             params={
                 'l1b_pather': satfilename.okm,
                 'geo_pather': satfilename.l1a_geo,
                 'l2_pather':  satfilename.l2,
-                'parfile': "/root/airflow/dags/imars_dags/settings/regions/"+region['place_name']+"/moda_l2gen.par",
-                'roi': region
+                'parfile': parfile,
+                'roi': region.place_name
             },
             queue=QUEUE.SAT_SCRIPTS
         )
         make_l1b >> l2gen
         l1a_2_geo >> l2gen
         # =========================================================================
-        return dag

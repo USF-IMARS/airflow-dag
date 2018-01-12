@@ -37,7 +37,7 @@ class POOL:
         https://issues.apache.org/jira/browse/AIRFLOW-584
     """
     DEFAULT = None    # default pool selected by not providing a value
-    SLEEP   = "sleep" # pool for tasks that are just waiting / sleeping / delay
+    # SLEEP   = "sleep" # pool for tasks that are just waiting / sleeping / delay
     # ^ this is used to reduce # of concurrency slots wasted just waiting.
 
 class PRIORITY:
@@ -99,8 +99,8 @@ SLEEP_ARGS = {
     'retry_delay': timedelta(hours=1),
     'retry_exponential_backoff': False,
     'execution_timeout': timedelta(seconds=2),
-    'priority_weight': PRIORITY.SLEEP,
-    'pool': POOL.SLEEP
+    'priority_weight': PRIORITY.SLEEP
+    # 'pool': POOL.SLEEP
 }
 
 """ path to cmr.cfg file for accessing common metadata repository """

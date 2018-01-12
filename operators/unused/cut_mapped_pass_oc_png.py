@@ -1,7 +1,7 @@
 from airflow.operators.bash_operator import BashOperator
 
 # === ./imars_dags/modis_aqua_processing.py :
-from imars_dags.util.globals import QUEUE, POOL
+from imars_dags.util.globals import QUEUE
 from imars_dags.util import satfilename
 from imars_dags.settings.regions import REGIONS
 

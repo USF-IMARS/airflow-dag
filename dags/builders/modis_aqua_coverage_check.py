@@ -127,7 +127,6 @@ def get_downloadable_granule_in_roi(exec_datetime, roi):
         roi.lonmax,  # up r long
         roi.latmax   # up r lat
     )
-    search_kwargs['downloadable']='true'  # also add the downloadable=true criteria
     search_kwargs['day_night_flag']='day',  # also day only for ocean color
     bounded_results = cmr.searchGranule(**search_kwargs)
     if (len(bounded_results) > 0):  # granule intersects our ROI

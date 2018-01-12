@@ -81,6 +81,9 @@ class BaseSatFilepath():
         """
         return self.basepath(region_id) + exec_time.strftime(self.filename_fmt)
 
+""" zipped l1a (myd01) files from OB.DAAC """
+l1a_lac_hdf_bz2 = BaseSatFilepath("l1a_lac_hdf_bz2", "A%Y%j.%H%M.L1A_LAC.x.hdf.bz2")
+
 """ modis aqua l1.
     I *think* these files are the same as l1a_LAC, but from LANCE.
 """

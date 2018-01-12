@@ -109,7 +109,6 @@ def get_downloadable_granule_in_roi(exec_datetime, roi):
         'limit':10,
         'short_name':"MYD01",  # [M]odis (Y)aqua (D) (0) level [1]
         'temporal':time_range,
-        'day_night_flag': 'day',  # day only for ocean color
         'sort_key': "-revision_date"  # this puts most recently updated first
     }
     print(search_kwargs)
@@ -128,8 +127,8 @@ def get_downloadable_granule_in_roi(exec_datetime, roi):
         roi.lonmax,  # up r long
         roi.latmax   # up r lat
     )
-    # also add the downloadable=true criteria
-    search_kwargs['downloadable']='true'
+    search_kwargs['downloadable']='true'  # also add the downloadable=true criteria
+    search_kwargs['day_night_flag']='day',  # also day only for ocean color
     bounded_results = cmr.searchGranule(**search_kwargs)
     if (len(bounded_results) > 0):  # granule intersects our ROI
         return bounded_results[0]  # use first granule (should be most recently updated)

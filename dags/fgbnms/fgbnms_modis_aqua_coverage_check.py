@@ -8,7 +8,7 @@ from imars_dags.util.globals import DEFAULT_ARGS
 
 default_args = DEFAULT_ARGS.copy()
 default_args.update({
-    'start_date': datetime(2018, 1, 8, 0, 0),
+    'start_date': datetime(2002, 7, 4, 0, 0),
     'retries': 1
 })
 

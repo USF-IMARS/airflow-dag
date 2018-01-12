@@ -8,6 +8,7 @@ import configparser
 
 # deps
 from airflow.operators.bash_operator import BashOperator
+from airflow.utils.trigger_rule import TriggerRule
 
 # this package
 from imars_dags.util.globals import QUEUE, DEFAULT_ARGS
@@ -25,13 +26,35 @@ schedule_interval=None
 def add_tasks(dag, region, parfile):
     with dag as dag:
         # =========================================================================
-        # === download the granule
+        # === extract granule l1a data
         # =========================================================================
+        # === option 1: l1a file already exists so we have nothing to do
+        check_for_extant_l1a_file = BashOperator(
+            task_id='check_for_extant_l1a_file',
+            bash_command='[[ -f params.filepather.myd01(execution_date, params.roi) ]]',
+            params={
+                'filepather': satfilename,
+                'roi': region.place_name
+            }
+        )
+        # === option 2: extract bz2 file from our local archive
+        extract_l1a_bz2 = BashOperator(
+            task_id='extract_l1a_bz2',
+            bash_command="""
+                bzip2 -d params.filepather.l1a_lac_hdf_bz2(execution_date, params.roi)
+            """,
+            params={
+                'filepather': satfilename,
+                'roi': region.place_name
+            },
+            trigger_rule=TriggerRule.ALL_FAILED  # only run if upstream fails
+        )
+        check_for_extant_l1a_file >> extract_l1a_bz2
+        # === option 3: download the granule
         # reads the download url from a metadata file created in the last step and
         # downloads the file iff the file does not already exist.
         download_granule = BashOperator(
             task_id='download_granule',
-            # trigger_rule='one_success',
             bash_command="""
                 METADATA_FILE={{ params.filepather.metadata(execution_date, params.roi) }} &&
                 OUT_PATH={{ params.filepather.myd01(execution_date, params.roi) }}         &&
@@ -45,8 +68,10 @@ def add_tasks(dag, region, parfile):
                 "username": secrets.ESDIS_USER,
                 "password": secrets.ESDIS_PASS,
                 "roi": region.place_name
-            }
+            },
+            trigger_rule=TriggerRule.ALL_FAILED  # only run if upstream fails
         )
+        extract_l1a_bz2 >> download_granule
         # =========================================================================
         # =========================================================================
         # === modis GEO
@@ -64,9 +89,12 @@ def add_tasks(dag, region, parfile):
                 'geo_pather': satfilename.l1a_geo,
                 'roi': region.place_name
             },
-            queue=QUEUE.SAT_SCRIPTS
+            queue=QUEUE.SAT_SCRIPTS,
+            trigger_rule=TriggerRule.ONE_SUCCESS  # run if any upstream passes
         )
-        download_granule >> l1a_2_geo
+        check_for_extant_l1a_file >> l1a_2_geo
+        extract_l1a_bz2           >> l1a_2_geo
+        download_granule          >> l1a_2_geo
         # =========================================================================
 
         # TODO: insert day/night check branch operator here? else ocssw will run on night granules too
@@ -96,7 +124,10 @@ def add_tasks(dag, region, parfile):
             queue=QUEUE.SAT_SCRIPTS
         )
         l1a_2_geo >> make_l1b
-        download_granule >> make_l1b
+        ## these are true, but kind of superfluous
+        # check_for_extant_l1a_file >> make_l1b
+        # extract_l1a_bz2           >> make_l1b
+        # download_granule          >> make_l1b
         # =========================================================================
         # =========================================================================
         # === l2gen l1b -> l2

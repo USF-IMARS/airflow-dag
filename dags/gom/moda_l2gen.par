@@ -10,6 +10,10 @@ l2prod=Rrs_412 Rrs_443 Rrs_488 Rrs_531 Rrs_547 Rrs_667 Rrs_678 adg_443_giop aph_
 
 # PROCESSING OPTIONS
 cirrus_opt=false
+maskland=0
+maskcloud=0
+maskhilt=0
+
 
 # ANCILLARY INPUTS  Default = climatology (select 'Get Ancillary' to download ancillary files)
 

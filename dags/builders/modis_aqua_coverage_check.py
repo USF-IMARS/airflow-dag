@@ -168,7 +168,7 @@ def _coverage_check(ds, **kwargs):
         cfg.read(cfg_path)  # returns empty config if no file
         if 'myd01' not in cfg.sections():  # + section if not exists
             cfg['myd01'] = {}
-        cfg['myd01']['upstream_download_link'] = granule_result.getDownloadUrl()
+        cfg['myd01']['upstream_download_link'] = str(granule_result.getDownloadUrl())
         with open(cfg_path, 'w') as meta_file:
             cfg.write(meta_file)
 

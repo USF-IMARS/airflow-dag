@@ -25,7 +25,7 @@ modis_aqua_daily.add_tasks(
     region=gom,
     gpt_xml=os.path.join(
         os.path.dirname(os.path.realpath(__file__)),  # imars_dags/dags/gom/
-        "moda_l3g.xml"
+        "L3G_MODA_GOM_v2.xml"
     )
 )
 modis_aqua_daily.add_png_exports(

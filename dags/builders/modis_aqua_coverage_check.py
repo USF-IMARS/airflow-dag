@@ -89,7 +89,7 @@ def add_tasks(dag, region, process_pass_dag_name):
 def get_downloadable_granule_in_roi(exec_datetime, roi):
     """
     returns pyCMR.Result if granule for given datetime is in one of our ROIs
-    and is downloadable, else returns None
+    and is downloadable and is during the day, else returns None
 
     NOTE: we get the granule metadata *without* server-side ROI check first
     & then do ROI check so we can be sure that the data
@@ -109,6 +109,7 @@ def get_downloadable_granule_in_roi(exec_datetime, roi):
         'limit':10,
         'short_name':"MYD01",  # [M]odis (Y)aqua (D) (0) level [1]
         'temporal':time_range,
+        'day_night_flag': 'day',  # day only for ocean color
         'sort_key': "-revision_date"  # this puts most recently updated first
     }
     print(search_kwargs)

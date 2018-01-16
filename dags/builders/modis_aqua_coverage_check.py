@@ -51,8 +51,8 @@ def add_tasks(dag, region, process_pass_dag_name):
             task_id='coverage_check',
             python_callable=_coverage_check,
             provide_context=True,
-            retries=10,
-            retry_delay=timedelta(hours=3),
+            retries=1,
+            retry_delay=timedelta(minutes=1),
             queue=QUEUE.PYCMR,
             op_kwargs={
                 'roi':region,

@@ -2,7 +2,7 @@
 manually triggered dag that runs processing for one modis pass
 """
 # std libs
-from datetime import datetime
+from datetime import datetime, timedelta
 import subprocess
 import configparser
 
@@ -35,7 +35,9 @@ def add_tasks(dag, region, parfile):
             params={
                 'filepather': satfilename,
                 'roi': region.place_name
-            }
+            },
+            retries=1,
+            retry_delay=timedelta(seconds=3)
         )
         # === option 2: extract bz2 file from our local archive
         extract_l1a_bz2 = BashOperator(
@@ -47,7 +49,9 @@ def add_tasks(dag, region, parfile):
                 'filepather': satfilename,
                 'roi': region.place_name
             },
-            trigger_rule=TriggerRule.ALL_FAILED  # only run if upstream fails
+            trigger_rule=TriggerRule.ALL_FAILED,  # only run if upstream fails
+            retries=1,
+            retry_delay=timedelta(seconds=5)
         )
         check_for_extant_l1a_file >> extract_l1a_bz2
         # === option 3: download the granule

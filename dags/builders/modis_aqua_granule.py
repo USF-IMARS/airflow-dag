@@ -65,7 +65,7 @@ def add_tasks(dag, region, parfile):
                 FILE_URL=$(grep "^upstream_download_link" $METADATA_FILE | cut -d'=' -f2-) &&
                 [[ -f $OUT_PATH ]] &&
                 echo "file already exists; skipping download." ||
-                wget --user={{params.username}} --password={{params.password}} --tries=1 --no-verbose --output-document=$OUT_PATH $FILE_URL
+                curl --user {{params.username}}:{{params.password}} -f $FILE_URL -o $OUT_PATH
             """,
             params={
                 "filepather": satfilename,

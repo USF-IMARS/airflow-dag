@@ -43,7 +43,7 @@ def add_tasks(dag, region, parfile):
         extract_l1a_bz2 = BashOperator(
             task_id='extract_l1a_bz2',
             bash_command="""
-                bzip2 -k -d {{ params.filepather.l1a_lac_hdf_bz2(execution_date, params.roi) }} > {{ params.filepather.myd01(execution_date, params.roi) }}
+                bzip2 -k -c -d {{ params.filepather.l1a_lac_hdf_bz2(execution_date, params.roi) }} > {{ params.filepather.myd01(execution_date, params.roi) }}
             """,
             params={
                 'filepather': satfilename,

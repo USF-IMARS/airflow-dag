@@ -26,7 +26,7 @@ modis_aqua_granule.add_tasks(
 create_granule_l3 = BashOperator(
     task_id="l3gen_granule",
     bash_command="""
-        /opt/snap/5.0.0/bin/gpt {{params.gpt_xml_file}} \
+        /opt/snap/bin/gpt {{params.gpt_xml_file}} \
         -t {{ params.satfilename.l3_pass(execution_date, params.roi_place_name) }} \
         -f NetCDF-BEAM \
         `{{ params.satfilename.l2(execution_date, params.roi_place_name) }}`

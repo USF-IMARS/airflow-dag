@@ -31,7 +31,7 @@ def add_tasks(dag, region, gpt_xml):
         # this assumes the l2 files for the whole day have already been generated
         #
         # example cmd:
-        #     /opt/snap/5.0.0/bin/gpt L3G_MODA_GOM_vIMARS.xml
+        #     /opt/snap/bin/gpt L3G_MODA_GOM_vIMARS.xml
         #     -t /home1/scratch/epa/satellite/modis/GOM/L3G_OC/A2017313_map.nc
         #     -f NetCDF-BEAM
         #     /srv/imars-objects/modis_aqua_gom/l2/A2017313174500.L2
@@ -52,7 +52,7 @@ def add_tasks(dag, region, gpt_xml):
         l3gen = BashOperator(
             task_id="l3gen",
             bash_command="""
-                /opt/snap/5.0.0/bin/gpt {{params.gpt_xml_file}} \
+                /opt/snap/bin/gpt {{params.gpt_xml_file}} \
                 -t {{ params.satfilename.l3(execution_date, params.roi_place_name) }} \
                 -f NetCDF-BEAM \
                 `{{ params.get_list_todays_l2s_cmd(execution_date, params.roi_place_name) }}`

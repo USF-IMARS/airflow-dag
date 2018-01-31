@@ -31,7 +31,7 @@ def add_tasks(dag, region, parfile):
         # === option 1: l1a file already exists so we have nothing to do
         check_for_extant_l1a_file = BashOperator(
             task_id='check_for_extant_l1a_file',
-            bash_command='[[ -f {{ params.filepather.myd01(execution_date, params.roi) }} ]]',
+            bash_command='[[ -s {{ params.filepather.myd01(execution_date, params.roi) }} ]]',
             params={
                 'filepather': satfilename,
                 'roi': region.place_name
@@ -63,7 +63,7 @@ def add_tasks(dag, region, parfile):
                 METADATA_FILE={{ params.filepather.metadata(execution_date, params.roi) }} &&
                 OUT_PATH={{ params.filepather.myd01(execution_date, params.roi) }}         &&
                 FILE_URL=$(grep "^upstream_download_link" $METADATA_FILE | cut -d'=' -f2-) &&
-                [[ -f $OUT_PATH ]] &&
+                [[ -s $OUT_PATH ]] &&
                 echo "file already exists; skipping download." ||
                 curl --user {{params.username}}:{{params.password}} -f $FILE_URL -o $OUT_PATH
             """,

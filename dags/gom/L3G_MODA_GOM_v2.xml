@@ -236,7 +236,7 @@ AXIS["Northing", NORTH]]
                    <expression>Rrs_531</expression>
                    <description>Remote sensing reflectance at 531 nm</description>
                    <type>float32</type>
-                   <validExpression>(Rrs_531 > -0.01 and Rrs_531 &lt; 0.01 and Rrs_531 !=0)</validExpression>
+                   <validExpression>(Rrs_531 > -0.01 and Rrs_531 &lt; 0.1 and Rrs_531 !=0)</validExpression>
                    <noDataValue>NaN</noDataValue>
                    <spectralWavelength>531.0</spectralWavelength>
                    <unit>sr^-1</unit> 
@@ -246,7 +246,7 @@ AXIS["Northing", NORTH]]
                    <expression>Rrs_547</expression>
                    <description>Remote sensing reflectance at 547 nm</description>
                    <type>float32</type>
-                   <validExpression>(Rrs_547 > -0.01 and Rrs_547 &lt; 0.01 and Rrs_547 !=0)</validExpression>
+                   <validExpression>(Rrs_547 > -0.01 and Rrs_547 &lt; 0.1 and Rrs_547 !=0)</validExpression>
                    <noDataValue>NaN</noDataValue>
                    <spectralWavelength>547.0</spectralWavelength>
                    <unit>sr^-1</unit> 
@@ -256,7 +256,7 @@ AXIS["Northing", NORTH]]
                    <expression>Rrs_667</expression>
                    <description>Remote sensing reflectance at 667 nm</description>
                    <type>float32</type>
-                   <validExpression>(Rrs_667 > -0.01 and Rrs_667 &lt; 0.01 and Rrs_667 !=0)</validExpression>
+                   <validExpression>(Rrs_667 > -0.01 and Rrs_667 &lt; 0.1 and Rrs_667 !=0)</validExpression>
                    <noDataValue>NaN</noDataValue>
                    <spectralWavelength>667.0</spectralWavelength>
                    <unit>sr^-1</unit> 
@@ -266,7 +266,7 @@ AXIS["Northing", NORTH]]
                    <expression>Rrs_678</expression>
                    <description>Remote sensing reflectance at 678 nm</description>
                    <type>float32</type>
-                   <validExpression>(Rrs_678 > -0.01 and Rrs_678 &lt; 0.01 and Rrs_678 !=0)</validExpression>
+                   <validExpression>(Rrs_678 > -0.01 and Rrs_678 &lt; 0.1 and Rrs_678 !=0)</validExpression>
                    <noDataValue>NaN</noDataValue>
                    <spectralWavelength>678.0</spectralWavelength>
                    <unit>sr^-1</unit> 

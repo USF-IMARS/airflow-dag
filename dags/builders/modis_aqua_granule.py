@@ -66,6 +66,7 @@ def add_tasks(dag, region, parfile):
                 [[ -s $OUT_PATH ]] &&
                 echo "file already exists; skipping download." ||
                 curl --user {{params.username}}:{{params.password}} -f $FILE_URL -o $OUT_PATH
+                && [[ -s $OUT_PATH ]]
             """,
             params={
                 "filepather": satfilename,

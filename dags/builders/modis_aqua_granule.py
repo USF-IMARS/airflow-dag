@@ -85,9 +85,11 @@ def add_tasks(dag, region, parfile):
             task_id='l1a_2_geo',
             bash_command="""
                 export OCSSWROOT=/opt/ocssw && source /opt/ocssw/OCSSW_bash.env && \
+                OUT_PATH={{ params.geo_pather(execution_date, params.roi) }} && \
                 /opt/ocssw/run/scripts/modis_GEO.py \
-                --output={{params.geo_pather(execution_date, params.roi)}} \
-                {{params.l1a_pather(execution_date, params.roi)}}
+                --output=$OUT_PATH \
+                {{params.l1a_pather(execution_date, params.roi)}} \
+                && [[ -s $OUT_PATH ]]
             """,
             params={
                 'l1a_pather': satfilename.myd01,
@@ -111,12 +113,16 @@ def add_tasks(dag, region, parfile):
             task_id='make_l1b',
             bash_command="""
                 export OCSSWROOT=/opt/ocssw && source /opt/ocssw/OCSSW_bash.env && \
+                OKM_PATH={{params.okm_pather(execution_date, params.roi)}} && \
+                HKM_PATH={{params.hkm_pather(execution_date, params.roi)}} && \
+                QKM_PATH={{params.qkm_pather(execution_date, params.roi)}} && \
                 $OCSSWROOT/run/scripts/modis_L1B.py \
-                --okm={{params.okm_pather(execution_date, params.roi)}} \
-                --hkm={{params.hkm_pather(execution_date, params.roi)}} \
-                --qkm={{params.qkm_pather(execution_date, params.roi)}} \
+                --okm=$OKM_PATH \
+                --hkm=$HKM_PATH \
+                --qkm=$QKM_PATH \
                 {{params.l1a_pather(execution_date, params.roi)}} \
-                {{params.geo_pather(execution_date, params.roi)}}
+                {{params.geo_pather(execution_date, params.roi)}} \
+                && [[ -s $OKM_PATH && -s $HKM_PATH && -s $QKM_PATH ]]
             """,
             params={
                 'l1a_pather': satfilename.myd01,

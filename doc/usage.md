@@ -2,6 +2,27 @@
 This document gives a broad overview of how to accomplish some basic research
 tasks.
 
+## Triggering a DAG
+Many DAGs are triggered automatically on scheduled interval.
+Other DAGs may need to be triggered manually or by another DAG with [TriggerDagRunOperator](https://airflow.apache.org/_modules/dagrun_operator.html).
+
+### Manually Trigger DAG from web UI
+To create a DAG with `execution_date` of right now, just click the "play" button next to the DAG.
+For creating a DAG with specific parameters go to `Browse -> Dag Runs -> Create`.
+[ref](https://stackoverflow.com/a/43375518/1483986)
+
+### Manually Trigger DAG from CLI
+
+`airflow run my_dag_name 2017-1-23T12:13`
+
+This will not re-run a DAG that has already run.
+To re-run an existing DAG add `--force=true` to the command above.
+You could also `clear` the DAG run first.
+To re-run a set of scheduled DAG runs use `backfill`.
+
+* Good summary at [this S.O. answer](https://stackoverflow.com/a/41817854/1483986)
+* [official CLI docs](https://airflow.incubator.apache.org/cli.html).
+
 ## Adding a new Region of Interest (RoI)
 
 ### code

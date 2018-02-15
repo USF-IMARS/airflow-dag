@@ -14,22 +14,8 @@ tasks.
 
 ### backend
 A new endpoint for the region must be set up on the backend that conforms with
-the [imars-objects atomic product hierarchy](https://github.com/USF-IMARS/IMaRS-docs/blob/master/docs/management_data/imars-objects.md) and `./util/satfilename.py`.
-Here are the basic steps to set up a new NFS endpoint at `/srv/imars-objects/my_region`
-1. choose a server to host the data & ssh there
-2. create the new `imars-object` dir
-    - `[root@thing2 ~]# mkdir /thing2/sat-products/my_region && cd /thing2/sat-products/my_region`
-3. create any product subdirectories needed (or copy them from another region)
-    - `[root@thing2 my_region]# mkdir metadata-ini myd01 l1b l2 l3 hkm geo qkm png_chlor_a`
-4. configure permissions
-    - `[root@thing2 my_region]# chown -R nfsnobody:nfsnobody .`
-5. Next, in the puppet configuration for the data server:
-    1. add a `profile::nfs_server::exports` to the `/data/node/my_server.yaml`
-        - `/thing2/sat-products/my_region: { }`
-    2. (optional) add backup using `backdat::fileset:`
-    3. add the new nfs share to `profile::imars_datashare_client_autofs` in `mounts` `imars-objects` `mapcontents`
-        - `ao1 $default_options thing2${host_suffix}:/ao1`,
-6. The endpoint is now ready (after puppet runs on each of your nodes)
+the [imars-objects atomic product hierarchy](https://github.com/USF-IMARS/IMaRS-docs/blob/master/docs/management_data/imars-objects.md) and `./util/satfilename.py`. 
+Checklist for creating an imars-objects chunk [here](https://github.com/USF-IMARS/IMaRS-docs/tree/master/docs/management_data/imars-objects).
 
 ## Creating Operators
 1. Define the operator within your DAG.

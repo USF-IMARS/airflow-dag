@@ -40,3 +40,25 @@ wv2_ingest = BashOperator(
         --filepath {} \;
     """
 )
+
+# wv2 unzip to final destination
+check_for_to_loads = SqlSensor(
+    conn_id="conn_id",
+    sql="SELECT id FROM file WHERE status=3 AND type=6",
+    soft_fail=True
+)
+wv2_ingest >> check_for_to_loads
+
+# TODO: make this crap work, dangit!
+unzip_wv2_ingest = BashOperator(
+    task_id="unzip_wv2_ingest",
+    dag = this_dag,
+    bash_command="""
+        filepath=${/opt/imars-etl/imars-etl.py extract --sql='product_type_id=6 AND status=3'} && \
+        unzip -i $filepath -o {{output_dir}}
+    """,
+    params={
+        "input_dir" : imars_etl.extract(type=6,status=3)
+        "output_dir": imars_etl.get_output(type=6,status=3,date_time=inp.date_time)
+    }
+# wv2 schedule zip file for deletion

@@ -8,8 +8,8 @@ from datetime import datetime,timedelta
 
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
-from airflow.operators.python_operator import BranchPythonOperator
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.python_operator import PythonOperator
+from airflow.operators.mysql_operator import MySqlOperator
 
 from imars_dags.util.globals import DEFAULT_ARGS
 
@@ -25,6 +25,8 @@ this_dag = DAG(
     schedule_interval=timedelta(days=1)
 )
 
+# TODO: better to do this with a FileSensor
+#   [ref] : https://stackoverflow.com/questions/44325938/airflow-file-sensor-for-sensing-files-on-my-local-drive
 wv2_ingest = BashOperator(
     task_id="wv2_ingest",
     dag = this_dag,
@@ -32,6 +34,8 @@ wv2_ingest = BashOperator(
     # `--type` is limited to `zip_wv2_ftp_ingest` b/c of `find` limitations
     #       product_type_id of `zip_wv2_ftp_ingest` is `6`
     # `--status` is `to_load` == 3
+
+    # TODO: need to use xargs here?
     bash_command="""
     find /srv/imars-objects/ftp-ingest/wv2_*zip -type f -exec \
     /opt/imars-etl/imars-etl.py load \
@@ -44,16 +48,20 @@ wv2_ingest = BashOperator(
 # wv2 unzip to final destination
 # =========================================================================
 # === wait for a valid target to process
+SQL_STR="SELECT id FROM file WHERE status=3 AND type=6"
 check_for_to_loads = SqlSensor(
     conn_id="conn_id",
-    sql="SELECT id FROM file WHERE status=3 AND type=6",
+    sql=SQL_STR,
     soft_fail=True
 )
 wv2_ingest >> check_for_to_loads
 
+# TODO: should set imars_product_metadata.status to "processing" to prevent
+#    duplicates?
+
 # === Extract
 def extract_file(**kwargs):
-    fname = imars_etl.extract(sql=sql_str)
+    fname = imars_etl.extract(sql=SQL_STR)
     return fname
 
 extract_file = PythonOperator(
@@ -97,5 +105,11 @@ load_file = PythonOperator(
 unzip_wv2_ingest >> load_file
 
 # === wv2 schedule zip file for deletion
-# TODO:
-"""UPDATE file SET status="to_delete" WHERE id={record_id}"""
+update_input_file_meta_db = MySqlOperator(
+    sql="""UPDATE file SET status="to_delete" WHERE id={record_id}""",
+    mysql_conn_id='imars_metadata',  # TODO: setup imars_metadata connection
+    autocommit=False,  # TODO: True?
+    database="imars_product_metadata",
+    parameters=None
+)
+load_file >> update_input_file_meta_db

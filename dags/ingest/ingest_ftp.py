@@ -40,8 +40,10 @@ wv2_ingest = BashOperator(
         --filepath {} \;
     """
 )
-
+# =========================================================================
 # wv2 unzip to final destination
+# =========================================================================
+# === wait for a valid target to process
 check_for_to_loads = SqlSensor(
     conn_id="conn_id",
     sql="SELECT id FROM file WHERE status=3 AND type=6",
@@ -49,16 +51,51 @@ check_for_to_loads = SqlSensor(
 )
 wv2_ingest >> check_for_to_loads
 
-# TODO: make this crap work, dangit!
+# === Extract
+def extract_file(**kwargs):
+    fname = imars_etl.extract(sql=sql_str)
+    return fname
+
+extract_file = PythonOperator(
+    task_id='extract_file',
+    provide_context=True,
+    python_callable=extract_file,
+    dag=this_dag
+)
+check_for_to_loads >> extract_file
+
+# === Transform
+OUTPUT_FILE = "/tmp/airflow_output_{{ execution_date }}"
 unzip_wv2_ingest = BashOperator(
     task_id="unzip_wv2_ingest",
     dag = this_dag,
     bash_command="""
-        filepath=${/opt/imars-etl/imars-etl.py extract --sql='product_type_id=6 AND status=3'} && \
-        unzip -i $filepath -o {{output_dir}}
+        unzip \
+            -i {{ ti.xcom_pull("extract_file.fname") }}
+            -o {{ params.OUTPUT_FILE }} \
     """,
     params={
-        "input_dir" : imars_etl.extract(type=6,status=3)
-        "output_dir": imars_etl.get_output(type=6,status=3,date_time=inp.date_time)
+        "OUTPUT_FILE": OUTPUT_FILE
     }
-# wv2 schedule zip file for deletion
+)
+extract_file >> unzip_wv2_ingest
+
+# === load result(s)
+def load_file(**kwargs):
+    metadata={
+        "TODO":"fill this"
+        "OUTPUT_FILE": OUTPUT_FILE
+    }
+    imars_etl.load(metadata)
+
+load_file = PythonOperator(
+    task_id='load_file',
+    provide_context=True,
+    python_callable=load_file,
+    dag=this_dag
+)
+unzip_wv2_ingest >> load_file
+
+# === wv2 schedule zip file for deletion
+# TODO:
+"""UPDATE file SET status="to_delete" WHERE id={record_id}"""

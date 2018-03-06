@@ -51,6 +51,7 @@ check_for_to_loads >> extract_file
 
 # === Transform
 OUTPUT_FILE = "/tmp/airflow_output_{{ execution_date }}"
+# TODO: verify xcom usage [ref]: https://groups.google.com/forum/#!topic/airbnb_airflow/ZEdpZbxawNc
 unzip_wv2_ingest = BashOperator(
     task_id="unzip_wv2_ingest",
     dag = this_dag,

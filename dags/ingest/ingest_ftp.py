@@ -41,3 +41,4 @@ wv2_ingest = BashOperator(
         --filepath {} \;
     """
 )
+# NOTE: this will return 0 (pass) even if imars-etl load fails...

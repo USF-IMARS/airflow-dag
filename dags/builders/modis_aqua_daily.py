@@ -74,7 +74,7 @@ def add_tasks(dag, region, gpt_xml):
         # ie, when the dag has run for every 5min granule today.
         wait_for_all_day_granules_checked = SqlSensor(
             task_id='wait_for_all_day_granules_checked',
-            conn_id='mysql_default',
+            conn_id='airflow_metadata',
             sql="""
             SELECT GREATEST(COUNT(state)-287, 0)
                 FROM dag_run WHERE
@@ -91,7 +91,7 @@ def add_tasks(dag, region, gpt_xml):
         # to generate a dynamic list of ExternalTaskSensors.
         wait_for_pass_processing_success = SqlSensor(
             task_id='wait_for_pass_processing_success',
-            conn_id='mysql_default',
+            conn_id='airflow_metadata',
             sql="""
                 SELECT 1 - LEAST(COUNT(state),1)
                     FROM dag_run WHERE

@@ -24,7 +24,7 @@ this_dag = DAG(
 )
 
 # === wait for a valid target to process
-SQL_STR="SELECT id FROM file WHERE status=3 AND type=6"
+SQL_STR="SELECT id FROM file WHERE status=3 AND product_type_id=6"
 check_for_to_loads = SqlSensor(
     task_id='check_for_to_loads',
     conn_id="imars_metadata",
@@ -85,8 +85,8 @@ unzip_wv2_ingest >> load_file
 # === wv2 schedule zip file for deletion
 update_input_file_meta_db = MySqlOperator(
     task_id="update_input_file_meta_db",
-    sql="""UPDATE file SET status="to_delete" WHERE id={record_id}""",
-    mysql_conn_id='imars_metadata_database',  # TODO: setup imars_metadata connection
+    sql=""" UPDATE file SET status="to_delete" WHERE filepath="{{ ti.xcom_pull("extract_file.fname") }}" """,
+    mysql_conn_id='imars_metadata',
     autocommit=False,  # TODO: True?
     parameters=None,
     dag=this_dag

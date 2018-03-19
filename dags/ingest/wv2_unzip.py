@@ -10,6 +10,7 @@ from airflow.operators.mysql_operator import MySqlOperator
 from airflow.operators.sensors import SqlSensor
 
 from imars_dags.util.globals import DEFAULT_ARGS
+import imars_etl
 
 default_args = DEFAULT_ARGS.copy()
 default_args.update({
@@ -24,7 +25,8 @@ this_dag = DAG(
 )
 
 # === wait for a valid target to process
-SQL_STR="SELECT id FROM file WHERE status=3 AND product_type_id=6"
+SQL_SELECTION="status = 3 AND product_type_id = 6"
+SQL_STR="SELECT id FROM file WHERE " + SQL_SELECTION
 check_for_to_loads = SqlSensor(
     task_id='check_for_to_loads',
     conn_id="imars_metadata",
@@ -38,7 +40,11 @@ check_for_to_loads = SqlSensor(
 
 # === Extract
 def extract_file(**kwargs):
-    fname = imars_etl.extract(sql=SQL_STR)
+    ti = kwargs['ti']
+    fname = imars_etl.extract({
+        "sql":SQL_SELECTION
+    })['filepath']
+    ti.xcom_push(key='fname', value=fname)
     return fname
 
 extract_file = PythonOperator(
@@ -50,27 +56,23 @@ extract_file = PythonOperator(
 check_for_to_loads >> extract_file
 
 # === Transform
-OUTPUT_FILE = "/tmp/airflow_output_{{ execution_date }}"
-# TODO: verify xcom usage [ref]: https://groups.google.com/forum/#!topic/airbnb_airflow/ZEdpZbxawNc
 unzip_wv2_ingest = BashOperator(
     task_id="unzip_wv2_ingest",
     dag = this_dag,
     bash_command="""
         unzip \
-            {{ ti.xcom_pull("extract_file.fname") }} \
-            -d {{ params.OUTPUT_FILE }}
-    """,
-    params={
-        'OUTPUT_FILE': OUTPUT_FILE,
-    }
+            {{ ti.xcom_pull(task_ids="extract_file", key="fname") }} \
+            -d /tmp/airflow_output_{{ ts }}
+    """
 )
 extract_file >> unzip_wv2_ingest
 
 # === load result(s)
 def load_file(**kwargs):
-    metadata={
-        "TODO":"fill this",
-        "OUTPUT_FILE": OUTPUT_FILE
+    ti = kwargs['ti']
+    metadata={  # metadata of the file (or dir) we are outputting
+        "filepath": ti.xcom_pull(task_ids="extract_file", key="fname"),
+        "type":6
     }
     imars_etl.load(metadata)
 
@@ -85,7 +87,7 @@ unzip_wv2_ingest >> load_file
 # === wv2 schedule zip file for deletion
 update_input_file_meta_db = MySqlOperator(
     task_id="update_input_file_meta_db",
-    sql=""" UPDATE file SET status="to_delete" WHERE filepath="{{ ti.xcom_pull("extract_file.fname") }}" """,
+    sql=""" UPDATE file SET status="to_delete" WHERE filepath="{{ ti.xcom_pull(task_ids="extract_file", key="fname") }}" """,
     mysql_conn_id='imars_metadata',
     autocommit=False,  # TODO: True?
     parameters=None,

@@ -42,3 +42,5 @@ wv2_ingest = BashOperator(
     """
 )
 # NOTE: this will return 0 (pass) even if imars-etl load fails...
+
+# TODO: should trigger wv2_unzip DAG?

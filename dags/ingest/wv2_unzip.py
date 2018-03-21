@@ -68,6 +68,61 @@ unzip_wv2_ingest = BashOperator(
 extract_file >> unzip_wv2_ingest
 
 # === load result(s)
+LOAD_TEMPLATE="""
+ find /tmp/airflow_output_{{ ts }} \
+     -type f \
+     -regextype sed \
+     -regex "$FILE_REGEX" \
+     | xargs -n1 /opt/imars-etl/imars-etl.py -v load --json '$METADATA_JSON' -f
+ """
+#  alternative to xargs:
+#  -exec imars-etl load --filepath {} --json '$METADATA_JSON' \;
+
+ # TODO: load each pass' m1bs files
+ # INSERT INTO product (short_name,full_name,satellite,sensor) VALUES("att_wv2_m1bs","wv2 1b multispectral .att","worldview2","multispectral")
+load_mul_att = BashOperator(
+    task_id="load_mul_att",
+    dag = this_dag,
+    bash_command=LOAD_TEMPLATE.replace(
+        '$METADATA_JSON',
+        '{"type":7, "status":3, "area_id":5}'
+    ).replace(
+        '$FILE_REGEX',
+        '.*/[0-3][0-9][A-Z]\{3\}[0-9]\{8\}-M1BS-[0-9_]*_P[0-9]\{3\}.ATT$'
+    )
+)
+
+# INSERT INTO product (short_name,full_name,satellite) VALUES("eph_wv2_m1bs","wv2 1b multispectral .eph","worldview2")
+# INSERT INTO product (short_name,full_name,satellite) VALUES("geo_wv2_m1bs","wv2 1b multispectral .geo","worldview2")
+# INSERT INTO product (short_name,full_name,satellite) VALUES("imd_wv2_m1bs","wv2 1b multispectral .imd","worldview2")
+# INSERT INTO product (short_name,full_name,satellite) VALUES("ntf_wv2_m1bs","wv2 1b multispectral .ntf","worldview2")
+# INSERT INTO product (short_name,full_name,satellite) VALUES("rpb_wv2_m1bs","wv2 1b multispectral .rpb","worldview2")
+# INSERT INTO product (short_name,full_name,satellite) VALUES("til_wv2_m1bs","wv2 1b multispectral .til","worldview2")
+# INSERT INTO product (short_name,full_name,satellite) VALUES("xml_wv2_m1bs","wv2 1b multispectral .xml","worldview2")
+# INSERT INTO product (short_name,full_name,satellite) VALUES("jpg_wv2_m1bs","wv2 1b multispectral .jpg","worldview2")
+# INSERT INTO product (short_name,full_name,satellite) VALUES("txt_wv2_m1bs","wv2 1b multispectral readme","worldview2")
+# # GIS FILES # load "$unzipped_path/GIS_FILES/"
+# INSERT INTO product (short_name,full_name,satellite) VALUES("shx_wv2_m1bs","wv2 1b multispectral .shx","worldview2")
+# INSERT INTO product (short_name,full_name,satellite) VALUES("shp_wv2_m1bs","wv2 1b multispectral .shp","worldview2")
+# INSERT INTO product (short_name,full_name,satellite) VALUES("prj_wv2_m1bs","wv2 1b multispectral .prj","worldview2")
+# INSERT INTO product (short_name,full_name,satellite) VALUES("dbf_wv2_m1bs","wv2 1b multispectral .dbf","worldview2")
+
+# TODO: load each pass' p1bs files
+# INSERT INTO product (short_name,full_name,satellite) VALUES("att_wv2_p1bs","wv2 1b panchromatic .att","worldview2")
+# INSERT INTO product (short_name,full_name,satellite) VALUES("eph_wv2_p1bs","wv2 1b panchromatic .eph","worldview2")
+# INSERT INTO product (short_name,full_name,satellite) VALUES("geo_wv2_p1bs","wv2 1b panchromatic .geo","worldview2")
+# INSERT INTO product (short_name,full_name,satellite) VALUES("imd_wv2_p1bs","wv2 1b panchromatic .imd","worldview2")
+# INSERT INTO product (short_name,full_name,satellite) VALUES("ntf_wv2_p1bs","wv2 1b panchromatic .ntf","worldview2")
+# INSERT INTO product (short_name,full_name,satellite) VALUES("rpb_wv2_p1bs","wv2 1b panchromatic .rpb","worldview2")
+# INSERT INTO product (short_name,full_name,satellite) VALUES("til_wv2_p1bs","wv2 1b panchromatic .til","worldview2")
+# INSERT INTO product (short_name,full_name,satellite) VALUES("xml_wv2_p1bs","wv2 1b panchromatic .xml","worldview2")
+# INSERT INTO product (short_name,full_name,satellite) VALUES("jpg_wv2_p1bs","wv2 1b panchromatic .jpg","worldview2")
+# INSERT INTO product (short_name,full_name,satellite) VALUES("txt_wv2_p1bs","wv2 1b panchromatic readme","worldview2")
+# # GIS_FILES
+# INSERT INTO product (short_name,full_name,satellite) VALUES("shx_wv2_p1bs","wv2 1b panchromatic .shx","worldview2")
+# INSERT INTO product (short_name,full_name,satellite) VALUES("shp_wv2_p1bs","wv2 1b panchromatic .shp","worldview2")
+# INSERT INTO product (short_name,full_name,satellite) VALUES("dbf_wv2_p1bs","wv2 1b panchromatic .dbf","worldview2")
+
 def load_file(**kwargs):
     ti = kwargs['ti']
     metadata={  # metadata of the file (or dir) we are outputting
@@ -94,3 +149,5 @@ update_input_file_meta_db = MySqlOperator(
     dag=this_dag
 )
 load_file >> update_input_file_meta_db
+
+# TODO: delete the /tmp/ file(s)

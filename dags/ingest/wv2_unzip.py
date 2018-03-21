@@ -73,19 +73,19 @@ LOAD_TEMPLATE="""
      -type f \
      -regextype sed \
      -regex "$FILE_REGEX" \
-     | xargs -n1 /opt/imars-etl/imars-etl.py -v load --json '$METADATA_JSON' -f
+     | xargs -n1 /opt/imars-etl/imars-etl.py -v load --type 7 --json '$METADATA_JSON' -f
  """
 #  alternative to xargs:
 #  -exec imars-etl load --filepath {} --json '$METADATA_JSON' \;
 
  # TODO: load each pass' m1bs files
- # INSERT INTO product (short_name,full_name,satellite,sensor) VALUES("att_wv2_m1bs","wv2 1b multispectral .att","worldview2","multispectral")
+ # INSERT INTO product (short_name,full_name,satellite,sensor) VALUES("att_wv2_m1bs","wv2 m 1b .att","worldview2","multispectral")
 load_mul_att = BashOperator(
     task_id="load_mul_att",
     dag = this_dag,
     bash_command=LOAD_TEMPLATE.replace(
         '$METADATA_JSON',
-        '{"type":7, "status":3, "area_id":5}'
+        '{"status":3, "area_id":5}'
     ).replace(
         '$FILE_REGEX',
         '.*/[0-3][0-9][A-Z]\{3\}[0-9]\{8\}-M1BS-[0-9_]*_P[0-9]\{3\}.ATT$'

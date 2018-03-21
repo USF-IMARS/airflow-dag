@@ -73,12 +73,11 @@ LOAD_TEMPLATE="""
      -type f \
      -regextype sed \
      -regex "$FILE_REGEX" \
-     | xargs -n1 /opt/imars-etl/imars-etl.py -v load --type 7 --json '$METADATA_JSON' -f
+     | xargs -n1 /opt/imars-etl/imars-etl.py -v load --product_type_id 7 --json '$METADATA_JSON' -f
  """
 #  alternative to xargs:
 #  -exec imars-etl load --filepath {} --json '$METADATA_JSON' \;
 
- # TODO: load each pass' m1bs files
  # INSERT INTO product (short_name,full_name,satellite,sensor) VALUES("att_wv2_m1bs","wv2 m 1b .att","worldview2","multispectral")
 load_mul_att = BashOperator(
     task_id="load_mul_att",
@@ -92,6 +91,7 @@ load_mul_att = BashOperator(
     )
 )
 
+ # TODO: load the rest of the m1bs files like above
 # INSERT INTO product (short_name,full_name,satellite) VALUES("eph_wv2_m1bs","wv2 1b multispectral .eph","worldview2")
 # INSERT INTO product (short_name,full_name,satellite) VALUES("geo_wv2_m1bs","wv2 1b multispectral .geo","worldview2")
 # INSERT INTO product (short_name,full_name,satellite) VALUES("imd_wv2_m1bs","wv2 1b multispectral .imd","worldview2")
@@ -127,7 +127,7 @@ def load_file(**kwargs):
     ti = kwargs['ti']
     metadata={  # metadata of the file (or dir) we are outputting
         "filepath": ti.xcom_pull(task_ids="extract_file", key="fname"),
-        "type":6
+        "product_type_id":6
     }
     imars_etl.load(metadata)
 

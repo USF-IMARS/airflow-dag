@@ -29,14 +29,14 @@ wv2_ingest = BashOperator(
     task_id="wv2_ingest",
     dag = this_dag,
     # `--date` is read in from the filename
-    # `--type` is limited to `zip_wv2_ftp_ingest` b/c of `find` limitations
+    # `--product_type_id` is limited to `zip_wv2_ftp_ingest` b/c of `find` limitations
     #       product_type_id of `zip_wv2_ftp_ingest` is `6`
     # `--status` is `to_load` == 3
     #  `--area`  is `UNCUT`   == 5
     bash_command="""
     find /srv/imars-objects/ftp-ingest/wv2_*zip -type f -exec \
     /opt/imars-etl/imars-etl.py load \
-        --type 6 \
+        --product_type_id 6 \
         --json '{"status":3, "area_id":5}'\
         --filepath {} \;
     """

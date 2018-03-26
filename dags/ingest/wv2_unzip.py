@@ -82,10 +82,10 @@ update_input_file_meta_db = MySqlOperator(
 
 # === load result(s)
 LOAD_TEMPLATE="""
-    /opt/imars-etl/imars-etl.py -v load \
+    /opt/imars-etl/imars-etl.py -vvv load \
         --product_type_id {{ params.product_type_id }} \
         --ingest_key {{ params.ingest_key }} \
-        --json {{ params.json }}
+        --json '{{ params.json }}' \
         --directory /tmp/airflow_output_{{ ts }}
 """
 
@@ -94,10 +94,10 @@ to_load=[
     # INSERT INTO product (short_name,full_name,satellite,sensor)
     #   VALUES("att_wv2_m1bs","wv2 m 1b .att","worldview2","multispectral")
     {
-        # "prod_type_name": "att_wv2_m1bs",
-        "prod_type_id": 7,
+        "product_type_name": "att_wv2_m1bs",
+        "product_type_id": 7,  # TODO: rm this after impl of USF-IMARS/imars-etl#1
         "ingest_key": "att_from_zip_wv2_ftp_ingest"
-    }
+    },
      # TODO: load the rest of the m1bs files like above
     # INSERT INTO product (short_name,full_name,satellite)
     #   VALUES("eph_wv2_m1bs","wv2 1b multispectral .eph","worldview2")
@@ -130,6 +130,11 @@ to_load=[
     # TODO: load each pass' p1bs files
     # INSERT INTO product (short_name,full_name,satellite)
     #   VALUES("att_wv2_p1bs","wv2 1b panchromatic .att","worldview2")
+    {
+        "product_type_name": "att_wv2_p1bs",
+        "product_type_id": 8,
+        "ingest_key": "att_from_zip_wv2_ftp_ingest"
+    },
     # INSERT INTO product (short_name,full_name,satellite)
     #   VALUES("eph_wv2_p1bs","wv2 1b panchromatic .eph","worldview2")
     # INSERT INTO product (short_name,full_name,satellite)
@@ -163,7 +168,7 @@ for output_params in to_load:
     output_params["json"] = '{"status":3, "area_id":5}'
 
     load_operator = BashOperator(
-        task_id="load_" + output_key,
+        task_id="load_" + output_params["product_type_name"],
         dag = this_dag,
         bash_command=LOAD_TEMPLATE,
         params=output_params

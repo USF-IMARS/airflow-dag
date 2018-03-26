@@ -82,27 +82,21 @@ update_input_file_meta_db = MySqlOperator(
 
 # === load result(s)
 LOAD_TEMPLATE="""
- find /tmp/airflow_output_{{ ts }} \
-     -type f \
-     -regextype sed \
-     -regex "$FILE_REGEX" \
-     | xargs -n1 /opt/imars-etl/imars-etl.py -v load --product_type_id 7 --json '$METADATA_JSON' -f
- """
-#  alternative to xargs:
-#  -exec imars-etl load --filepath {} --json '$METADATA_JSON' \;
+    /opt/imars-etl/imars-etl.py -v load \
+        --product_type_id {{ params.product_type_id }} \
+        --ingest_key {{ params.ingest_key }} \
+        --json {{ params.json }}
+        --directory /tmp/airflow_output_{{ ts }}
+"""
 
-# a dict of products we are loading from the output directory
-#    FILE_REGEX : defines a regex to select all the product files
-#       (and only those files) from the /tmp/ directory created above.
-#    METADATA_JSON : defines additional metadata for the product
-#           * status 3 indicates the file has just been loaded
-#           * area 5 is "no area"
-to_load={
-# INSERT INTO product (short_name,full_name,satellite,sensor)
-#   VALUES("att_wv2_m1bs","wv2 m 1b .att","worldview2","multispectral")
-    "att_wv2_m1bs":{
-        "METADATA_JSON" : '{"status":3, "area_id":5}',
-        "FILE_REGEX": '.*/[0-3][0-9][A-Z]\{3\}[0-9]\{8\}-M1BS-[0-9_]*_P[0-9]\{3\}.ATT$'
+# a list of params for products we are loading from the output directory
+to_load=[
+    # INSERT INTO product (short_name,full_name,satellite,sensor)
+    #   VALUES("att_wv2_m1bs","wv2 m 1b .att","worldview2","multispectral")
+    {
+        # "prod_type_name": "att_wv2_m1bs",
+        "prod_type_id": 7,
+        "ingest_key": "att_from_zip_wv2_ftp_ingest"
     }
      # TODO: load the rest of the m1bs files like above
     # INSERT INTO product (short_name,full_name,satellite)
@@ -161,21 +155,18 @@ to_load={
     #   VALUES("shp_wv2_p1bs","wv2 1b panchromatic .shp","worldview2")
     # INSERT INTO product (short_name,full_name,satellite)
     #   VALUES("dbf_wv2_p1bs","wv2 1b panchromatic .dbf","worldview2")
-}
+]
 
 # imars-etl.load each of the file products listed in to_load
-for output_key in to_load:
-    output_val = to_load[output_key]
+for output_params in to_load:
+    # set params common to all files being loaded:
+    output_params["json"] = '{"status":3, "area_id":5}'
+
     load_operator = BashOperator(
         task_id="load_" + output_key,
         dag = this_dag,
-        bash_command=LOAD_TEMPLATE.replace(
-            '$METADATA_JSON',
-            output_val["METADATA_JSON"]
-        ).replace(
-            '$FILE_REGEX',
-            output_val['FILE_REGEX']
-        )
+        bash_command=LOAD_TEMPLATE,
+        params=output_params
     )
     load_operator >> update_input_file_meta_db
     # load_operator >> tmp_cleanup

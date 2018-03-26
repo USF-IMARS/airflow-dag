@@ -21,7 +21,9 @@ default_args.update({
 this_dag = DAG(
     dag_id="wv2_unzip",
     default_args=default_args,
-    schedule_interval=timedelta(days=1)
+    schedule_interval=timedelta(days=1),
+    catchup=False,  # NOTE: this & max_active_runs prevents duplicate extractions
+    max_active_runs=1
 )
 
 # === wait for a valid target to process

@@ -15,13 +15,14 @@ import imars_etl
 default_args = DEFAULT_ARGS.copy()
 default_args.update({
     'start_date': datetime(2018, 3, 5, 16, 0),
-    'retries': 1
+    'retries': 1,
+    'retry_delay': timedelta(minutes=3),
 })
 
 this_dag = DAG(
     dag_id="wv2_unzip",
     default_args=default_args,
-    schedule_interval=timedelta(days=1),
+    schedule_interval=timedelta(hours=1),
     catchup=False,  # NOTE: this & max_active_runs prevents duplicate extractions
     max_active_runs=1
 )
@@ -85,7 +86,7 @@ unzip_wv2_ingest >> rm_spurrious_gis_files
 # === wv2 schedule zip file for deletion
 update_input_file_meta_db = MySqlOperator(
     task_id="update_input_file_meta_db",
-    sql=""" UPDATE file SET status="to_delete" WHERE filepath="{{ ti.xcom_pull(task_ids="extract_file", key="fname") }}" """,
+    sql=""" UPDATE file SET status=1 WHERE filepath="{{ ti.xcom_pull(task_ids="extract_file", key="fname") }}" """,
     mysql_conn_id='imars_metadata',
     autocommit=False,  # TODO: True?
     parameters=None,

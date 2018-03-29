@@ -38,7 +38,7 @@ check_for_to_loads = SqlSensor(
 )
 
 # TODO: should set imars_product_metadata.status to "processing" to prevent
-#    duplicates?
+#    duplicates? Not an issue so long as catchup=False & max_active_runs=1
 
 # === Extract
 # ============================================================================
@@ -92,14 +92,20 @@ update_input_file_meta_db = MySqlOperator(
     dag=this_dag
 )
 
-# TODO: delete the /tmp/ file(s)
-# tmp_cleanup = BashOperator(...)
+# === delete any remaining junk we left in /tmp/
+tmp_cleanup = BashOperator(
+    task_id="tmp_cleanup",
+    dag=this_dag,
+    bash_command="""
+        rm -r /tmp/airflow_output_{{ ts }}
+    """
+)
 
 # === Load
 # ============================================================================
 LOAD_TEMPLATE="""
     /opt/imars-etl/imars-etl.py -vvv load \
-        --product_type_id {{ params.product_type_id }} \
+        --product_type_name {{ params.product_type_name }} \
         --json '{{ params.json }}' \
         --directory /tmp/airflow_output_{{ ts }}
 """
@@ -107,156 +113,78 @@ LOAD_TEMPLATE="""
 # a list of params for products we are loading from the output directory
 to_load=[
     # INSERT INTO product (short_name,full_name,satellite,sensor) VALUES("att_wv2_m1bs","wv2 m 1b .att","worldview2","multispectral")
-    {
-        "product_type_name": "att_wv2_m1bs",
-        "product_type_id": 7,  # TODO: rm this after USF-IMARS/imars-etl#1
-    },
+    "att_wv2_m1bs",
     # INSERT INTO product (short_name,full_name,satellite) VALUES("eph_wv2_m1bs","wv2 1b multispectral .eph","worldview2")
-    {
-        "product_type_name": "eph_wv2_m1bs",
-        "product_type_id": 33,
-    },
+    "eph_wv2_m1bs",
     # INSERT INTO product (short_name,full_name,satellite) VALUES("geo_wv2_m1bs","wv2 1b multispectral .geo","worldview2")
-    {
-        "product_type_name": "geo_wv2_m1bs",
-        "product_type_id": 9,
-    },
+    "geo_wv2_m1bs",
     # INSERT INTO product (short_name,full_name,satellite) VALUES("imd_wv2_m1bs","wv2 1b multispectral .imd","worldview2")
-    {
-        "product_type_name": "imd_wv2_m1bs",
-        "product_type_id": 10,
-    },
+    "imd_wv2_m1bs",
     # INSERT INTO product (short_name,full_name,satellite) VALUES("ntf_wv2_m1bs","wv2 1b multispectral .ntf","worldview2");
-    {
-        "product_type_name": "ntf_wv2_m1bs",
-        "product_type_id": 11,
-    },
+    "ntf_wv2_m1bs",
     # INSERT INTO product (short_name,full_name,satellite) VALUES("rpb_wv2_m1bs","wv2 1b multispectral .rpb","worldview2");
-    {
-        "product_type_name": "rpb_wv2_m1bs",
-        "product_type_id": 12,
-    },
+    "rpb_wv2_m1bs",
     # INSERT INTO product (short_name,full_name,satellite) VALUES("til_wv2_m1bs","wv2 1b multispectral .til","worldview2");
-    {
-        "product_type_name": "til_wv2_m1bs",
-        "product_type_id": 13,
-    },
+    "til_wv2_m1bs",
     # INSERT INTO product (short_name,full_name,satellite) VALUES("xml_wv2_m1bs","wv2 1b multispectral .xml","worldview2");
-    {
-        "product_type_name": "xml_wv2_m1bs",
-        "product_type_id": 14,
-    },
+    "xml_wv2_m1bs",
     # INSERT INTO product (short_name,full_name,satellite) VALUES("jpg_wv2_m1bs","wv2 1b multispectral .jpg","worldview2");
-    {
-        "product_type_name": "jpg_wv2_m1bs",
-        "product_type_id": 15,
-    },
+    "jpg_wv2_m1bs",
     # INSERT INTO product (short_name,full_name,satellite) VALUES("txt_wv2_m1bs","wv2 1b multispectral readme","worldview2");
-    {
-        "product_type_name": "txt_wv2_m1bs",
-        "product_type_id": 16,
-    },
+    "txt_wv2_m1bs",
     # # # GIS FILES # load "$unzipped_path/GIS_FILES/"
     # INSERT INTO product (short_name,full_name,satellite) VALUES("shx_wv2_m1bs","wv2 1b multispectral .shx","worldview2");
-    {
-        "product_type_name": "shx_wv2_m1bs",
-        "product_type_id": 17,
-    },
+    "shx_wv2_m1bs",
     # INSERT INTO product (short_name,full_name,satellite) VALUES("shp_wv2_m1bs","wv2 1b multispectral .shp","worldview2");
-    {
-        "product_type_name": "shp_wv2_m1bs",
-        "product_type_id": 18,
-    },
+    "shp_wv2_m1bs",
     # INSERT INTO product (short_name,full_name,satellite) VALUES("prj_wv2_m1bs","wv2 1b multispectral .prj","worldview2");
-    {
-        "product_type_name": "prj_wv2_m1bs",
-        "product_type_id": 19,
-    },
+    "prj_wv2_m1bs",
     # INSERT INTO product (short_name,full_name,satellite) VALUES("dbf_wv2_m1bs","wv2 1b multispectral .dbf","worldview2");
-    {
-        "product_type_name": "dbf_wv2_m1bs",
-        "product_type_id": 20,
-    },
+    "dbf_wv2_m1bs",
 
     # INSERT INTO product (short_name,full_name,satellite) VALUES("att_wv2_p1bs","wv2 1b panchromatic .att","worldview2")
-    {
-        "product_type_name": "att_wv2_p1bs",
-        "product_type_id": 8,
-    },
+    "att_wv2_p1bs",
     # INSERT INTO product (short_name,full_name,satellite) VALUES("eph_wv2_p1bs","wv2 1b panchromatic .eph","worldview2");
-    {
-        "product_type_name": "eph_wv2_p1bs",
-        "product_type_id": 21,
-    },
+    "eph_wv2_p1bs",
     # INSERT INTO product (short_name,full_name,satellite) VALUES("geo_wv2_p1bs","wv2 1b panchromatic .geo","worldview2");
-    {
-        "product_type_name": "geo_wv2_p1bs",
-        "product_type_id": 22,
-    },
+    "geo_wv2_p1bs",
     # INSERT INTO product (short_name,full_name,satellite) VALUES("imd_wv2_p1bs","wv2 1b panchromatic .imd","worldview2");
-    {
-        "product_type_name": "imd_wv2_p1bs",
-        "product_type_id": 23,
-    },
+    "imd_wv2_p1bs",
     # INSERT INTO product (short_name,full_name,satellite) VALUES("ntf_wv2_p1bs","wv2 1b panchromatic .ntf","worldview2");
-    {
-        "product_type_name": "ntf_wv2_p1bs",
-        "product_type_id": 24,
-    },
+    "ntf_wv2_p1bs",
     # INSERT INTO product (short_name,full_name,satellite) VALUES("rpb_wv2_p1bs","wv2 1b panchromatic .rpb","worldview2");
-    {
-        "product_type_name": "rpb_wv2_p1bs",
-        "product_type_id": 25,
-    },
+    "rpb_wv2_p1bs",
     # INSERT INTO product (short_name,full_name,satellite) VALUES("til_wv2_p1bs","wv2 1b panchromatic .til","worldview2");
-    {
-        "product_type_name": "til_wv2_p1bs",
-        "product_type_id": 26,
-    },
+    "til_wv2_p1bs",
     # INSERT INTO product (short_name,full_name,satellite) VALUES("xml_wv2_p1bs","wv2 1b panchromatic .xml","worldview2");
-    {
-        "product_type_name": "xml_wv2_p1bs",
-        "product_type_id": 27,
-    },
+    "xml_wv2_p1bs",
     # INSERT INTO product (short_name,full_name,satellite) VALUES("jpg_wv2_p1bs","wv2 1b panchromatic .jpg","worldview2");
-    {
-        "product_type_name": "jpg_wv2_p1bs",
-        "product_type_id": 28,
-    },
+    "jpg_wv2_p1bs",
     # INSERT INTO product (short_name,full_name,satellite) VALUES("txt_wv2_p1bs","wv2 1b panchromatic readme","worldview2");
-    {
-        "product_type_name": "txt_wv2_p1bs",
-        "product_type_id": 29,
-    },
+    "txt_wv2_p1bs",
     # # # GIS_FILES
     # INSERT INTO product (short_name,full_name,satellite) VALUES("shx_wv2_p1bs","wv2 1b panchromatic .shx","worldview2");
-    {
-        "product_type_name": "shx_wv2_p1bs",
-        "product_type_id": 30,
-    },
+    "shx_wv2_p1bs",
     # INSERT INTO product (short_name,full_name,satellite) VALUES("shp_wv2_p1bs","wv2 1b panchromatic .shp","worldview2");
-    {
-        "product_type_name": "shp_wv2_p1bs",
-        "product_type_id": 31,
-    },
+    "shp_wv2_p1bs",
     # INSERT INTO product (short_name,full_name,satellite) VALUES("dbf_wv2_p1bs","wv2 1b panchromatic .dbf","worldview2");
-    {
-        "product_type_name": "dbf_wv2_p1bs",
-        "product_type_id": 32,
-    },
+    "dbf_wv2_p1bs",
 ]
 
 # imars-etl.load each of the file products listed in to_load
-for output_params in to_load:
+for product_short_name in to_load:
     # set params common to all files being loaded:
-    output_params["json"] = '{"status":3, "area_id":5}'
+    output_params = {
+        "json":'{"status":3, "area_id":5}',
+        "product_type_name": product_short_name
+    }
 
     load_operator = BashOperator(
-        task_id="load_" + output_params["product_type_name"],
+        task_id="load_" + product_short_name,
         dag = this_dag,
         bash_command=LOAD_TEMPLATE,
         params=output_params
     )
     rm_spurrious_gis_files >> load_operator
     load_operator >> update_input_file_meta_db
-    # load_operator >> tmp_cleanup
+    load_operator >> tmp_cleanup

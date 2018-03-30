@@ -14,13 +14,16 @@ from imars_dags.util.globals import DEFAULT_ARGS
 default_args = DEFAULT_ARGS.copy()
 default_args.update({
     'start_date': datetime(2018, 3, 1, 20, 0),
-    'retries': 1
+    'retries': 1,
+    'retry_delay': timedelta(minutes=3),
 })
 
 this_dag = DAG(
     dag_id="ingest_ftp",
     default_args=default_args,
-    schedule_interval=timedelta(days=1)
+    schedule_interval=timedelta(hours=1),
+    catchup=False,  # NOTE: this & max_active_runs prevents duplicate extractions
+    max_active_runs=1
 )
 
 # TODO: better to do this with a FileSensor
@@ -34,11 +37,10 @@ wv2_ingest = BashOperator(
     # `--status` is `to_load` == 3
     #  `--area`  is `UNCUT`   == 5
     bash_command="""
-    find /srv/imars-objects/ftp-ingest/wv2_*zip -type f -exec \
     /opt/imars-etl/imars-etl.py load \
         --product_type_id 6 \
         --json '{"status":3, "area_id":5}'\
-        --filepath {} \;
+        --directory /srv/imars-objects/ftp-ingest
     """
 )
 # NOTE: this will return 0 (pass) even if imars-etl load fails...

@@ -30,6 +30,7 @@ this_dag = DAG(
 # === wait for a valid target to process
 SQL_SELECTION="status = 3 AND product_type_id = 6"
 SQL_STR="SELECT id FROM file WHERE " + SQL_SELECTION
+
 check_for_to_loads = SqlSensor(
     task_id='check_for_to_loads',
     conn_id="imars_metadata",

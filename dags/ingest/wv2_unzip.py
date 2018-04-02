@@ -98,6 +98,7 @@ update_input_file_meta_db = MySqlOperator(
 tmp_cleanup = BashOperator(
     task_id="tmp_cleanup",
     dag=this_dag,
+    trigger_rule="all_done",
     bash_command="""
         rm -r /tmp/airflow_output_{{ ts }}
     """

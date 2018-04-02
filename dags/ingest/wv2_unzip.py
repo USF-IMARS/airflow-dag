@@ -5,12 +5,9 @@ from datetime import datetime,timedelta
 
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
-from airflow.operators.python_operator import PythonOperator
-from airflow.operators.mysql_operator import MySqlOperator
-from airflow.operators.sensors import SqlSensor
 
 from imars_dags.util.globals import DEFAULT_ARGS
-import imars_etl
+import imars_dags.dags.builders.imars_etl as imars_etl_builder
 
 default_args = DEFAULT_ARGS.copy()
 default_args.update({
@@ -27,41 +24,7 @@ this_dag = DAG(
     max_active_runs=1
 )
 
-# === wait for a valid target to process
-SQL_SELECTION="status = 3 AND product_type_id = 6"
-SQL_STR="SELECT id FROM file WHERE " + SQL_SELECTION
 
-check_for_to_loads = SqlSensor(
-    task_id='check_for_to_loads',
-    conn_id="imars_metadata",
-    sql=SQL_STR,
-    soft_fail=True,
-    dag=this_dag
-)
-
-# TODO: should set imars_product_metadata.status to "processing" to prevent
-#    duplicates? Not an issue so long as catchup=False & max_active_runs=1
-
-# === Extract
-# ============================================================================
-def extract_file(**kwargs):
-    ti = kwargs['ti']
-    fname = imars_etl.extract({
-        "sql":SQL_SELECTION
-    })['filepath']
-    ti.xcom_push(key='fname', value=fname)
-    return fname
-
-extract_file = PythonOperator(
-    task_id='extract_file',
-    provide_context=True,
-    python_callable=extract_file,
-    dag=this_dag
-)
-check_for_to_loads >> extract_file
-
-# === Transform
-# ============================================================================
 unzip_wv2_ingest = BashOperator(
     task_id="unzip_wv2_ingest",
     dag = this_dag,
@@ -71,7 +34,6 @@ unzip_wv2_ingest = BashOperator(
             -d /tmp/airflow_output_{{ ts }}
     """
 )
-extract_file >> unzip_wv2_ingest
 
 # these GIS_FILES need to be removed so they don't get accidentally ingested
 # later on.
@@ -83,35 +45,6 @@ rm_spurrious_gis_files = BashOperator(
     """
 )
 unzip_wv2_ingest >> rm_spurrious_gis_files
-
-# === wv2 schedule zip file for deletion
-update_input_file_meta_db = MySqlOperator(
-    task_id="update_input_file_meta_db",
-    sql=""" UPDATE file SET status=1 WHERE filepath="{{ ti.xcom_pull(task_ids="extract_file", key="fname") }}" """,
-    mysql_conn_id='imars_metadata',
-    autocommit=False,  # TODO: True?
-    parameters=None,
-    dag=this_dag
-)
-
-# === delete any remaining junk we left in /tmp/
-tmp_cleanup = BashOperator(
-    task_id="tmp_cleanup",
-    dag=this_dag,
-    trigger_rule="all_done",
-    bash_command="""
-        rm -r /tmp/airflow_output_{{ ts }}
-    """
-)
-
-# === Load
-# ============================================================================
-LOAD_TEMPLATE="""
-    /opt/imars-etl/imars-etl.py -vvv load \
-        --product_type_name {{ params.product_type_name }} \
-        --json '{{ params.json }}' \
-        --directory /tmp/airflow_output_{{ ts }}
-"""
 
 # a list of params for products we are loading from the output directory
 to_load=[
@@ -174,20 +107,9 @@ to_load=[
     "dbf_wv2_p1bs",
 ]
 
-# imars-etl.load each of the file products listed in to_load
-for product_short_name in to_load:
-    # set params common to all files being loaded:
-    output_params = {
-        "json":'{"status":3, "area_id":5}',
-        "product_type_name": product_short_name
+imars_etl_builder.add_tasks(
+    this_dag, 6, [unzip_wv2_ingest], [rm_spurrious_gis_files],
+    to_load, common_load_params={
+        "json":'{"status":3, "area_id":5}'
     }
-
-    load_operator = BashOperator(
-        task_id="load_" + product_short_name,
-        dag = this_dag,
-        bash_command=LOAD_TEMPLATE,
-        params=output_params
-    )
-    rm_spurrious_gis_files >> load_operator
-    load_operator >> update_input_file_meta_db
-    load_operator >> tmp_cleanup
+)

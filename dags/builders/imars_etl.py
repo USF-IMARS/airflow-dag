@@ -2,17 +2,11 @@
 allows for easy set up of ETL operations within imars-etl
 """
 from airflow.operators.bash_operator import BashOperator
-from airflow.operators.subdag_operator import SubDagOperator
-from airflow.operators.sensors import TimeDeltaSensor, SqlSensor
-from airflow.utils.state import State
-from datetime import timedelta, datetime
+from airflow.operators.sensors import SqlSensor
+from airflow.operators.python_operator import PythonOperator
+from airflow.operators.mysql_operator import MySqlOperator
 
-# === ./imars_dags/modis_aqua_processing.py :
-from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, SLEEP_ARGS
-from imars_dags.util import satfilename
-from imars_dags.settings.png_export_transforms import png_export_transforms
-
-schedule_interval=timedelta(days=1)
+import imars_etl
 
 def add_tasks(
     dag, product_type_id, first_transform_operators, last_transform_operators,
@@ -51,7 +45,6 @@ def add_tasks(
             conn_id="imars_metadata",
             sql=SQL_STR,
             soft_fail=True,
-            dag=this_dag
         )
         # TODO: should set imars_product_metadata.status to "processing" to prevent
         #    duplicates? Not an issue so long as catchup=False & max_active_runs=1
@@ -70,7 +63,6 @@ def add_tasks(
             task_id='extract_file',
             provide_context=True,
             python_callable=extract_file,
-            dag=this_dag
         )
 
         # === Load
@@ -78,7 +70,6 @@ def add_tasks(
         # === /tmp/ cleanup
         tmp_cleanup = BashOperator(
             task_id="tmp_cleanup",
-            dag=this_dag,
             trigger_rule="all_done",
             bash_command="""
                 rm -r /tmp/airflow_output_{{ ts }}
@@ -91,7 +82,6 @@ def add_tasks(
             mysql_conn_id='imars_metadata',
             autocommit=False,  # TODO: True?
             parameters=None,
-            dag=this_dag
         )
 
         # TODO: wire together
@@ -118,9 +108,8 @@ def add_tasks(
 
                 load_operator = BashOperator(
                     task_id="load_" + product_short_name,
-                    dag = this_dag,
                     bash_command=LOAD_TEMPLATE,
-                    params=output_params
+                    params=common_load_params
                 )
                 # transform(s) >> load(s)
                 t_op >> load_operator

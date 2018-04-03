@@ -75,6 +75,9 @@ def add_tasks(
                 rm -r /tmp/airflow_output_{{ ts }}
             """
         )
+        # ensure we clean up even if something in the middle fails
+        extract_file >> tmp_cleanup
+
         # === mysql update
         update_input_file_meta_db = MySqlOperator(
             task_id="update_input_file_meta_db",
@@ -117,3 +120,6 @@ def add_tasks(
                 load_operator >> update_input_file_meta_db
                 # load(s) >> cleanup
                 load_operator >> tmp_cleanup
+
+                # TODO: if load operator fails with IntegrityError (duplicate)
+                #    mark success or skip or something...

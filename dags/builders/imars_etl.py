@@ -77,6 +77,20 @@ def add_tasks(
         )
         # ensure we clean up even if something in the middle fails
         extract_file >> tmp_cleanup
+        # NOTE: ^this^ doesn't work...
+        #   possible fixes:
+        #       1. Take a subdag param instead of operator lists & set subdag
+        #           upstream from tmp_cleanup. The subdag will fail as a unit.
+        #           * (-): but then all processing steps get lumped together
+        #           * (-): this pushes extra complexity onto the implementing DAG
+        #       2. pass on_retry_callback to every task
+        # https://medium.com/handy-tech/airflow-tips-tricks-and-pitfalls-9ba53fba14eb
+        #       3. set to `one_failed`, set every taks upstream, and add an
+        #           always-fail operator (or duplicate the operator with an
+        #           on_success)
+        #           * (-): this will trigger cleanup before some are done
+        #       4. duplicate task, one as-is and another with `one_failed` with
+        #           every task upstream.
 
         # === mysql update
         update_input_file_meta_db = MySqlOperator(

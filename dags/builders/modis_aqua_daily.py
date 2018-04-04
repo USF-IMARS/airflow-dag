@@ -2,7 +2,6 @@
 airflow processing pipeline definition for MODIS aqua daily processing
 """
 from airflow.operators.bash_operator import BashOperator
-from airflow.operators.subdag_operator import SubDagOperator
 from airflow.operators.sensors import TimeDeltaSensor, SqlSensor
 from airflow.utils.state import State
 from datetime import timedelta, datetime

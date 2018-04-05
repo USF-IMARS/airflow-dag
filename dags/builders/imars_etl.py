@@ -2,9 +2,9 @@
 allows for easy set up of ETL operations within imars-etl
 """
 from airflow.operators.bash_operator import BashOperator
-from airflow.operators.sensors import SqlSensor
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.mysql_operator import MySqlOperator
+from airflow.operators.sensors import SqlSensor
 
 import imars_etl
 
@@ -35,19 +35,19 @@ def add_tasks(
         imars_metadata_db.file columns to find a list of potential values.
     """
     with dag as dag:
-        # === mysql_sensor
-        # ============================================================================
-        # TODO: could have multiple product_type_id(s) here?
-        SQL_SELECTION="status = 3 AND product_type_id = {}".format(product_type_id)
-        SQL_STR="SELECT id FROM file WHERE " + SQL_SELECTION
+
+        # TODO: remove this. (it is now in FileTriggerDAG)
+        sql_selection="status={} AND product_type_id={}".format(
+            3,  # STATUS.TO_LOAD
+            product_type_id
+        )
+        sql_str="SELECT id FROM file WHERE " + sql_selection
         check_for_to_loads = SqlSensor(
             task_id='check_for_to_loads',
             conn_id="imars_metadata",
-            sql=SQL_STR,
+            sql=sql_str,
             soft_fail=True,
         )
-        # TODO: should set imars_product_metadata.status to "processing" to prevent
-        #    duplicates? Not an issue so long as catchup=False & max_active_runs=1
 
         # === Extract
         # ============================================================================

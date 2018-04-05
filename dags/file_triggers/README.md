@@ -5,6 +5,8 @@ name of the DAG in the form `file_trigger_{short_name}.py`.
 A file_trigger DAG only triggers external processing DAGs and updates
 `file.status`.
 
+---------------------------------------------------------------------------
+
 External DAGs triggered should be triggered with `execution_date` set using
 metadata from the file. Because of this each file within a `product_type_id`
 and `area_id` must have a unique `date_time`.
@@ -15,6 +17,8 @@ should return only 1 result for any value of `date_time` and `product_type_id`.
 This *should* be enforced by the following constraint:
 `CONSTRAINT pid_and_date UNIQUE(product_type_id,date_time,area_id)`
 (...but it isn't right now.)
+
+---------------------------------------------------------------------------
 
 The following diagram illustrates the relationship between these DAGs and
 `file.state` in the metadata db:

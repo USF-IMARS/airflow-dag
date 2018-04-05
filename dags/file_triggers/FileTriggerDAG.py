@@ -16,7 +16,7 @@ from airflow import DAG
 from airflow.operators.sensors import SqlSensor
 
 from imars_dags.operators.MMTTriggerDagRunOperator import MMTTriggerDagRunOperator
-from imars_dags.patches.mysql_operator_patched import MySqlOperator_patched as MySqlOperator
+from imars_dags.patches.mysql_operator_patched import MySqlOperator_patched
 
 
 class STATUS:  # status IDs from imars_product_metadata.status
@@ -70,7 +70,11 @@ class FileTriggerDAG(DAG):
 
             (see highlighted line at left)
             """
-
+            get_file_metadata = MySqlOperator_patched(
+                task_id='get_file_metadata',
+                conn_id="imars_metadata",
+                sql="SELECT id,date_time,area_id,filepath FROM file WHERE " + sql_selection,
+            )
 
 
 
@@ -81,24 +85,24 @@ class FileTriggerDAG(DAG):
             # TODO: convert area_id to area_name `SELECT code FROM area WHERE id={area_id}`
 
             # TODO: trigger dag(s) for this product & for this region
-            area_id = "GOM"  # TODO: ti.pull()
-            exec_date = "2018-01-01T01:01"  # TODO: ti.pull()
-            for processing_dag_name in self.dags_to_trigger:
-                # processing_dag_name is root dag, but each region has a dag
-                dag_to_trigger="{}_{}".format(area_id, processing_dag_name)
-                trigger_dag_operator_id = "trigger_{}".format(dag_to_trigger)
-
-                trigger_processing_REGION = MMTTriggerDagRunOperator(
-                    trigger_dag_id=trigger_dag_operator_id,
-                    python_callable=lambda context, dag_run_obj: dag_run_obj,
-                    execution_date="{{params.exec_date}}",
-                    task_id=dag_to_trigger,
-                    params={
-                        'exec_date': exec_date
-                    },
-                    retries=1,
-                    retry_delay=timedelta(minutes=2)
-                )
+            # area_id = "GOM"  # TODO: ti.pull()
+            # exec_date = "2018-01-01T01:01"  # TODO: ti.pull()
+            # for processing_dag_name in self.dags_to_trigger:
+            #     # processing_dag_name is root dag, but each region has a dag
+            #     dag_to_trigger="{}_{}".format(area_id, processing_dag_name)
+            #     trigger_dag_operator_id = "trigger_{}".format(dag_to_trigger)
+            #
+            #     trigger_processing_REGION = MMTTriggerDagRunOperator(
+            #         trigger_dag_id=trigger_dag_operator_id,
+            #         python_callable=lambda context, dag_run_obj: dag_run_obj,
+            #         execution_date="{{params.exec_date}}",
+            #         task_id=dag_to_trigger,
+            #         params={
+            #             'exec_date': exec_date
+            #         },
+            #         retries=1,
+            #         retry_delay=timedelta(minutes=2)
+            #     )
                 # TODO:
                 # sql_watch >> trigger_processing_REGION
 

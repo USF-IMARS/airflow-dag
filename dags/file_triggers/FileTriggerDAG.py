@@ -14,9 +14,12 @@ from datetime import timedelta
 
 from airflow import DAG
 from airflow.operators.sensors import SqlSensor
+from airflow.operators.python_operator import PythonOperator
+
+from imars_etl.get_metadata import get_metadata
+from imars_etl.id_lookup import id_lookup
 
 from imars_dags.operators.MMTTriggerDagRunOperator import MMTTriggerDagRunOperator
-from imars_dags.patches.mysql_operator_patched import MySqlOperator_patched as MySqlOperator
 
 
 class STATUS:  # status IDs from imars_product_metadata.status
@@ -49,7 +52,7 @@ class FileTriggerDAG(DAG):
             # TODO: SQL watch for pid=={} & status==to_load
             # === mysql_sensor
             # =================================================================
-            sql_selection="status={} AND product_type_id={}".format(
+            sql_selection="status={} AND product_type_id={};".format(
                 STATUS.TO_LOAD,
                 self.product_type_id
             )
@@ -64,41 +67,55 @@ class FileTriggerDAG(DAG):
             #       to prevent duplicates?
             #       Not an issue so long as catchup=False & max_active_runs=1
 
-            # TODO: ti.push() area_id & date_time from SQL
-            """
-            easiest way to do this is to overload dbapi_hook.run (& others) to return the result of cur.execute()?
 
-            (see highlighted line at left)
-            """
+            def get_file_metadata(**kwargs):
+                # `ti.push()`es area_id & date_time from SQL
+                ti = kwargs['ti']
+
+                file_metadata = get_metadata(
+                    {"sql": sql_selection}
+                )
+
+                # convert area_id to area_name
+                file_metadata['area_name'] = imars_etl.id_lookup({
+                    'table': 'area',
+                    'value': ti.xcom_pull('area_id')
+                })
+
+                ti.xcom_push(key='file_metadata', value=file_metadata)
+                # NOTE: can we just use the dict above?
+                ti.xcom_push(key='area_id',   value=file_metadata['area_id'])
+                ti.xcom_push(key='area_name',   value=file_metadata['area_name'])
+                ti.xcom_push(key='date_time', value=file_metadata['date_time'])
+                return fname
+
+            get_file_metadata = PythonOperator(
+                task_id='get_file_metadata',
+                provide_context=True,
+                python_callable=get_file_metadata,
+            )
 
 
-
-
-
-
-
-
-            # TODO: convert area_id to area_name `SELECT code FROM area WHERE id={area_id}`
 
             # TODO: trigger dag(s) for this product & for this region
-            area_id = "GOM"  # TODO: ti.pull()
-            exec_date = "2018-01-01T01:01"  # TODO: ti.pull()
-            for processing_dag_name in self.dags_to_trigger:
-                # processing_dag_name is root dag, but each region has a dag
-                dag_to_trigger="{}_{}".format(area_id, processing_dag_name)
-                trigger_dag_operator_id = "trigger_{}".format(dag_to_trigger)
-
-                trigger_processing_REGION = MMTTriggerDagRunOperator(
-                    trigger_dag_id=trigger_dag_operator_id,
-                    python_callable=lambda context, dag_run_obj: dag_run_obj,
-                    execution_date="{{params.exec_date}}",
-                    task_id=dag_to_trigger,
-                    params={
-                        'exec_date': exec_date
-                    },
-                    retries=1,
-                    retry_delay=timedelta(minutes=2)
-                )
+            # area_id = "GOM"  # TODO: ti.pull()
+            # exec_date = "2018-01-01T01:01"  # TODO: ti.pull()
+            # for processing_dag_name in self.dags_to_trigger:
+            #     # processing_dag_name is root dag, but each region has a dag
+            #     dag_to_trigger="{}_{}".format(area_id, processing_dag_name)
+            #     trigger_dag_operator_id = "trigger_{}".format(dag_to_trigger)
+            #
+            #     trigger_processing_REGION = MMTTriggerDagRunOperator(
+            #         trigger_dag_id=trigger_dag_operator_id,
+            #         python_callable=lambda context, dag_run_obj: dag_run_obj,
+            #         execution_date="{{params.exec_date}}",
+            #         task_id=dag_to_trigger,
+            #         params={
+            #             'exec_date': exec_date
+            #         },
+            #         retries=1,
+            #         retry_delay=timedelta(minutes=2)
+            #     )
                 # TODO:
                 # sql_watch >> trigger_processing_REGION
 

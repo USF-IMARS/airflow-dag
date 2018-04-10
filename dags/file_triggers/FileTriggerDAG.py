@@ -16,6 +16,7 @@ from airflow import DAG
 from airflow.operators.sensors import SqlSensor
 from airflow.operators.python_operator import PythonOperator, BranchPythonOperator
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.mysql_operator import MySqlOperator
 
 from imars_etl.get_metadata import get_metadata
 from imars_etl.id_lookup import id_lookup
@@ -25,11 +26,12 @@ from imars_dags.operators.MMTTriggerDagRunOperator import MMTTriggerDagRunOperat
 
 class STATUS:  # status IDs from imars_product_metadata.status
     # {status.short_name.upper()} = {status.id}
-    TO_LOAD = 3
     STD     = 1
+    EXTERNAL= 2
+    TO_LOAD = 3
+    ERROR   = 4
 
 class FileTriggerDAG(DAG):
-
     def __init__(self, *args, **kwargs):
         """
         parameters:
@@ -129,6 +131,33 @@ class FileTriggerDAG(DAG):
             get_file_metadata >> branch_to_correct_region
 
             """
+            === update metadata db
+            =================================================================
+            """
+            # === if success
+            # TODO: use STATUS.STD here
+            set_product_status_to_std = MySqlOperator(
+                task_id="set_product_status_to_std",
+                sql=""" UPDATE file SET status=1 WHERE filepath="{{ ti.xcom_pull(task_ids="get_file_metadata", key="filepath") }}" """,
+                mysql_conn_id='imars_metadata',
+                autocommit=False,  # TODO: True?
+                parameters=None,
+                trigger_rule="all_success"
+            )
+            # === else failed
+            # TODO: use STATUS.ERROR here
+            set_product_status_to_err = MySqlOperator(
+                task_id="set_product_status_to_err",
+                sql=""" UPDATE file SET status=3 WHERE filepath="{{ ti.xcom_pull(task_ids="get_file_metadata", key="filepath") }}" """,
+                mysql_conn_id='imars_metadata',
+                autocommit=False,  # TODO: True?
+                parameters=None,
+                trigger_rule="one_failed"
+            )
+
+
+
+            """
             === trigger region processing dags
             =================================================================
             """
@@ -156,9 +185,5 @@ class FileTriggerDAG(DAG):
                         execution_date="{{ ti.xcom_pull(task_ids='get_file_metadata', key='date_time').strftime('%Y-%m-%d %H:%M:%S') }}",
                     )
                     ROI_dummy >> ROI_processing_DAG
-
-            """
-            === update metadata db
-            =================================================================
-            """
-            # TODO:
+                    ROI_processing_DAG >> set_product_status_to_std
+                    ROI_processing_DAG >> set_product_status_to_err

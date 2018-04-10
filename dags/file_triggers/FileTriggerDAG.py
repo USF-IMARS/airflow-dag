@@ -14,7 +14,8 @@ from datetime import timedelta
 
 from airflow import DAG
 from airflow.operators.sensors import SqlSensor
-from airflow.operators.python_operator import PythonOperator
+from airflow.operators.python_operator import PythonOperator, BranchPythonOperator
+from airflow.operators.dummy_operator import DummyOperator
 
 from imars_etl.get_metadata import get_metadata
 from imars_etl.id_lookup import id_lookup
@@ -67,56 +68,97 @@ class FileTriggerDAG(DAG):
             #       to prevent duplicates?
             #       Not an issue so long as catchup=False & max_active_runs=1
 
-
+            """
+            === get_file_metadata
+            =================================================================
+            retrieves metadata from db & stores it in ti xcom for other
+            operators to use.
+            """
             def get_file_metadata(**kwargs):
                 # `ti.push()`es area_id & date_time from SQL
                 ti = kwargs['ti']
-
+                # print("sql:\n\t{}".format(sql_selection))
                 file_metadata = get_metadata(
-                    {"sql": sql_selection}
+                    {
+                        "sql": sql_selection,
+                        "first": True
+                    }
                 )
-
+                # print("\n\tmeta:\n\t{}\n".format(file_metadata))
+                # logging.info("\n\n\tmeta:\n\t{}".format(file_metadata))
                 # convert area_id to area_name
-                file_metadata['area_name'] = imars_etl.id_lookup({
+                file_metadata['area_name'] = id_lookup({
                     'table': 'area',
-                    'value': ti.xcom_pull('area_id')
+                    'value': file_metadata['area_id']
                 })
 
                 ti.xcom_push(key='file_metadata', value=file_metadata)
                 # NOTE: can we just use the dict above?
                 ti.xcom_push(key='area_id',   value=file_metadata['area_id'])
-                ti.xcom_push(key='area_name',   value=file_metadata['area_name'])
+                ti.xcom_push(key='area_name', value=file_metadata['area_name'])
                 ti.xcom_push(key='date_time', value=file_metadata['date_time'])
-                return fname
+                print("\n\tenhanced meta:\n\t{}\n".format(file_metadata))
+                # logging.info(file_metadata)
+                return file_metadata
 
             get_file_metadata = PythonOperator(
                 task_id='get_file_metadata',
                 provide_context=True,
                 python_callable=get_file_metadata,
             )
+            check_for_to_loads >> get_file_metadata
 
+            """
+            === branch_to_correct_region
+            =================================================================
+            uses region_name from metadata to trigger the correct dag(s)
+            """
+            def branch_to_correct_region(**kwargs):
+                ti = kwargs['ti']
+                area_name = ti.xcom_pull(
+                    task_ids='get_file_metadata',
+                    key='area_name'
+                )
+                return area_name + "_dummy"
 
+            branch_to_correct_region = BranchPythonOperator(
+                task_id="branch_to_correct_region",
+                provide_context=True,
+                python_callable=branch_to_correct_region,
+            )
+            get_file_metadata >> branch_to_correct_region
 
-            # TODO: trigger dag(s) for this product & for this region
-            # area_id = "GOM"  # TODO: ti.pull()
-            # exec_date = "2018-01-01T01:01"  # TODO: ti.pull()
-            # for processing_dag_name in self.dags_to_trigger:
-            #     # processing_dag_name is root dag, but each region has a dag
-            #     dag_to_trigger="{}_{}".format(area_id, processing_dag_name)
-            #     trigger_dag_operator_id = "trigger_{}".format(dag_to_trigger)
-            #
-            #     trigger_processing_REGION = MMTTriggerDagRunOperator(
-            #         trigger_dag_id=trigger_dag_operator_id,
-            #         python_callable=lambda context, dag_run_obj: dag_run_obj,
-            #         execution_date="{{params.exec_date}}",
-            #         task_id=dag_to_trigger,
-            #         params={
-            #             'exec_date': exec_date
-            #         },
-            #         retries=1,
-            #         retry_delay=timedelta(minutes=2)
-            #     )
-                # TODO:
-                # sql_watch >> trigger_processing_REGION
+            """
+            === trigger region processing dags
+            =================================================================
+            """
+            REGION_NAMES = ['UNCUT', 'gom', 'fgbnms']  # TODO: get this from elsewhere
+            # trigger dag(s) for this product & for this region
+            for roi_name in REGION_NAMES:
+                # the dummy operator is just a choke point so the
+                #   BranchPythonOperator above can trigger several operators
+                #   grouped by ROI under ${ROI}_dummy.
+                ROI_dummy = DummyOperator(
+                    task_id=roi_name+"_dummy",
+                    trigger_rule='one_success'
+                )
+                branch_to_correct_region >> ROI_dummy
+                for processing_dag_name in self.dags_to_trigger:
+                    # processing_dag_name is root dag, but each region has a dag
+                    dag_to_trigger="{}_{}".format(roi_name, processing_dag_name)
+                    trigger_dag_operator_id = "trigger_{}".format(dag_to_trigger)
+                    ROI_processing_DAG = MMTTriggerDagRunOperator(
+                        task_id=trigger_dag_operator_id,
+                        python_callable=lambda context, dag_run_obj: dag_run_obj,
+                        retries=1,
+                        retry_delay=timedelta(minutes=2),
+                        trigger_dag_id=dag_to_trigger,
+                        execution_date="{{ ti.xcom_pull(task_ids='get_file_metadata', key='date_time').strftime('%Y-%m-%d %H:%M:%S') }}",
+                    )
+                    ROI_dummy >> ROI_processing_DAG
 
-            # TODO: update metadata db
+            """
+            === update metadata db
+            =================================================================
+            """
+            # TODO:

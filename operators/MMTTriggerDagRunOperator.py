@@ -32,7 +32,8 @@ class MMTTriggerDagRunOperator(TriggerDagRunOperator):
         dag=my_controller_dag
     )
     """
-    template_fields = ('execution_date',)
+    # NOTE: I would like to add 'task_id', but it does not work
+    template_fields = ('execution_date','trigger_dag_id',)
 
     def __init__(
         self, trigger_dag_id, python_callable, execution_date,

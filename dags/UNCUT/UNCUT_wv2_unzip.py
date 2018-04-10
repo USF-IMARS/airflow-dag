@@ -17,9 +17,9 @@ default_args.update({
 })
 
 this_dag = DAG(
-    dag_id="wv2_unzip",
+    dag_id="UNCUT_wv2_unzip",
     default_args=default_args,
-    schedule_interval=timedelta(hours=1),
+    schedule_interval=None,
     catchup=False,  # NOTE: this & max_active_runs prevents duplicate extractions
     max_active_runs=1
 )
@@ -30,7 +30,7 @@ unzip_wv2_ingest = BashOperator(
     dag = this_dag,
     bash_command="""
         unzip \
-            {{ ti.xcom_pull(task_ids="extract_file", key="fname") }} \
+            {{ ti.xcom_pull(task_ids="get_file_metadata", key="filepath") }} \
             -d /tmp/airflow_output_{{ ts }}
     """
 )

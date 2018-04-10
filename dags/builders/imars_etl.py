@@ -36,6 +36,15 @@ def add_tasks(
     """
     with dag as dag:
 
+
+
+
+        # TODO: !!! this whole thing needs to be reviewed b/c FileTriggerDAG
+        #           took over a lot of this.
+
+
+
+
         # TODO: remove this. (it is now in FileTriggerDAG)
         sql_selection="status={} AND product_type_id={}".format(
             3,  # STATUS.TO_LOAD
@@ -92,19 +101,6 @@ def add_tasks(
         #       4. duplicate task, one as-is and another with `one_failed` with
         #           every task upstream.
 
-        # === mysql update
-        update_input_file_meta_db = MySqlOperator(
-            task_id="update_input_file_meta_db",
-            sql=""" UPDATE file SET status=1 WHERE filepath="{{ ti.xcom_pull(task_ids="extract_file", key="fname") }}" """,
-            mysql_conn_id='imars_metadata',
-            autocommit=False,  # TODO: True?
-            parameters=None,
-        )
-
-        # TODO: wire together
-        # mysql_sensor >> extract(s) >> transform(s) >> load(s) >> cleanup
-        #                                                 |----->> myql_update
-        # mysql_sensor     >> extract(s)
         check_for_to_loads >> extract_file
 
         LOAD_TEMPLATE="""
@@ -131,7 +127,7 @@ def add_tasks(
                 # transform(s) >> load(s)
                 t_op >> load_operator
                 # load(s) >> mysql_update
-                load_operator >> update_input_file_meta_db
+                # load_operator >> update_input_file_meta_db
                 # load(s) >> cleanup
                 load_operator >> tmp_cleanup
 

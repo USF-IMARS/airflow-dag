@@ -54,7 +54,7 @@ def add_tasks(
         def extract_file(**kwargs):
             ti = kwargs['ti']
             fname = imars_etl.extract({
-                "sql":SQL_SELECTION
+                "sql":sql_selection
             })['filepath']
             ti.xcom_push(key='fname', value=fname)
             return fname

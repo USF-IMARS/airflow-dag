@@ -138,7 +138,7 @@ class FileTriggerDAG(DAG):
             # TODO: use STATUS.STD here
             set_product_status_to_std = MySqlOperator(
                 task_id="set_product_status_to_std",
-                sql=""" UPDATE file SET status=1 WHERE filepath="{{ ti.xcom_pull(task_ids="get_file_metadata", key="filepath") }}" """,
+                sql=""" UPDATE file SET status=1 WHERE filepath="{{ ti.xcom_pull(task_ids="get_file_metadata")["filepath"] }}" """,
                 mysql_conn_id='imars_metadata',
                 autocommit=False,  # TODO: True?
                 parameters=None,
@@ -148,14 +148,12 @@ class FileTriggerDAG(DAG):
             # TODO: use STATUS.ERROR here
             set_product_status_to_err = MySqlOperator(
                 task_id="set_product_status_to_err",
-                sql=""" UPDATE file SET status=3 WHERE filepath="{{ ti.xcom_pull(task_ids="get_file_metadata", key="filepath") }}" """,
+                sql=""" UPDATE file SET status=4 WHERE filepath="{{ ti.xcom_pull(task_ids="get_file_metadata")["filepath"] }}" """,
                 mysql_conn_id='imars_metadata',
                 autocommit=False,  # TODO: True?
                 parameters=None,
                 trigger_rule="one_failed"
             )
-
-
 
             """
             === trigger region processing dags

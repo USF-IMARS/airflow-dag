@@ -30,7 +30,7 @@ unzip_wv2_ingest = BashOperator(
     dag = this_dag,
     bash_command="""
         unzip \
-            {{ ti.xcom_pull(task_ids="extract_file")["fname"] }} \
+            {{ ti.xcom_pull(task_ids="extract_file") }} \
             -d /tmp/airflow_output_{{ ts }}
     """
 )

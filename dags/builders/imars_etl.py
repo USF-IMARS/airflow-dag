@@ -39,7 +39,7 @@ def add_tasks(
 
     ---------
     local file name is loaded into the DAG context and can be accessed like:
-        {{ ti.xcom_pull(task_ids="extract_file")["fname"] }}
+        {{ ti.xcom_pull(task_ids="extract_file")}}
     """
     with dag as dag:
         # === Extract
@@ -65,7 +65,7 @@ def add_tasks(
                 File path to acess the extracted file locally.
                 Because this is returned the path can be accessed by other tasks
                 using xcom like:
-                `{{ ti.xcom_pull(task_ids="extract_file")["fname"] }}`
+                `{{ ti.xcom_pull(task_ids="extract_file") }}`
             """
             sql_selection = kwargs['templates_dict']['sql_selection']
             fname = imars_etl.extract({

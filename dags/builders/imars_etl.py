@@ -42,9 +42,30 @@ def add_tasks(
     with dag as dag:
         # === Extract
         # ============================================================================
-        sql_selection = 'date_time="{{ dt }} AND product_type_id={{ product_type_id }}"'
         def extract_file(**kwargs):
-            sql_selection = kwargs['sql_selection']
+            """
+            Extracts a file from the remote system & makes it avaliable locally.
+            `templates_dict` should be used to pass sql_selection in the context
+            provided by kwargs.
+
+            parameters:
+            -----------
+            kwargs : keyword-arguments
+                kwargs contains the context set by airflow.
+                Within this context we expect the following variables:
+
+                `sql_selection` should look like:
+                    'date_time="{{ dt }} AND product_type_id={{ product_type_id }}"'
+
+            returns:
+            --------
+            fname : str
+                File path to acess the extracted file locally.
+                Because this is returned the path can be accessed by other tasks
+                using xcom like:
+                `{{ ti.xcom_pull(task_ids="extract_file")["fname"] }}`
+            """
+            sql_selection = kwargs['templates_dict']['sql_selection']
             fname = imars_etl.extract({
                 "sql":sql_selection
             })['filepath']

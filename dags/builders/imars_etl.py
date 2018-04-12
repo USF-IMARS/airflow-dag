@@ -1,6 +1,8 @@
 """
 allows for easy set up of ETL operations within imars-etl
 """
+import logging
+
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.mysql_operator import MySqlOperator
@@ -69,6 +71,8 @@ def add_tasks(
             fname = imars_etl.extract({
                 "sql":sql_selection
             })['filepath']
+            print(       "extracting product matching SQL:\n\t" + sql_selection)
+            logging.info("extracting product matching SQL:\n\t" + sql_selection)
             # ti.xcom_push(key='fname', value=fname)
             return fname
 
@@ -77,7 +81,7 @@ def add_tasks(
             provide_context=True,
             python_callable=extract_file,
             templates_dict={
-                "sql_selection": 'date_time="{{ dt }}" AND product_type_id=' + str(product_type_id)
+                "sql_selection": 'date_time="{{ execution_date }}" AND product_type_id=' + str(product_type_id)
             }
         )
 

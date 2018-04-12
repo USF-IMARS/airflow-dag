@@ -33,45 +33,31 @@ def add_tasks(
         Dictionary to be passed into imars-etl.load() with metadata that is
         common to all of your to_load output files. Check imars-etl docs and/or
         imars_metadata_db.file columns to find a list of potential values.
+
+
+    ---------
+    local file name is loaded into the DAG context and can be accessed like:
+        {{ ti.xcom_pull(task_ids="extract_file")["fname"] }}
     """
     with dag as dag:
-
-
-
-
-        # TODO: !!! this whole thing needs to be reviewed b/c FileTriggerDAG
-        #           took over a lot of this.
-
-
-
-
-        # TODO: remove this. (it is now in FileTriggerDAG)
-        sql_selection="status={} AND product_type_id={}".format(
-            3,  # STATUS.TO_LOAD
-            product_type_id
-        )
-        sql_str="SELECT id FROM file WHERE " + sql_selection
-        check_for_to_loads = SqlSensor(
-            task_id='check_for_to_loads',
-            conn_id="imars_metadata",
-            sql=sql_str,
-            soft_fail=True,
-        )
-
         # === Extract
         # ============================================================================
+        sql_selection = 'date_time="{{ dt }} AND product_type_id={{ product_type_id }}"'
         def extract_file(**kwargs):
-            ti = kwargs['ti']
+            sql_selection = kwargs['sql_selection']
             fname = imars_etl.extract({
                 "sql":sql_selection
             })['filepath']
-            ti.xcom_push(key='fname', value=fname)
+            # ti.xcom_push(key='fname', value=fname)
             return fname
 
         extract_file = PythonOperator(
             task_id='extract_file',
             provide_context=True,
             python_callable=extract_file,
+            templates_dict={
+                "sql_selection": 'date_time="{{ dt }}" AND product_type_id=' + str(product_type_id)
+            }
         )
 
         # === Load
@@ -100,8 +86,6 @@ def add_tasks(
         #           * (-): this will trigger cleanup before some are done
         #       4. duplicate task, one as-is and another with `one_failed` with
         #           every task upstream.
-
-        check_for_to_loads >> extract_file
 
         LOAD_TEMPLATE="""
             /opt/imars-etl/imars-etl.py -vvv load \

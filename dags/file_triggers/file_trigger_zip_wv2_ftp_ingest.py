@@ -23,5 +23,5 @@ this_dag = FileTriggerDAG(
     ],
     dag_id="file_trigger_zip_wv2_ftp_ingest",
     default_args=default_args,
-    schedule_interval=timedelta(hours=1),
+    schedule_interval=timedelta(minutes=15),
 )

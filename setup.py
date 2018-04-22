@@ -28,6 +28,7 @@ setup(name='imars_dags',
     tests_require=['nose'],
     install_requires=[
         'git+https://git}@github.com/7yl4r/pycmr.git/@prod'
+        # TODO: add imars-etl here?
     ],
     #cmdclass={'test': PyTest},
 

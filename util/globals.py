@@ -19,7 +19,6 @@ class QUEUE:
     PYCMR = 'pycmr'  # https://github.com/7yl4r/pyCMR
     SNAP = 'snap'  # https://github.com/USF-IMARS/snap-puppet
 
-
 class POOL:
     """
     Similar to QUEUE class.

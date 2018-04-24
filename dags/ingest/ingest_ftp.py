@@ -40,7 +40,7 @@ wv2_ingest = BashOperator(
     # `--status` is `to_load` == 3
     #  `--area`  is `UNCUT`   == 5
     bash_command="""
-    /opt/imars-etl/imars-etl.py -vvv load \
+    python3 -m imars_etl -vvv load \
         --product_type_id 6 \
         --json '{"status":3, "area_id":5}'\
         --directory /srv/imars-objects/ftp-ingest

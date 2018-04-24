@@ -113,7 +113,7 @@ def add_tasks(
         #           every task upstream.
 
         LOAD_TEMPLATE="""
-            /opt/imars-etl/imars-etl.py -vvv load \
+            python3 -m imars_etl -vvv load \
                 --product_type_name {{ params.product_type_name }} \
                 --json '{{ params.json }}' \
                 --directory /tmp/airflow_output_{{ ts }}

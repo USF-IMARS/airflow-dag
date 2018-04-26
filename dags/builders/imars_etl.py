@@ -6,6 +6,7 @@ import logging
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.mysql_operator import MySqlOperator
+from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.sensors import SqlSensor
 
 import imars_etl
@@ -85,9 +86,8 @@ def add_tasks(
             }
         )
 
-        # === Load
-        # ============================================================================
         # === /tmp/ cleanup
+        # ============================================================================
         tmp_cleanup = BashOperator(
             task_id="tmp_cleanup",
             trigger_rule="all_done",
@@ -95,23 +95,30 @@ def add_tasks(
                 rm -r /tmp/airflow_output_{{ ts }}
             """
         )
-        # ensure we clean up even if something in the middle fails
         extract_file >> tmp_cleanup
-        # NOTE: ^this^ doesn't work...
-        #   possible fixes:
-        #       1. Take a subdag param instead of operator lists & set subdag
-        #           upstream from tmp_cleanup. The subdag will fail as a unit.
-        #           * (-): but then all processing steps get lumped together
-        #           * (-): this pushes extra complexity onto the implementing DAG
-        #       2. pass on_retry_callback to every task
-        # https://medium.com/handy-tech/airflow-tips-tricks-and-pitfalls-9ba53fba14eb
-        #       3. set to `one_failed`, set every taks upstream, and add an
-        #           always-fail operator (or duplicate the operator with an
-        #           on_success)
-        #           * (-): this will trigger cleanup before some are done
-        #       4. duplicate task, one as-is and another with `one_failed` with
-        #           every task upstream.
 
+        # to ensure we clean up even if something in the middle fails, we must
+        # do some weird stuff. For details see:
+        # https://github.com/USF-IMARS/imars_dags/issues/44
+        poke_until_tmp_cleanup_done = SqlSensor(
+            # poke until the cleanup is done
+            task_id='poke_until_tmp_cleanup_done',
+            conn_id='airflow_metadata',
+            poke_interval=60*2,
+            soft_fail=False,
+            timeout=60*30,
+            sql="""
+            SELECT * FROM task_instance WHERE
+                task_id="tmp_cleanup"
+                AND state IN ('success','failed')
+                AND dag_id="{{ dag.dag_id }}"
+                AND execution_date="{{ execution_date }}";
+            """
+        )
+        extract_file >> poke_until_tmp_cleanup_done
+
+        # === Load
+        # ============================================================================
         LOAD_TEMPLATE="""
             python3 -m imars_etl -vvv load \
                 --product_type_name {{ params.product_type_name }} \

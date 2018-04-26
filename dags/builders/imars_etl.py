@@ -12,17 +12,19 @@ from airflow.operators.sensors import SqlSensor
 import imars_etl
 
 def add_tasks(
-    dag, product_type_id, first_transform_operators, last_transform_operators,
-    to_load, common_load_params={}
+    dag, sql_selector, first_transform_operators, last_transform_operators,
+    to_load, common_load_params={}, test=False
 ):
     """
     Parameters:
     -----------
     dag : airflow.DAG
         DAG we are building upon
-    product_type_id : int
-        Product id number from imars metadata db which we watch for as an input.
-        This is the input file of your DAG.
+    sql_selector : str
+        "WHERE ____" style SQL selector string to search metadata db for input.
+        This is to find the input file of your DAG.
+        Example:
+        "product_type_id=6 AND is_day_pass=1"
     first_transform_operators : airflow.operators.*[]
         Operators which get wired after extract. These are the first in your
         processing chain.
@@ -57,7 +59,7 @@ def add_tasks(
                 kwargs contains the context set by airflow.
                 Within this context we expect the following variables:
 
-                `sql_selection` should look like:
+                `sql_selection` should look something like:
                     'date_time="{{ dt }} AND product_type_id={{ product_type_id }}"'
 
             returns:
@@ -69,20 +71,24 @@ def add_tasks(
                 `{{ ti.xcom_pull(task_ids="extract_file") }}`
             """
             sql_selection = kwargs['templates_dict']['sql_selection']
-            fname = imars_etl.extract({
-                "sql":sql_selection
-            })['filepath']
-            print(       "extracting product matching SQL:\n\t" + sql_selection)
-            logging.info("extracting product matching SQL:\n\t" + sql_selection)
-            # ti.xcom_push(key='fname', value=fname)
-            return fname
+            if kwargs['templates_dict']['test'] == "True":
+                return "/tmp/fake/file.name"
+            else:
+                fname = imars_etl.extract({
+                    "sql":sql_selection
+                })['filepath']
+                print(       "extracting product matching SQL:\n\t" + sql_selection)
+                logging.info("extracting product matching SQL:\n\t" + sql_selection)
+                # ti.xcom_push(key='fname', value=fname)
+                return fname
 
         extract_file = PythonOperator(
             task_id='extract_file',
             provide_context=True,
             python_callable=extract_file,
             templates_dict={
-                "sql_selection": 'date_time="{{ execution_date }}" AND product_type_id=' + str(product_type_id)
+                "sql_selection": 'date_time="{{ execution_date }}" AND (' + sql_selector + ')',
+                "test": str(test)
             }
         )
 

@@ -108,7 +108,7 @@ to_load=[
 ]
 
 imars_etl_builder.add_tasks(
-    this_dag, 6, [unzip_wv2_ingest], [rm_spurrious_gis_files],
+    this_dag, "product_type_id=6", [unzip_wv2_ingest], [rm_spurrious_gis_files],
     to_load, common_load_params={
         "json":'{"status":3, "area_id":5}'
     }

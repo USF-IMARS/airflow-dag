@@ -20,8 +20,6 @@ this_dag = DAG(
     dag_id="UNCUT_wv2_unzip",
     default_args=default_args,
     schedule_interval=None,
-    catchup=False,  # NOTE: this & max_active_runs prevents duplicate extractions
-    max_active_runs=1
 )
 
 

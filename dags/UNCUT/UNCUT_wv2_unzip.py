@@ -11,7 +11,7 @@ import imars_dags.dags.builders.imars_etl as imars_etl_builder
 
 default_args = DEFAULT_ARGS.copy()
 default_args.update({
-    'start_date': datetime(2018, 3, 5, 16, 0),
+    'start_date': datetime(1980, 1, 1),
     'retries': 1,
     'retry_delay': timedelta(minutes=3),
 })

@@ -22,6 +22,7 @@ this_dag = DAG(
     schedule_interval=None,
 )
 
+TMP_DIR = imars_etl_builder.get_tmp_dir(this_dag)
 
 unzip_wv2_ingest = BashOperator(
     task_id="unzip_wv2_ingest",
@@ -29,7 +30,7 @@ unzip_wv2_ingest = BashOperator(
     bash_command="""
         unzip \
             {{ ti.xcom_pull(task_ids="extract_file") }} \
-            -d /tmp/airflow_output_{{ ts }}
+            -d {{ TMP_DIR }}
     """
 )
 
@@ -39,7 +40,7 @@ rm_spurrious_gis_files = BashOperator(
     task_id="rm_spurrious_gis_files",
     dag=this_dag,
     bash_command="""
-        rm -r /tmp/airflow_output_{{ ts }}/*/*/GIS_FILES
+        rm -r {{ TMP_DIR }}/*/*/GIS_FILES
     """
 )
 unzip_wv2_ingest >> rm_spurrious_gis_files

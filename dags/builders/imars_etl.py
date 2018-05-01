@@ -11,6 +11,12 @@ from airflow.operators.sensors import SqlSensor
 
 import imars_etl
 
+def get_tmp_dir(dag):
+    """
+    returns temporary directory (template) for given dag.
+    """
+    return "/srv/imars-objects/airflow_tmp/"+dag.dag_id+"/{{ts}}"
+
 def add_tasks(
     dag, sql_selector, first_transform_operators, last_transform_operators,
     to_load, common_load_params={}, test=False
@@ -44,6 +50,7 @@ def add_tasks(
     local file name is loaded into the DAG context and can be accessed like:
         {{ ti.xcom_pull(task_ids="extract_file")}}
     """
+    TMP_DIR = get_tmp_dir(dag)
     with dag as dag:
         # === Extract
         # ============================================================================
@@ -98,7 +105,7 @@ def add_tasks(
             task_id="tmp_cleanup",
             trigger_rule="all_done",
             bash_command="""
-                rm -r /tmp/airflow_output_{{ ts }}
+                rm -r {{ TMP_DIR }}
             """
         )
         extract_file >> tmp_cleanup
@@ -129,7 +136,7 @@ def add_tasks(
             python3 -m imars_etl -vvv load \
                 --product_type_name {{ params.product_type_name }} \
                 --json '{{ params.json }}' \
-                --directory /tmp/airflow_output_{{ ts }}
+                --directory {{ TMP_DIR }}
         """
 
         for t_op in first_transform_operators:

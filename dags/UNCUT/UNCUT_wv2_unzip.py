@@ -40,8 +40,8 @@ rm_spurrious_gis_files = BashOperator(
     task_id="rm_spurrious_gis_files",
     dag=this_dag,
     bash_command="""
-        rm -r {{ TMP_DIR }}/*/*/GIS_FILES
-    """
+        rm -r {}/*/*/GIS_FILES
+    """.format(TMP_DIR)
 )
 unzip_wv2_ingest >> rm_spurrious_gis_files
 

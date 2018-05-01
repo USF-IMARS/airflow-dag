@@ -105,8 +105,8 @@ def add_tasks(
             task_id="tmp_cleanup",
             trigger_rule="all_done",
             bash_command="""
-                rm -r {{ TMP_DIR }}
-            """
+                rm -r {}
+            """.format(TMP_DIR)
         )
         extract_file >> tmp_cleanup
 
@@ -136,8 +136,7 @@ def add_tasks(
             python3 -m imars_etl -vvv load \
                 --product_type_name {{ params.product_type_name }} \
                 --json '{{ params.json }}' \
-                --directory {{ TMP_DIR }}
-        """
+                --directory """ + TMP_DIR
 
         for t_op in first_transform_operators:
             # extract(s) >> transform(s)

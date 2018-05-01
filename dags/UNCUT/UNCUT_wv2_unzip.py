@@ -30,8 +30,7 @@ unzip_wv2_ingest = BashOperator(
     bash_command="""
         unzip \
             {{ ti.xcom_pull(task_ids="extract_file") }} \
-            -d {{ TMP_DIR }}
-    """
+            -d """ + .format(TMP_DIR)
 )
 
 # these GIS_FILES need to be removed so they don't get accidentally ingested

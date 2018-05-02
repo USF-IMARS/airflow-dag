@@ -2,6 +2,7 @@
 allows for easy set up of ETL operations within imars-etl
 """
 import logging
+import os, errno
 
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import PythonOperator
@@ -15,7 +16,14 @@ def get_tmp_dir(dag):
     """
     returns temporary directory (template) for given dag.
     """
-    return "/srv/imars-objects/airflow_tmp/"+dag.dag_id+"/{{ts}}"
+    directory="/srv/imars-objects/airflow_tmp/"+dag.dag_id+"_{{ts}}"
+    try:
+        os.mkdir(directory)  # not mkdirs b/c we want to fail if unmounted
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
+        # else already exists
+    return directory
 
 def add_tasks(
     dag, sql_selector, first_transform_operators, last_transform_operators,

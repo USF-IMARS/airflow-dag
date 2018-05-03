@@ -23,6 +23,7 @@ with DAG(
     catchup=False,  # NOTE: this & max_active_runs prevents duplicate ingests
     max_active_runs=1
 ) as dag:
+    TMP_DIR = imars_etl_builder.get_tmp_dir(dag.dag_id)
 
     proc_step_one = DummyOperator(
         task_id='proc_step_one',
@@ -40,5 +41,5 @@ with DAG(
     proc_step_two >> proc_step_three
 
     imars_etl_builder.add_tasks(
-        dag, "", [proc_step_one], [proc_step_three], [], test=True
+        dag, "", [proc_step_one], [proc_step_three], [], TMP_DIR, test=True
     )

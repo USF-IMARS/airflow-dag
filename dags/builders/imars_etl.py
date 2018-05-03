@@ -27,7 +27,7 @@ def get_tmp_dir(dag_id):
 
 def add_tasks(
     dag, sql_selector, first_transform_operators, last_transform_operators,
-    to_load, common_load_params={}, test=False
+    to_load, TMP_DIR, common_load_params={}, test=False
 ):
     """
     Parameters:
@@ -58,7 +58,6 @@ def add_tasks(
     local file name is loaded into the DAG context and can be accessed like:
         {{ ti.xcom_pull(task_ids="extract_file")}}
     """
-    TMP_DIR = get_tmp_dir(dag.dag_id)
     with dag as dag:
         # === Extract
         # ============================================================================

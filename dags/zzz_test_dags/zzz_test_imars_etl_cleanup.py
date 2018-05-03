@@ -15,15 +15,16 @@ default_args.update({
     'start_date': datetime(2018, 3, 1, 20, 0),
     'retries': 0,
 })
+DAG_ID="zzz_test_imars_etl_cleanup"
+TMP_DIR = imars_etl_builder.get_tmp_dir(DAG_ID)
 
 with DAG(
-    dag_id="zzz_test_imars_etl_cleanup",
+    dag_id=DAG_ID,
     default_args=default_args,
     schedule_interval=None,
     catchup=False,  # NOTE: this & max_active_runs prevents duplicate ingests
     max_active_runs=1
 ) as dag:
-    TMP_DIR = imars_etl_builder.get_tmp_dir(dag.dag_id)
 
     proc_step_one = DummyOperator(
         task_id='proc_step_one',

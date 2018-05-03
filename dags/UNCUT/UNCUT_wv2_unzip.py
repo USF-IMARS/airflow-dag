@@ -22,7 +22,7 @@ this_dag = DAG(
     schedule_interval=None,
 )
 
-TMP_DIR = imars_etl_builder.get_tmp_dir(this_dag)
+TMP_DIR = imars_etl_builder.get_tmp_dir(this_dag.dag_id)
 
 unzip_wv2_ingest = BashOperator(
     task_id="unzip_wv2_ingest",
@@ -39,8 +39,8 @@ rm_spurrious_gis_files = BashOperator(
     task_id="rm_spurrious_gis_files",
     dag=this_dag,
     bash_command="""
-        rm -r {}/*/*/GIS_FILES
-    """.format(TMP_DIR)
+        rm -r """+TMP_DIR+"""/*/*/GIS_FILES
+    """
 )
 unzip_wv2_ingest >> rm_spurrious_gis_files
 
@@ -107,7 +107,8 @@ to_load=[
 
 imars_etl_builder.add_tasks(
     this_dag, "product_type_id=6", [unzip_wv2_ingest], [rm_spurrious_gis_files],
-    to_load, common_load_params={
+    to_load, TMP_DIR,
+    common_load_params={
         "json":'{"status":3, "area_id":5}'
     }
 )

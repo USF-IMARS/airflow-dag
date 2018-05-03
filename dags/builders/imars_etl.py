@@ -12,11 +12,11 @@ from airflow.operators.sensors import SqlSensor
 
 import imars_etl
 
-def get_tmp_dir(dag):
+def get_tmp_dir(dag_id):
     """
     returns temporary directory (template) for given dag.
     """
-    directory="/srv/imars-objects/airflow_tmp/"+dag.dag_id+"_{{ts}}"
+    directory="/srv/imars-objects/airflow_tmp/"+dag_id+"_{{ts}}"
     try:
         os.mkdir(directory)  # not mkdirs b/c we want to fail if unmounted
     except OSError as e:
@@ -58,7 +58,7 @@ def add_tasks(
     local file name is loaded into the DAG context and can be accessed like:
         {{ ti.xcom_pull(task_ids="extract_file")}}
     """
-    TMP_DIR = get_tmp_dir(dag)
+    TMP_DIR = get_tmp_dir(dag.dag_id)
     with dag as dag:
         # === Extract
         # ============================================================================

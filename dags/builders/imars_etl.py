@@ -17,12 +17,14 @@ def get_tmp_dir(dag_id):
     returns temporary directory (template) for given dag.
     """
     directory="/srv/imars-objects/airflow_tmp/"+dag_id+"_{{ts}}"
-    try:
-        os.mkdir(directory)  # not mkdirs b/c we want to fail if unmounted
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            raise
-        # else already exists
+    # try:
+    #     # oops, can't mkdir here b/c of jinja template
+    #     os.mkdir(directory)  # not mkdirs b/c we want to fail if unmounted
+    # except OSError as e:
+    #     if e.errno != errno.EEXIST:
+    #         raise
+    #     # else already exists
+    #     return directory
     return directory
 
 def add_tasks(
@@ -59,8 +61,16 @@ def add_tasks(
         {{ ti.xcom_pull(task_ids="extract_file")}}
     """
     with dag as dag:
+        # === /tmp/ create
+        # ======================================================================
+        tmp_mkdir = BashOperator(
+            task_id="tmp_mkdir",
+            trigger_rule="all_done",
+            bash_command="mkdir " + TMP_DIR,
+        )
+
         # === Extract
-        # ============================================================================
+        # ======================================================================
         def extract_file(**kwargs):
             """
             Extracts a file from the remote system & makes it avaliable locally.
@@ -105,15 +115,16 @@ def add_tasks(
                 "test": str(test)
             }
         )
+        tmp_mkdir >> extract_file
 
         # === /tmp/ cleanup
-        # ============================================================================
+        # ======================================================================
         tmp_cleanup = BashOperator(
             task_id="tmp_cleanup",
             trigger_rule="all_done",
-            bash_command="rm -r" + TMP_DIR,
+            bash_command="rm -r " + TMP_DIR,
         )
-        extract_file >> tmp_cleanup
+        tmp_mkdir >> tmp_cleanup  # just in case we have 0 proc ops
 
         # to ensure we clean up even if something in the middle fails, we must
         # do some weird stuff. For details see:
@@ -133,10 +144,10 @@ def add_tasks(
                 AND execution_date="{{ execution_date }}";
             """
         )
-        extract_file >> poke_until_tmp_cleanup_done
+        tmp_mkdir >> poke_until_tmp_cleanup_done
 
         # === Load
-        # ============================================================================
+        # ======================================================================
         LOAD_TEMPLATE="""
             python3 -m imars_etl -vvv load \
                 --product_type_name {{ params.product_type_name }} \

@@ -22,7 +22,7 @@ this_dag = DAG(
     schedule_interval=None,
 )
 
-TMP_DIR = imars_etl_builder.get_tmp_dir(this_dag)
+TMP_DIR = imars_etl_builder.get_tmp_dir(this_dag.dag_id)
 
 unzip_wv2_ingest = BashOperator(
     task_id="unzip_wv2_ingest",

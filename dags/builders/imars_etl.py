@@ -112,9 +112,7 @@ def add_tasks(
         tmp_cleanup = BashOperator(
             task_id="tmp_cleanup",
             trigger_rule="all_done",
-            bash_command="""
-                rm -r {}
-            """.format(TMP_DIR)
+            bash_command="rm -r" + TMP_DIR,
         )
         extract_file >> tmp_cleanup
 

@@ -16,7 +16,7 @@ default_args.update({
     'retries': 0,
 })
 DAG_ID="zzz_test_imars_etl_cleanup"
-TMP_DIR = imars_etl_builder.get_tmp_dir(DAG_ID)
+TMP_DIR = "/srv/imars-objects/airflow_tmp/test"
 
 with DAG(
     dag_id=DAG_ID,

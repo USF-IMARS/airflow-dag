@@ -40,7 +40,7 @@ def add_tasks(
         "WHERE ____" style SQL selector string to search metadata db for input.
         This is to find the input file of your DAG.
         Example:
-        "product_type_id=6 AND is_day_pass=1"
+        "product_id=6 AND is_day_pass=1"
     first_transform_operators : airflow.operators.*[]
         Operators which get wired after extract. These are the first in your
         processing chain.
@@ -84,7 +84,7 @@ def add_tasks(
                 Within this context we expect the following variables:
 
                 `sql_selection` should look something like:
-                    'date_time="{{ dt }} AND product_type_id={{ product_type_id }}"'
+                    'date_time="{{ dt }} AND product_id={{ product_id }}"'
 
             returns:
             --------

@@ -17,7 +17,7 @@ default_args.update({
 })
 
 this_dag = FileTriggerDAG(
-    product_type_id=6,
+    product_id=6,
     dags_to_trigger=[
         "wv2_unzip"
     ],

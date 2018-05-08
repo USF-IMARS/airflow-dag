@@ -10,7 +10,7 @@ this_dag = FileTriggerDAG(
 )
 ```
 """
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from airflow import DAG
 from airflow.operators.sensors import SqlSensor
@@ -20,6 +20,7 @@ from airflow.operators.mysql_operator import MySqlOperator
 
 from imars_etl.get_metadata import get_metadata
 from imars_etl.id_lookup import id_lookup
+from imars_dags.util.globals import DEFAULT_ARGS
 
 from imars_dags.operators.MMTTriggerDagRunOperator import MMTTriggerDagRunOperator
 
@@ -32,6 +33,9 @@ class STATUS:  # status IDs from imars_product_metadata.status
     ERROR   = 4
 
 class FileTriggerDAG(DAG):
+    DAWN_OF_TIME = datetime(2018, 5, 5, 5, 5)  # any date in past is fine
+    SCHEDULE_INTERVAL = timedelta(minutes=15)  # must be > POKE_INTERVAL
+    POKE_INTERVAL = 60*5  # use higher value for less load on prod meta server
     def __init__(self, *args, **kwargs):
         """
         parameters:
@@ -44,9 +48,30 @@ class FileTriggerDAG(DAG):
         self.product_id = kwargs.pop('product_id')
         self.dags_to_trigger = kwargs.pop('dags_to_trigger')
 
+        # === overload some arguments TODO: warn or something???
         # NOTE: catchup & max_active_runs prevent duplicate extractions
         kwargs['catchup']=False
         kwargs['max_active_runs']=1
+
+        # === set arguments if ommitted
+        def_def_args = DEFAULT_ARGS.copy()
+        def_def_args.update({
+            'start_date': self.DAWN_OF_TIME,
+            'retries': 0,
+        })
+        kwargs['default_args'] = getattr(
+            kwargs,
+            'default_args',
+            def_def_args
+        )
+
+        kwargs['schedule_interval'] = getattr(
+            kwargs,
+            'schedule_interval',
+            self.SCHEDULE_INTERVAL
+        )
+        self.schedule_interval = kwargs['schedule_interval']
+
         super(FileTriggerDAG, self).__init__(*args, **kwargs)
         self._add_file_trigger_tasks()
 
@@ -65,6 +90,9 @@ class FileTriggerDAG(DAG):
                 conn_id="imars_metadata",
                 sql=sql_str,
                 soft_fail=True,
+                poke_interval=self.POKE_INTERVAL,
+                # timeout matches schedule_interval b/c we always want 1 running
+                timeout=self.schedule_interval.total_seconds()
             )
             # TODO: should set imars_product_metadata.status to "processing"
             #       to prevent duplicates?
@@ -142,7 +170,7 @@ class FileTriggerDAG(DAG):
                 mysql_conn_id='imars_metadata',
                 autocommit=False,  # TODO: True?
                 parameters=None,
-                trigger_rule="all_success"
+                trigger_rule="one_success"
             )
             # === else failed
             # TODO: use STATUS.ERROR here

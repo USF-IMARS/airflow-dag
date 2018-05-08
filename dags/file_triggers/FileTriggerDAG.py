@@ -1,9 +1,9 @@
 """
 example usage:
 ```
-product_type_id = 6
+product_id = 6
 this_dag = FileTriggerDAG(
-    product_type_id=6,
+    product_id=6,
     dags_to_trigger=[
         "wv2_unzip"
     ]
@@ -36,12 +36,12 @@ class FileTriggerDAG(DAG):
         """
         parameters:
         -----------
-        product_type_id : int
-            product_type_id for the product we are watching.
+        product_id : int
+            product_id for the product we are watching.
         dags_to_trigger : str[]
             list of DAG names to trigger when we get a new product.
         """
-        self.product_type_id = kwargs.pop('product_type_id')
+        self.product_id = kwargs.pop('product_id')
         self.dags_to_trigger = kwargs.pop('dags_to_trigger')
 
         # NOTE: catchup & max_active_runs prevent duplicate extractions
@@ -52,12 +52,12 @@ class FileTriggerDAG(DAG):
 
     def _add_file_trigger_tasks(self):
         with self as dag:
-            # TODO: SQL watch for pid=={} & status==to_load
+            # TODO: SQL watch for pid=={} & status_id==to_load
             # === mysql_sensor
             # =================================================================
-            sql_selection="status={} AND product_type_id={};".format(
+            sql_selection="status_id={} AND product_id={};".format(
                 STATUS.TO_LOAD,
-                self.product_type_id
+                self.product_id
             )
             sql_str="SELECT id FROM file WHERE " + sql_selection
             check_for_to_loads = SqlSensor(
@@ -138,7 +138,7 @@ class FileTriggerDAG(DAG):
             # TODO: use STATUS.STD here
             set_product_status_to_std = MySqlOperator(
                 task_id="set_product_status_to_std",
-                sql=""" UPDATE file SET status=1 WHERE filepath="{{ ti.xcom_pull(task_ids="get_file_metadata")["filepath"] }}" """,
+                sql=""" UPDATE file SET status_id=1 WHERE filepath="{{ ti.xcom_pull(task_ids="get_file_metadata")["filepath"] }}" """,
                 mysql_conn_id='imars_metadata',
                 autocommit=False,  # TODO: True?
                 parameters=None,
@@ -148,7 +148,7 @@ class FileTriggerDAG(DAG):
             # TODO: use STATUS.ERROR here
             set_product_status_to_err = MySqlOperator(
                 task_id="set_product_status_to_err",
-                sql=""" UPDATE file SET status=4 WHERE filepath="{{ ti.xcom_pull(task_ids="get_file_metadata")["filepath"] }}" """,
+                sql=""" UPDATE file SET status_id=4 WHERE filepath="{{ ti.xcom_pull(task_ids="get_file_metadata")["filepath"] }}" """,
                 mysql_conn_id='imars_metadata',
                 autocommit=False,  # TODO: True?
                 parameters=None,

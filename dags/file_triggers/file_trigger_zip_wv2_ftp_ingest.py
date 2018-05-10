@@ -1,11 +1,6 @@
 # =========================================================================
-# wv2 unzip to final destination
+# wv2 zip from ftp ingest (manually requested from Digital Globe)
 # =========================================================================
-from datetime import datetime,timedelta
-
-from airflow import DAG
-from imars_dags.operators.MMTTriggerDagRunOperator import MMTTriggerDagRunOperator
-
 from imars_dags.dags.file_triggers.FileTriggerDAG import FileTriggerDAG
 
 this_dag = FileTriggerDAG(

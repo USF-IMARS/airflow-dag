@@ -200,18 +200,22 @@ class FileTriggerDAG(DAG):
                     trigger_rule='one_success'
                 )
                 branch_to_correct_region >> ROI_dummy
-                for processing_dag_name in self.dags_to_trigger:
-                    # processing_dag_name is root dag, but each region has a dag
-                    dag_to_trigger="{}_{}".format(roi_name, processing_dag_name)
-                    trigger_dag_operator_id = "trigger_{}".format(dag_to_trigger)
-                    ROI_processing_DAG = MMTTriggerDagRunOperator(
-                        task_id=trigger_dag_operator_id,
-                        python_callable=lambda context, dag_run_obj: dag_run_obj,
-                        retries=1,
-                        retry_delay=timedelta(minutes=2),
-                        trigger_dag_id=dag_to_trigger,
-                        execution_date="{{ ti.xcom_pull(task_ids='get_file_metadata', key='date_time').strftime('%Y-%m-%d %H:%M:%S') }}",
-                    )
-                    ROI_dummy >> ROI_processing_DAG
-                    ROI_processing_DAG >> set_product_status_to_std
-                    ROI_processing_DAG >> set_product_status_to_err
+                if len(self.dags_to_trigger) > 1:
+                    for processing_dag_name in self.dags_to_trigger:
+                        # processing_dag_name is root dag, but each region has a dag
+                        dag_to_trigger="{}_{}".format(roi_name, processing_dag_name)
+                        trigger_dag_operator_id = "trigger_{}".format(dag_to_trigger)
+                        ROI_processing_DAG = MMTTriggerDagRunOperator(
+                            task_id=trigger_dag_operator_id,
+                            python_callable=lambda context, dag_run_obj: dag_run_obj,
+                            retries=1,
+                            retry_delay=timedelta(minutes=2),
+                            trigger_dag_id=dag_to_trigger,
+                            execution_date="{{ ti.xcom_pull(task_ids='get_file_metadata', key='date_time').strftime('%Y-%m-%d %H:%M:%S') }}",
+                        )
+                        ROI_dummy >> ROI_processing_DAG
+                        ROI_processing_DAG >> set_product_status_to_std
+                        ROI_processing_DAG >> set_product_status_to_err
+                else:  # no dags_to_trigger means just set it std and do nothing
+                    ROI_dummy >> set_product_status_to_std
+                    ROI_dummy >> set_product_status_to_err

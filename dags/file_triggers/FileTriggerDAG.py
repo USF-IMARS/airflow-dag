@@ -35,8 +35,8 @@ class STATUS:  # status IDs from imars_product_metadata.status
 
 class FileTriggerDAG(DAG):
     DAWN_OF_TIME = datetime(2018, 5, 5, 5, 5)  # any date in past is fine
-    SCHEDULE_INTERVAL = timedelta(minutes=15)  # must be > POKE_INTERVAL
-    POKE_INTERVAL = 60*5  # use higher value for less load on prod meta server
+    SCHEDULE_INTERVAL = timedelta(minutes=1)  # must be >= POKE_INTERVAL
+    POKE_INTERVAL = 60  # use higher value for less load on prod meta server
     def __init__(self, *args, **kwargs):
         """
         parameters:

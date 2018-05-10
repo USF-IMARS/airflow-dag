@@ -9,7 +9,7 @@ from imars_dags.operators.MMTTriggerDagRunOperator import MMTTriggerDagRunOperat
 from imars_dags.dags.file_triggers.FileTriggerDAG import FileTriggerDAG
 
 this_dag = FileTriggerDAG(
-    product_id=6,
+    product_ids=[6],
     dags_to_trigger=[
         "wv2_unzip"
     ],

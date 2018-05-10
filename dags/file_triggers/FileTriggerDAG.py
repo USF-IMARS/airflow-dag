@@ -1,9 +1,9 @@
 """
 example usage:
 ```
-product_id = 6
+# trigger wv2_unzip for files with product_id = 6
 this_dag = FileTriggerDAG(
-    product_id=6,
+    product_ids=[6],
     dags_to_trigger=[
         "wv2_unzip"
     ]
@@ -21,6 +21,7 @@ from airflow.operators.mysql_operator import MySqlOperator
 from imars_etl.get_metadata import get_metadata
 from imars_etl.id_lookup import id_lookup
 from imars_dags.util.globals import DEFAULT_ARGS
+from imars_dags.util.list_to_sql_or import list_to_sql_or
 
 from imars_dags.operators.MMTTriggerDagRunOperator import MMTTriggerDagRunOperator
 
@@ -40,13 +41,13 @@ class FileTriggerDAG(DAG):
         """
         parameters:
         -----------
-        product_id : int
-            product_id for the product we are watching.
+        product_ids : int[]
+            list of `product_ids` for the product we are watching.
         dags_to_trigger : str[]
             list of DAG names to trigger when we get a new product.
         """
-        self.product_id = kwargs.pop('product_id')
-        self.dags_to_trigger = kwargs.pop('dags_to_trigger')
+        self.product_ids = kwargs.pop('product_ids')
+        self.dags_to_trigger = kwargs.pop('dags_to_trigger', [])
 
         # === overload some arguments TODO: warn or something???
         # NOTE: catchup & max_active_runs prevent duplicate extractions
@@ -75,14 +76,15 @@ class FileTriggerDAG(DAG):
         super(FileTriggerDAG, self).__init__(*args, **kwargs)
         self._add_file_trigger_tasks()
 
+
     def _add_file_trigger_tasks(self):
         with self as dag:
             # TODO: SQL watch for pid=={} & status_id==to_load
             # === mysql_sensor
             # =================================================================
-            sql_selection="status_id={} AND product_id={};".format(
+            sql_selection="status_id={} AND {};".format(
                 STATUS.TO_LOAD,
-                self.product_id
+                list_to_sql_or('product_id', self.product_ids)
             )
             sql_str="SELECT id FROM file WHERE " + sql_selection
             check_for_to_loads = SqlSensor(

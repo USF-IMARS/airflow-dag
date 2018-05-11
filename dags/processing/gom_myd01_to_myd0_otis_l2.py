@@ -50,7 +50,8 @@ with this_dag as dag:
             export OCSSWROOT=/opt/ocssw      && \n\
             source /opt/ocssw/OCSSW_bash.env && \n\
             OUT_PATH="""+GEOFILE+"""         && \n\
-            /opt/ocssw/run/scripts/modis_GEO.py --output=$OUT_PATH \\\n\
+            /opt/ocssw/run/scripts/modis_GEO.py \\\n\
+                --output=$OUT_PATH \\\n\
                 {{ ti.xcom_pull(task_ids="extract_file") }} && \n\
             [[ -s $OUT_PATH ]]
         """,
@@ -68,6 +69,10 @@ with this_dag as dag:
     HKMFILE=TMP_DIR+'/hkm'
     QKMFILE=TMP_DIR+'/qkm'
 
+    # NOTE: we need write access to the input file
+    #       [ref](https://oceancolor.gsfc.nasa.gov/forum/oceancolor/topic_show.pl?tid=5333)
+    #       This is because "MODIS geolocation updates L1A metadata for
+    #       geographic coverage and orbital parameters"
     make_l1b = BashOperator(
         task_id='make_l1b',
         bash_command="""
@@ -75,13 +80,13 @@ with this_dag as dag:
             OKM_PATH="""+OKMFILE+""" && \n\
             HKM_PATH="""+HKMFILE+""" && \n\
             QKM_PATH="""+QKMFILE+""" && \n\
-            $OCSSWROOT/run/scripts/modis_L1B.py \n\
-            --okm=$OKM_PATH \n\
-            --hkm=$HKM_PATH \n\
-            --qkm=$QKM_PATH \n\
-            {{ ti.xcom_pull(task_ids="extract_file") }} \n\
-            """+GEOFILE+""" \n\
-            && [[ -s $OKM_PATH && -s $HKM_PATH && -s $QKM_PATH ]]
+            $OCSSWROOT/run/scripts/modis_L1B.py \\\n\
+                --okm=$OKM_PATH \\\n\
+                --hkm=$HKM_PATH \\\n\
+                --qkm=$QKM_PATH \\\n\
+                {{ ti.xcom_pull(task_ids="extract_file") }} \\\n\
+                """+GEOFILE+""" && \n\
+            [[ -s $OKM_PATH && -s $HKM_PATH && -s $QKM_PATH ]]
         """,
         queue=QUEUE.SAT_SCRIPTS
     )
@@ -94,11 +99,11 @@ with this_dag as dag:
         task_id="l2gen",
         bash_command="""
             export OCSSWROOT=/opt/ocssw && source /opt/ocssw/OCSSW_bash.env && \n\
-            $OCSSWROOT/run/bin/linux_64/l2gen \n\
-            ifile="""+OKMFILE+""" \n\
-            ofile="""+L2FILE+""" \n\
-            geofile="""+GEOFILE+""" \n\
-            par={{params.parfile}}
+            $OCSSWROOT/run/bin/linux_64/l2gen \\\n\
+                ifile="""+OKMFILE+""" \\\n\
+                ofile="""+L2FILE+""" \\\n\
+                geofile="""+GEOFILE+""" \\\n\
+                par={{params.parfile}}
         """,
         params={
             'parfile': PARFILE,

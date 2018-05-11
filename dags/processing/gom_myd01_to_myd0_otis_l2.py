@@ -47,12 +47,12 @@ with this_dag as dag:
     l1a_2_geo = BashOperator(
         task_id='l1a_2_geo',
         bash_command="""
-            export OCSSWROOT=/opt/ocssw && source /opt/ocssw/OCSSW_bash.env && \n\\\
-            OUT_PATH="""+GEOFILE+""" && \n\
-            /opt/ocssw/run/scripts/modis_GEO.py \n\
-            --output=$OUT_PATH \n\
-            {{ ti.xcom_pull(task_ids="extract_file") }} && \n\
-            && [[ -s $OUT_PATH ]]
+            export OCSSWROOT=/opt/ocssw      && \n\
+            source /opt/ocssw/OCSSW_bash.env && \n\
+            OUT_PATH="""+GEOFILE+"""         && \n\
+            /opt/ocssw/run/scripts/modis_GEO.py --output=$OUT_PATH \\\n\
+                {{ ti.xcom_pull(task_ids="extract_file") }} && \n\
+            [[ -s $OUT_PATH ]]
         """,
         queue=QUEUE.SAT_SCRIPTS,
         trigger_rule=TriggerRule.ONE_SUCCESS  # run if any upstream passes

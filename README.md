@@ -1,6 +1,11 @@
 # airflow-dag
 :blowfish: USF IMaRS Airflow DAGs
 
+Don't hesitate to
+[open an issue](https://github.com/USF-IMARS/imars_dags/issues/47) if you are
+confused or something isn't working for you.
+This is under heavy development so documentation or code may contain errors.
+
 ## DAG development guidelines
 
 ### organizational rules

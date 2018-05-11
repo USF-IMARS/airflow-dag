@@ -1,5 +1,5 @@
 """
-allows for easy set up of ETL operations within imars-etl
+allows for easy set up of ETL operations within imars-etl.
 """
 import logging
 import os, errno

@@ -33,16 +33,17 @@ def add_tasks(dag, region, parfile):
         # === extract granule l1a data
         # =========================================================================
         # === option 1: l1a file already exists so we have nothing to do
-        check_for_extant_l1a_file = BashOperator(
-            task_id='check_for_extant_l1a_file',
-            bash_command='[[ -s {{ params.filepather.myd01(execution_date, params.roi) }} ]]',
-            params={
-                'filepather': satfilename,
-                'roi': region.place_name
-            },
-            retries=1,
-            retry_delay=timedelta(seconds=3)
-        )
+        # TODO: change to mysqlOperator which checks metadata db
+        # check_for_extant_l1a_file = BashOperator(
+        #     task_id='check_for_extant_l1a_file',
+        #     bash_command='[[ -s {{ params.filepather.myd01(execution_date, params.roi) }} ]]',
+        #     params={
+        #         'filepather': satfilename,
+        #         'roi': region.place_name
+        #     },
+        #     retries=1,
+        #     retry_delay=timedelta(seconds=3)
+        # )
         # === option 2: extract bz2 file from our local archive
         extract_l1a_bz2 = BashOperator(
             task_id='extract_l1a_bz2',
@@ -57,7 +58,7 @@ def add_tasks(dag, region, parfile):
             retries=1,
             retry_delay=timedelta(seconds=5)
         )
-        check_for_extant_l1a_file >> extract_l1a_bz2
+        # check_for_extant_l1a_file >> extract_l1a_bz2
         # === option 3: download the granule
         # reads the download url from a metadata file created in the last step and
         # downloads the file iff the file does not already exist.
@@ -103,7 +104,7 @@ def add_tasks(dag, region, parfile):
             queue=QUEUE.SAT_SCRIPTS,
             trigger_rule=TriggerRule.ONE_SUCCESS  # run if any upstream passes
         )
-        check_for_extant_l1a_file >> l1a_2_geo
+        # check_for_extant_l1a_file >> l1a_2_geo
         extract_l1a_bz2           >> l1a_2_geo
         download_granule          >> l1a_2_geo
         # =========================================================================

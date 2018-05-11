@@ -2,10 +2,7 @@
 # this sets up a FileTriggerDAG that catches a whole bunch of products
 # which do not launch DAGs and changes their status from `to_load` to `std`
 # =========================================================================
-from datetime import datetime,timedelta
-
-from airflow import DAG
-from imars_dags.operators.MMTTriggerDagRunOperator import MMTTriggerDagRunOperator
+import airflow  # you need this here or else airflow will not find your dag
 
 from imars_dags.dags.file_triggers.FileTriggerDAG import FileTriggerDAG
 

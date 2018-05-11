@@ -50,7 +50,7 @@ class FileTriggerDAG(DAG):
             list of DAG names to trigger when we get a new product.
         """
         self.product_ids = kwargs.pop('product_ids')
-        self.dags_to_trigger = kwargs.pop('dags_to_trigger', [])
+        self.dags_to_trigger = kwargs.pop('dags_to_trigger')
 
         # === overload some arguments TODO: warn or something???
         # NOTE: catchup & max_active_runs prevent duplicate extractions
@@ -78,7 +78,6 @@ class FileTriggerDAG(DAG):
 
         super(FileTriggerDAG, self).__init__(*args, **kwargs)
         self._add_file_trigger_tasks()
-
 
     def _add_file_trigger_tasks(self):
         with self as dag:
@@ -203,7 +202,7 @@ class FileTriggerDAG(DAG):
                     trigger_rule='one_success'
                 )
                 branch_to_correct_region >> ROI_dummy
-                if len(self.dags_to_trigger) > 1:
+                if len(self.dags_to_trigger) > 0:
                     for processing_dag_name in self.dags_to_trigger:
                         # processing_dag_name is root dag, but each region has a dag
                         dag_to_trigger="{}_{}".format(roi_name, processing_dag_name)

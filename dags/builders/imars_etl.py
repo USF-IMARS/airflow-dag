@@ -3,6 +3,7 @@ allows for easy set up of ETL operations within imars-etl.
 """
 import logging
 import os, errno
+from datetime import timedelta
 
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import PythonOperator
@@ -133,9 +134,12 @@ def add_tasks(
             # poke until the cleanup is done
             task_id='poke_until_tmp_cleanup_done',
             conn_id='airflow_metadata',
-            poke_interval=60*2,
             soft_fail=False,
-            timeout=60*30,
+            poke_interval=60*2,              # check every two minutes
+            timeout=60*9,                    # for the first 9 minutes
+            retries=10,                      # don't give up easily
+            retry_delay=timedelta(hours=1),  # but be patient between checks
+            retry_exponential_backoff=True,
             sql="""
             SELECT * FROM task_instance WHERE
                 task_id="tmp_cleanup"

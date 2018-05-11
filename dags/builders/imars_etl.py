@@ -16,7 +16,7 @@ def get_tmp_dir(dag_id):
     """
     returns temporary directory (template) for given dag.
     """
-    directory="/srv/imars-objects/airflow_tmp/"+dag_id+"_{{ts}}"
+    directory="/srv/imars-objects/airflow_tmp/"+dag_id+"_{{ts_nodash}}"
     # try:
     #     # oops, can't mkdir here b/c of jinja template
     #     os.mkdir(directory)  # not mkdirs b/c we want to fail if unmounted

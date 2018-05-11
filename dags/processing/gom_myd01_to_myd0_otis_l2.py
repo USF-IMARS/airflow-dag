@@ -47,11 +47,11 @@ with this_dag as dag:
     l1a_2_geo = BashOperator(
         task_id='l1a_2_geo',
         bash_command="""
-            export OCSSWROOT=/opt/ocssw && source /opt/ocssw/OCSSW_bash.env && \
-            OUT_PATH="""+GEOFILE+""" && \
-            /opt/ocssw/run/scripts/modis_GEO.py \
-            --output=$OUT_PATH \
-            {{ ti.xcom_pull(task_ids="extract_file") }} && \
+            export OCSSWROOT=/opt/ocssw && source /opt/ocssw/OCSSW_bash.env && \n\\\
+            OUT_PATH="""+GEOFILE+""" && \n\
+            /opt/ocssw/run/scripts/modis_GEO.py \n\
+            --output=$OUT_PATH \n\
+            {{ ti.xcom_pull(task_ids="extract_file") }} && \n\
             && [[ -s $OUT_PATH ]]
         """,
         queue=QUEUE.SAT_SCRIPTS,
@@ -71,16 +71,16 @@ with this_dag as dag:
     make_l1b = BashOperator(
         task_id='make_l1b',
         bash_command="""
-            export OCSSWROOT=/opt/ocssw && source /opt/ocssw/OCSSW_bash.env && \
-            OKM_PATH="""+OKMFILE+""" && \
-            HKM_PATH="""+HKMFILE+""" && \
-            QKM_PATH="""+QKMFILE+""" && \
-            $OCSSWROOT/run/scripts/modis_L1B.py \
-            --okm=$OKM_PATH \
-            --hkm=$HKM_PATH \
-            --qkm=$QKM_PATH \
-            {{ ti.xcom_pull(task_ids="extract_file") }} \
-            """+GEOFILE+""" \
+            export OCSSWROOT=/opt/ocssw && source /opt/ocssw/OCSSW_bash.env && \n\
+            OKM_PATH="""+OKMFILE+""" && \n\
+            HKM_PATH="""+HKMFILE+""" && \n\
+            QKM_PATH="""+QKMFILE+""" && \n\
+            $OCSSWROOT/run/scripts/modis_L1B.py \n\
+            --okm=$OKM_PATH \n\
+            --hkm=$HKM_PATH \n\
+            --qkm=$QKM_PATH \n\
+            {{ ti.xcom_pull(task_ids="extract_file") }} \n\
+            """+GEOFILE+""" \n\
             && [[ -s $OKM_PATH && -s $HKM_PATH && -s $QKM_PATH ]]
         """,
         queue=QUEUE.SAT_SCRIPTS
@@ -93,11 +93,11 @@ with this_dag as dag:
     l2gen = BashOperator(
         task_id="l2gen",
         bash_command="""
-            export OCSSWROOT=/opt/ocssw && source /opt/ocssw/OCSSW_bash.env && \
-            $OCSSWROOT/run/bin/linux_64/l2gen \
-            ifile="""+OKMFILE+""" \
-            ofile="""+L2FILE+""" \
-            geofile="""+GEOFILE+""" \
+            export OCSSWROOT=/opt/ocssw && source /opt/ocssw/OCSSW_bash.env && \n\
+            $OCSSWROOT/run/bin/linux_64/l2gen \n\
+            ifile="""+OKMFILE+""" \n\
+            ofile="""+L2FILE+""" \n\
+            geofile="""+GEOFILE+""" \n\
             par={{params.parfile}}
         """,
         params={

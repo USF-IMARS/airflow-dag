@@ -5,23 +5,27 @@ manually triggered dag that runs processing for one modis pass
 from datetime import datetime, timedelta
 import subprocess
 import configparser
+import os
 
 # deps
 from airflow.operators.bash_operator import BashOperator
 from airflow.utils.trigger_rule import TriggerRule
+from airflow import DAG
 
 # this package
+import imars_dags.dags.builders.imars_etl as imars_etl_builder
 from imars_dags.util.globals import QUEUE, DEFAULT_ARGS
 from imars_dags.util import satfilename
 from imars_dags.settings import secrets  # NOTE: this file not in public repo!
+from imars_dags.regions import gom, fgbnms, ao1
 
-default_args = DEFAULT_ARGS.copy()
-default_args.update({
+DEF_ARGS = DEFAULT_ARGS.copy()
+DEF_ARGS.update({
     'start_date': datetime.utcnow(),
     'retries': 1
 })
 
-schedule_interval=None
+SCHEDULE_INTERVAL=None
 
 def add_tasks(dag, region, parfile):
     with dag as dag:
@@ -165,3 +169,74 @@ def add_tasks(dag, region, parfile):
         make_l1b >> l2gen
         l1a_2_geo >> l2gen
         # =========================================================================
+
+
+# === GOM
+gom_dag = DAG(
+    dag_id="gom_modis_aqua_granule",
+    default_args=DEF_ARGS,
+    schedule_interval=SCHEDULE_INTERVAL
+)
+
+add_tasks(
+    gom_dag,
+    region=gom,
+    parfile=os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),  # imars_dags/dags/gom/
+        "moda_l2gen.par"
+    )
+)
+
+# === FGBNMS
+fgb_dag = DAG(
+    dag_id="fgbnms_modis_aqua_granule",
+    default_args=DEF_ARGS,
+    schedule_interval=SCHEDULE_INTERVAL
+)
+
+add_tasks(
+    fgb_dag,
+    region=fgbnms,
+    parfile=os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),  # imars_dags/dags/fgbnms/
+        "moda_l2gen.par"
+    )
+)
+
+# === A01
+ao1_dag = DAG(
+    dag_id="ao1_modis_aqua_granule",
+    default_args=DEF_ARGS,
+    schedule_interval=SCHEDULE_INTERVAL
+)
+
+add_tasks(
+    ao1_dag,
+    region=ao1,
+    parfile=os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),  # imars_dags/dags/ao1/
+        "moda_l2gen.par"
+    )
+)
+
+create_granule_l3 = BashOperator(
+    task_id="l3gen_granule",
+    bash_command="""
+        /opt/snap/bin/gpt {{params.gpt_xml_file}} \
+        -t {{ params.satfilename.l3_pass(execution_date, params.roi_place_name) }} \
+        -f NetCDF-BEAM \
+        `{{ params.satfilename.l2(execution_date, params.roi_place_name) }}`
+    """,
+    params={
+        'satfilename': satfilename,
+        'roi_place_name': ao1.place_name,
+        'gpt_xml_file': os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),  # imars_dags/dags/ao1/
+            "moda_l3g.par"
+        )
+    },
+    queue=QUEUE.SNAP,
+    dag = ao1_dag
+)
+
+# TODO: export tiff from l3

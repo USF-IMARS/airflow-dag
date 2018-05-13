@@ -13,11 +13,11 @@ from airflow.operators.sensors import SqlSensor
 
 import imars_etl
 
-def get_tmp_dir(dag_id):
+def get_tmp_prefix(dag_id):
     """
     returns temporary directory (template) for given dag.
     """
-    directory="/srv/imars-objects/airflow_tmp/"+dag_id+"_{{ts_nodash}}"
+    directory="/srv/imars-objects/airflow_tmp_"+dag_id+"_{{ts_nodash}}_"
     # try:
     #     # oops, can't mkdir here b/c of jinja template
     #     os.mkdir(directory)  # not mkdirs b/c we want to fail if unmounted
@@ -30,7 +30,7 @@ def get_tmp_dir(dag_id):
 
 def add_tasks(
     dag, sql_selector, first_transform_operators, last_transform_operators,
-    to_load, TMP_DIR, common_load_params={}, test=False
+    to_load, to_cleanup=[], common_load_params={}, test=False
 ):
     """
     Parameters:
@@ -49,8 +49,10 @@ def add_tasks(
         Operators which get wired before load. These are the last in your
         processing chain.
     to_load : str[]
-        Product `short_name`s which get loaded into the imars-etl data warehouse
+        paths to be loaded into the imars-etl data warehouse
         after processing is done. These are the output files of your DAG.
+    to_cleanup : str[]
+        List of files we will rm to cleanup after everything is done.
     common_load_params : dict
         Dictionary to be passed into imars-etl.load() with metadata that is
         common to all of your to_load output files. Check imars-etl docs and/or
@@ -62,14 +64,6 @@ def add_tasks(
         {{ ti.xcom_pull(task_ids="extract_file")}}
     """
     with dag as dag:
-        # === /tmp/ create
-        # ======================================================================
-        tmp_mkdir = BashOperator(
-            task_id="tmp_mkdir",
-            trigger_rule="all_done",
-            bash_command="mkdir " + TMP_DIR,
-        )
-
         # === Extract
         # ======================================================================
         def extract_file(**kwargs):
@@ -116,68 +110,69 @@ def add_tasks(
                 "test": str(test)
             }
         )
-        tmp_mkdir >> extract_file
+        # tmp_mkdir >> extract_file
 
         # === /tmp/ cleanup
         # ======================================================================
-        tmp_cleanup = BashOperator(
-            task_id="tmp_cleanup",
-            trigger_rule="all_done",
-            bash_command="rm -r " + TMP_DIR,
-        )
-        tmp_mkdir >> tmp_cleanup  # just in case we have 0 proc ops
-
-        # to ensure we clean up even if something in the middle fails, we must
-        # do some weird stuff. For details see:
-        # https://github.com/USF-IMARS/imars_dags/issues/44
-        poke_until_tmp_cleanup_done = SqlSensor(
-            # poke until the cleanup is done
-            task_id='poke_until_tmp_cleanup_done',
-            conn_id='airflow_metadata',
-            soft_fail=False,
-            poke_interval=60*2,              # check every two minutes
-            timeout=60*9,                    # for the first 9 minutes
-            retries=10,                      # don't give up easily
-            retry_delay=timedelta(hours=1),  # but be patient between checks
-            retry_exponential_backoff=True,
-            sql="""
-            SELECT * FROM task_instance WHERE
-                task_id="tmp_cleanup"
-                AND state IN ('success','failed')
-                AND dag_id="{{ dag.dag_id }}"
-                AND execution_date="{{ execution_date }}";
-            """
-        )
-        tmp_mkdir >> poke_until_tmp_cleanup_done
+        # TODO: loop through `to_cleanup` and rm instead of this:
+        # tmp_cleanup = BashOperator(
+        #     task_id="tmp_cleanup",
+        #     trigger_rule="all_done",
+        #     bash_command="rm " + TMP_DIR,
+        # )
+        # tmp_mkdir >> tmp_cleanup  # just in case we have 0 proc ops
+        #
+        # # to ensure we clean up even if something in the middle fails, we must
+        # # do some weird stuff. For details see:
+        # # https://github.com/USF-IMARS/imars_dags/issues/44
+        # poke_until_tmp_cleanup_done = SqlSensor(
+        #     # poke until the cleanup is done
+        #     task_id='poke_until_tmp_cleanup_done',
+        #     conn_id='airflow_metadata',
+        #     soft_fail=False,
+        #     poke_interval=60*2,              # check every two minutes
+        #     timeout=60*9,                    # for the first 9 minutes
+        #     retries=10,                      # don't give up easily
+        #     retry_delay=timedelta(hours=1),  # but be patient between checks
+        #     retry_exponential_backoff=True,
+        #     sql="""
+        #     SELECT * FROM task_instance WHERE
+        #         task_id="tmp_cleanup"
+        #         AND state IN ('success','failed')
+        #         AND dag_id="{{ dag.dag_id }}"
+        #         AND execution_date="{{ execution_date }}";
+        #     """
+        # )
+        # tmp_mkdir >> poke_until_tmp_cleanup_done
 
         # === Load
         # ======================================================================
-        LOAD_TEMPLATE="""
-            python3 -m imars_etl -vvv load \
-                --product_type_name {{ params.product_type_name }} \
-                --json '{{ params.json }}' \
-                --directory """ + TMP_DIR
-
+        # loop through each to_load and load it
         for t_op in first_transform_operators:
             # extract(s) >> transform(s)
             extract_file >> t_op
 
-        for t_op in last_transform_operators:
-            for product_short_name in to_load:
-                # set params for this file specifically:
-                common_load_params["product_type_name"]=product_short_name
+        def load_task(ds, **kwargs):
+            imars_etl.load(kwargs)
 
-                load_operator = BashOperator(
-                    task_id="load_" + product_short_name,
-                    bash_command=LOAD_TEMPLATE,
-                    params=common_load_params
+        for t_op in last_transform_operators:
+            for load_args in to_load:
+                sanitized_filepath = (
+                    load_args['filepath']
+                    .replace("{{ts_nodash}}","_ts_")
+                    .replace('/','_')
+                )
+                load_operator = PythonOperator(
+                    task_id='load_' + sanitized_filepath,
+                    python_callable=load_task,
+                    op_kwargs=load_args,
                 )
                 # transform(s) >> load(s)
                 t_op >> load_operator
                 # load(s) >> mysql_update
                 # load_operator >> update_input_file_meta_db
                 # load(s) >> cleanup
-                load_operator >> tmp_cleanup
+                # load_operator >> tmp_cleanup
 
                 # TODO: if load operator fails with IntegrityError (duplicate)
                 #    mark success or skip or something...

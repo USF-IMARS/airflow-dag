@@ -27,7 +27,7 @@ def tmp_filepath(dag_id, suffix, ts=None):
         timestring for the current file in the form of ts_nodash
         example: 201805051345  # for date 2018-05-05T13:45
     """
-    filepath="/srv/imars-objects/airflow_tmp_"+dag_id
+    filepath="/srv/imars-objects/airflow_tmp/"+dag_id
     if ts is not None:
         filepath += "_{}".format(ts)
     else:

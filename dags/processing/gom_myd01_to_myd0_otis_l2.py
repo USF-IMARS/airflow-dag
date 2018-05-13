@@ -38,12 +38,11 @@ this_dag = DAG(
     schedule_interval=SCHEDULE_INTERVAL
 )
 
-TMP_PREFIX = imars_etl_builder.get_tmp_prefix(this_dag.dag_id)
 with this_dag as dag:
     # =========================================================================
     # === modis GEO
     # =========================================================================
-    GEOFILE = TMP_PREFIX + 'geofile'
+    GEOFILE = imars_etl_builder.tmp_filepath(dag.dag_id, 'geofile')
     l1a_2_geo = BashOperator(
         task_id='l1a_2_geo',
         bash_command="""
@@ -65,9 +64,9 @@ with this_dag as dag:
     # =========================================================================
     # === modis l1a + geo -> l1b
     # =========================================================================
-    OKMFILE = TMP_PREFIX + 'okm'  # aka L1b
-    HKMFILE = TMP_PREFIX + 'hkm'
-    QKMFILE = TMP_PREFIX + 'qkm'
+    OKMFILE = imars_etl_builder.tmp_filepath(dag.dag_id, 'okm')  # aka L1b
+    HKMFILE = imars_etl_builder.tmp_filepath(dag.dag_id, 'hkm')
+    QKMFILE = imars_etl_builder.tmp_filepath(dag.dag_id, 'qkm')
 
     # NOTE: we need write access to the input file
     #       [ref](https://oceancolor.gsfc.nasa.gov/forum/oceancolor/topic_show.pl?tid=5333)
@@ -94,7 +93,7 @@ with this_dag as dag:
     # =========================================================================
     # === l2gen l1b -> l2
     # =========================================================================
-    L2FILE = TMP_PREFIX + 'l2'
+    L2FILE = imars_etl_builder.tmp_filepath(dag.dag_id, 'l2')
     l2gen = BashOperator(
         task_id="l2gen",
         bash_command="""
@@ -121,7 +120,7 @@ with this_dag as dag:
         sql_selector="product_id=5",
         first_transform_operators=[l1a_2_geo],
         last_transform_operators=[l2gen],
-        to_load=[
+        files_to_load=[
             {
                 "filepath":L2FILE,  # required!
                 "verbose":3,
@@ -131,9 +130,6 @@ with this_dag as dag:
                 "json":'{"status_id":3,"area_id":2}'
             }
         ],
-        common_load_params={  # TODO: rm
-            "json":'{"status_id":3, "area_id":2}'
-        },
         to_cleanup=[GEOFILE,OKMFILE,HKMFILE,QKMFILE]
     )
 

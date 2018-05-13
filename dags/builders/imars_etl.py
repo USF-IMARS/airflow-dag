@@ -13,24 +13,33 @@ from airflow.operators.sensors import SqlSensor
 
 import imars_etl
 
-def get_tmp_prefix(dag_id):
+def tmp_filepath(dag_id, suffix, ts=None):
     """
     returns temporary directory (template) for given dag.
+
+    Parameters:
+    -----------
+    dag_id :
+    suffix : str
+        suffix to append to filepath, use this like your filename.
+        examples: myFile.txt, fileToLoad, output_file.csv
+    ts : str
+        timestring for the current file in the form of ts_nodash
+        example: 201805051345  # for date 2018-05-05T13:45
     """
-    directory="/srv/imars-objects/airflow_tmp_"+dag_id+"_{{ts_nodash}}_"
-    # try:
-    #     # oops, can't mkdir here b/c of jinja template
-    #     os.mkdir(directory)  # not mkdirs b/c we want to fail if unmounted
-    # except OSError as e:
-    #     if e.errno != errno.EEXIST:
-    #         raise
-    #     # else already exists
-    #     return directory
-    return directory
+    filepath="/srv/imars-objects/airflow_tmp_"+dag_id
+    if ts is not None:
+        filepath += "_{}".format(ts)
+    else:
+        filepath += "_{{ts_nodash}}"
+    filepath += "_{}".format(suffix)
+    return filepath
 
 def add_tasks(
     dag, sql_selector, first_transform_operators, last_transform_operators,
-    to_load, to_cleanup=[], common_load_params={}, test=False
+    files_to_load=None,
+    products_to_load_from_dir=None,
+    to_cleanup=[], common_load_params={}, test=False
 ):
     """
     Parameters:
@@ -48,9 +57,18 @@ def add_tasks(
     last_transform_operators : airflow.operators.*[]
         Operators which get wired before load. These are the last in your
         processing chain.
-    to_load : str[]
+    files_to_load : dict[]
         paths to be loaded into the imars-etl data warehouse
         after processing is done. These are the output files of your DAG.
+        required dict elements: {
+            'filepath': ...
+        }
+    products_to_load_from_dir : dict[]
+        products to load from directories
+        required dict elements: {
+            'directory': ...
+            'product_type_name': ...
+        }
     to_cleanup : str[]
         List of files we will rm to cleanup after everything is done.
     common_load_params : dict
@@ -155,10 +173,27 @@ def add_tasks(
         def load_task(ds, **kwargs):
             imars_etl.load(kwargs)
 
+        if   products_to_load_from_dir is not None and files_to_load is not None:
+            to_load = products_to_load_from_dir + files_to_load
+        elif products_to_load_from_dir is not None:
+            to_load = products_to_load_from_dir
+        elif files_to_load is not None:
+            to_load = files_to_load
+        else:
+            raise AssertionError(
+                "products_to_load_from_dir or files_to_load required"
+            )
         for t_op in last_transform_operators:
             for load_args in to_load:
+                try:
+                    fpath = load_args['filepath']
+                except KeyError:
+                    fpath = "{}_{}".format(
+                        load_args['directory'],
+                        load_args['product_type_name']
+                    )
                 sanitized_filepath = (
-                    load_args['filepath']
+                    fpath
                     .replace("{{ts_nodash}}","_ts_")
                     .replace('/','_')
                 )

@@ -16,7 +16,6 @@ default_args.update({
     'retries': 0,
 })
 DAG_ID="zzz_test_imars_etl_cleanup"
-TMP_DIR = imars_etl_builder.get_tmp_dir(DAG_ID)
 
 with DAG(
     dag_id=DAG_ID,
@@ -41,6 +40,12 @@ with DAG(
     )
     proc_step_two >> proc_step_three
 
+    dag, sql_selector, first_transform_operators, last_transform_operators,
+    files_to_load=None,
+    products_to_load_from_dir=None,
+    to_cleanup=[], common_load_params={}, test=False
+
     imars_etl_builder.add_tasks(
-        dag, "", [proc_step_one], [proc_step_three], [], TMP_DIR, test=True
+        dag, "", [proc_step_one], [proc_step_three], files_to_load=[],
+        imars_etl_builder.tmp_filepath(DAG_ID,'testpath'), test=True
     )

@@ -215,5 +215,6 @@ to_load=[
 
 imars_etl_builder.add_tasks(
     this_dag, "product_id=6", [unzip_wv2_ingest], [rm_spurrious_gis_files],
-    products_to_load_from_dir=to_load
+    products_to_load_from_dir=to_load,
+    to_cleanup=[UNZIP_DIR]
 )

@@ -81,6 +81,7 @@ def add_tasks(
     local file name is loaded into the DAG context and can be accessed like:
         {{ ti.xcom_pull(task_ids="extract_file")}}
     """
+    HAS_CLEANUP = len(to_cleanup) > 0
     with dag as dag:
         # === Extract
         # ======================================================================
@@ -133,7 +134,7 @@ def add_tasks(
         # === /tmp/ cleanup
         # ======================================================================
         # loop through `to_cleanup` and rm instead of this:
-        if len(to_cleanup) > 0:
+        if HAS_CLEANUP:
             tmp_cleanup = BashOperator(
                 task_id="tmp_cleanup",
                 trigger_rule="all_done",
@@ -187,26 +188,22 @@ def add_tasks(
         for t_op in last_transform_operators:
             for load_args in to_load:
                 try:
-                    fpath = load_args['filepath']
+                    fpath = load_args['filepath'].split('_')[-1]  # suffix only
                 except KeyError:
                     fpath = "{}_{}".format(
-                        load_args['directory'],
+                        load_args['directory'].split('_')[-1],  # suffix only
                         load_args['product_type_name']
                     )
-                sanitized_filepath = (
-                    fpath
-                    .replace("{{ts_nodash}}","_ts_")
-                    .replace('/','_')
-                )
                 load_operator = PythonOperator(
-                    task_id='load_' + sanitized_filepath,
+                    task_id='load_' + fpath,
                     python_callable=load_task,
                     op_kwargs=load_args,
                 )
                 # transform(s) >> load(s)
                 t_op >> load_operator
                 # load(s) >> cleanup
-                load_operator >> tmp_cleanup
+                if HAS_CLEANUP:
+                    load_operator >> tmp_cleanup
 
                 # TODO: if load operator fails with IntegrityError (duplicate)
                 #    mark success or skip or something...

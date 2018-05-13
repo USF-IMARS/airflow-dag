@@ -132,36 +132,37 @@ def add_tasks(
 
         # === /tmp/ cleanup
         # ======================================================================
-        # TODO: loop through `to_cleanup` and rm instead of this:
-        # tmp_cleanup = BashOperator(
-        #     task_id="tmp_cleanup",
-        #     trigger_rule="all_done",
-        #     bash_command="rm " + TMP_DIR,
-        # )
-        # tmp_mkdir >> tmp_cleanup  # just in case we have 0 proc ops
-        #
-        # # to ensure we clean up even if something in the middle fails, we must
-        # # do some weird stuff. For details see:
-        # # https://github.com/USF-IMARS/imars_dags/issues/44
-        # poke_until_tmp_cleanup_done = SqlSensor(
-        #     # poke until the cleanup is done
-        #     task_id='poke_until_tmp_cleanup_done',
-        #     conn_id='airflow_metadata',
-        #     soft_fail=False,
-        #     poke_interval=60*2,              # check every two minutes
-        #     timeout=60*9,                    # for the first 9 minutes
-        #     retries=10,                      # don't give up easily
-        #     retry_delay=timedelta(hours=1),  # but be patient between checks
-        #     retry_exponential_backoff=True,
-        #     sql="""
-        #     SELECT * FROM task_instance WHERE
-        #         task_id="tmp_cleanup"
-        #         AND state IN ('success','failed')
-        #         AND dag_id="{{ dag.dag_id }}"
-        #         AND execution_date="{{ execution_date }}";
-        #     """
-        # )
-        # tmp_mkdir >> poke_until_tmp_cleanup_done
+        # loop through `to_cleanup` and rm instead of this:
+        if len(to_cleanup) > 0:
+            tmp_cleanup = BashOperator(
+                task_id="tmp_cleanup",
+                trigger_rule="all_done",
+                bash_command="rm " + " ".join(to_cleanup),
+            )
+
+            # to ensure we clean up even if something in the middle fails, we must
+            # do some weird stuff. For details see:
+            # https://github.com/USF-IMARS/imars_dags/issues/44
+            poke_until_tmp_cleanup_done = SqlSensor(
+                # poke until the cleanup is done
+                task_id='poke_until_tmp_cleanup_done',
+                conn_id='airflow_metadata',
+                soft_fail=False,
+                poke_interval=60*2,              # check every two minutes
+                timeout=60*9,                    # for the first 9 minutes
+                retries=10,                      # don't give up easily
+                retry_delay=timedelta(hours=1),  # but be patient between checks
+                retry_exponential_backoff=True,
+                sql="""
+                SELECT * FROM task_instance WHERE
+                    task_id="tmp_cleanup"
+                    AND state IN ('success','failed')
+                    AND dag_id="{{ dag.dag_id }}"
+                    AND execution_date="{{ execution_date }}";
+                """
+            )
+            # start poking immediately
+            extract_file >> poke_until_tmp_cleanup_done
 
         # === Load
         # ======================================================================
@@ -204,10 +205,8 @@ def add_tasks(
                 )
                 # transform(s) >> load(s)
                 t_op >> load_operator
-                # load(s) >> mysql_update
-                # load_operator >> update_input_file_meta_db
                 # load(s) >> cleanup
-                # load_operator >> tmp_cleanup
+                load_operator >> tmp_cleanup
 
                 # TODO: if load operator fails with IntegrityError (duplicate)
                 #    mark success or skip or something...

@@ -80,9 +80,9 @@ with this_dag as dag:
             HKM_PATH="""+HKMFILE+""" && \n\
             QKM_PATH="""+QKMFILE+""" && \n\
             $OCSSWROOT/run/scripts/modis_L1B.py \\\n\
-                --okm=$OKM_PATH \\\n\
-                --hkm=$HKM_PATH \\\n\
-                --qkm=$QKM_PATH \\\n\
+                --okm $OKM_PATH \\\n\
+                --hkm $HKM_PATH \\\n\
+                --qkm $QKM_PATH \\\n\
                 {{ ti.xcom_pull(task_ids="extract_file") }} \\\n\
                 """+GEOFILE+""" && \n\
             [[ -s $OKM_PATH && -s $HKM_PATH && -s $QKM_PATH ]]

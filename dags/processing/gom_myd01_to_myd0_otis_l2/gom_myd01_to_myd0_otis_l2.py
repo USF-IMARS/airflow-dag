@@ -102,7 +102,8 @@ with this_dag as dag:
                 ifile="""+OKMFILE+""" \\\n\
                 ofile="""+L2FILE+""" \\\n\
                 geofile="""+GEOFILE+""" \\\n\
-                par={{params.parfile}}
+                par={{params.parfile}} && \n\
+            [[ -s """+L2FILE+""" ]]
         """,
         params={
             'parfile': PARFILE,

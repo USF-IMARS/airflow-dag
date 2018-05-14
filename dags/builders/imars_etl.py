@@ -13,7 +13,7 @@ from airflow.operators.sensors import SqlSensor
 
 import imars_etl
 
-def tmp_filepath(dag_id, suffix, ts=None):
+def tmp_filepath(dag_id, suffix, ts="{{ts_nodash}}"):
     """
     returns temporary directory (template) for given dag.
 
@@ -25,15 +25,17 @@ def tmp_filepath(dag_id, suffix, ts=None):
         examples: myFile.txt, fileToLoad, output_file.csv
     ts : str
         timestring for the current file in the form of ts_nodash
-        example: 201805051345  # for date 2018-05-05T13:45
+        example: 20180505T1345  # for date 2018-05-05T13:45
     """
-    filepath="/srv/imars-objects/airflow_tmp/"+dag_id
-    if ts is not None:
-        filepath += "_{}".format(ts)
-    else:
-        filepath += "_{{ts_nodash}}"
-    filepath += "_{}".format(suffix)
-    return filepath
+    return (
+        "/srv/imars-objects/airflow_tmp/" + dag_id
+        + "_" + str(ts)
+        + "_" + str(suffix)
+    )
+
+def tmp_format_str():
+    return tmp_filepath("{dag_id}", "{tag}", ts="%Y%m%dT%H%M%S").split('/')[-1]
+
 
 def add_tasks(
     dag, sql_selector, first_transform_operators, last_transform_operators,
@@ -72,7 +74,7 @@ def add_tasks(
     to_cleanup : str[]
         List of files we will rm to cleanup after everything is done.
         NOTE: Loaded files should be cleaned up manually using this.
-        Will not work on directories (for safety reasons). 
+        Will not work on directories (for safety reasons).
     common_load_params : dict
         Dictionary to be passed into imars-etl.load() with metadata that is
         common to all of your to_load output files. Check imars-etl docs and/or
@@ -175,7 +177,21 @@ def add_tasks(
             extract_file >> t_op
 
         def load_task(**kwargs):
-            imars_etl.load(kwargs)
+            load_args = kwargs['load_args']
+            # default args we add to all load ops:
+            load_args['verbose'] = 3
+            load_args['load_format'] = tmp_format_str()
+
+            # apply macros on filepath arg:
+            task = kwargs['task']
+            load_args['filepath'] = task.render_template(
+                '',
+                load_args['filepath'],
+                kwargs
+            )
+
+            print('loading {}'.format(load_args))
+            imars_etl.load(load_args)
 
         if   products_to_load_from_dir is not None and files_to_load is not None:
             to_load = products_to_load_from_dir + files_to_load
@@ -196,10 +212,12 @@ def add_tasks(
                         load_args['directory'].split('_')[-1],  # suffix only
                         load_args['product_type_name']
                     )
+
                 load_operator = PythonOperator(
                     task_id='load_' + fpath,
                     python_callable=load_task,
-                    op_kwargs=load_args,
+                    op_kwargs={'load_args': load_args},
+                    provide_context=True,
                 )
                 # transform(s) >> load(s)
                 t_op >> load_operator

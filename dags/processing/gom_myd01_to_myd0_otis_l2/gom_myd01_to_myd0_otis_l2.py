@@ -85,8 +85,8 @@ with this_dag as dag:
                 --qkm $QKM_PATH \\\n\
                 {{ ti.xcom_pull(task_ids="extract_file") }} \\\n\
                 """+GEOFILE+""" && \n\
-            [[ -s $OKM_PATH && -s $HKM_PATH && -s $QKM_PATH ]]
-        """,
+            [[ -s $OKM_PATH ]]
+        """,  # NOTE: might want to add `&& -s $HKM_PATH && -s $QKM_PATH` too
         queue=QUEUE.SAT_SCRIPTS
     )
     # =========================================================================

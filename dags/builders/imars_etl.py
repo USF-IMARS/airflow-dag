@@ -71,6 +71,8 @@ def add_tasks(
         }
     to_cleanup : str[]
         List of files we will rm to cleanup after everything is done.
+        NOTE: Loaded files should be cleaned up manually using this.
+        Will not work on directories (for safety reasons). 
     common_load_params : dict
         Dictionary to be passed into imars-etl.load() with metadata that is
         common to all of your to_load output files. Check imars-etl docs and/or
@@ -172,7 +174,7 @@ def add_tasks(
             # extract(s) >> transform(s)
             extract_file >> t_op
 
-        def load_task(ds, **kwargs):
+        def load_task(**kwargs):
             imars_etl.load(kwargs)
 
         if   products_to_load_from_dir is not None and files_to_load is not None:

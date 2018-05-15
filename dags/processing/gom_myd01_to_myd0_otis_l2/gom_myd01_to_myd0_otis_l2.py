@@ -105,15 +105,18 @@ with this_dag as dag:
         bash_command="""
             export OCSSWROOT=/opt/ocssw && source /opt/ocssw/OCSSW_bash.env && \n\
             $OCSSWROOT/run/bin/linux_64/l2gen \\\n\
-                ifile="""+OKMFILE+""" \\\n\
-                ofile="""+L2FILE+""" \\\n\
-                geofile="""+GEOFILE+""" \\\n\
-                xcalfile={{params.xcalfile}}\\\n\
-                par={{params.parfile}} && \n\
-            [[ -s """+L2FILE+""" ]]
+                par={{params.parfile}} \\\n\
+                ifile={{params.okmfile}} \\\n\
+                geofile={{params.geofile}} \\\n\
+                ofile={{params.l2file}} \\\n\
+                xcalfile={{params.xcalfile}} && \n\
+            [[ -s {{params.l2file}} ]]
         """,
         params={
             'parfile': PARFILE,
+            'okmfile': OKMFILE,
+            'geofile': GEOFILE,
+            'l2file': L2FILE,
             'xcalfile': XCALFILE
         },
         queue=QUEUE.SAT_SCRIPTS

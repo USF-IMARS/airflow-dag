@@ -98,6 +98,8 @@ with this_dag as dag:
     # === l2gen l1b -> l2
     # =========================================================================
     L2FILE = imars_etl_builder.tmp_filepath(dag.dag_id, 'l2')
+    # l2gen usage usage docs:
+    # https://seadas.gsfc.nasa.gov/help/seadas-processing/ProcessL2gen.html#COMMAND_LINE_HELP
     l2gen = BashOperator(
         task_id="l2gen",
         bash_command="""
@@ -131,10 +133,10 @@ with this_dag as dag:
             {
                 "filepath":L2FILE,  # required!
                 "verbose":3,
-                "product_id":5,
+                "product_id":35,
                 # "time":"2016-02-12T16:25:18",
                 # "datetime": datetime(2016,2,12,16,25,18),
-                "json":'{"status_id":3,"area_id":2}'
+                "json":'{"status_id":3,"area_id":1}'
             }
         ],
         to_cleanup=[GEOFILE,OKMFILE,HKMFILE,QKMFILE,L2FILE]

@@ -13,6 +13,8 @@ from airflow.operators.sensors import SqlSensor
 
 import imars_etl
 
+# TODO: if tmp_filepath was part of a class we could store tmp files on the
+#       instance and automatically add them to the `to_cleanup` list
 def tmp_filepath(dag_id, suffix, ts="{{ts_nodash}}"):
     """
     returns temporary directory (template) for given dag.
@@ -35,7 +37,6 @@ def tmp_filepath(dag_id, suffix, ts="{{ts_nodash}}"):
 
 def tmp_format_str():
     return tmp_filepath("{dag_id}", "{tag}", ts="%Y%m%dT%H%M%S").split('/')[-1]
-
 
 def add_tasks(
     dag, sql_selector, first_transform_operators, last_transform_operators,

@@ -31,6 +31,10 @@ PARFILE=os.path.join(
     os.path.dirname(os.path.realpath(__file__)),  # imars_dags/dags/gom/
     "moda_l2gen.par"
 )
+# NOTE: xcalfile must be set for v7.4 and will need to be updated ~ 1/mo
+#     for more info see:
+#     https://oceancolor.gsfc.nasa.gov/forum/oceancolor/topic_show.pl?pid=37506
+XCALFILE="$OCVARROOT/modisa/xcal/OPER/xcal_modisa_axc_oc_v1.12d"
 
 this_dag = DAG(
     dag_id="gom_myd01_to_myd0_otis_l2",
@@ -102,11 +106,13 @@ with this_dag as dag:
                 ifile="""+OKMFILE+""" \\\n\
                 ofile="""+L2FILE+""" \\\n\
                 geofile="""+GEOFILE+""" \\\n\
+                xcalfile={{params.xcalfile}}\\\n\
                 par={{params.parfile}} && \n\
             [[ -s """+L2FILE+""" ]]
         """,
         params={
             'parfile': PARFILE,
+            'xcalfile': XCALFILE
         },
         queue=QUEUE.SAT_SCRIPTS
     )
@@ -131,7 +137,7 @@ with this_dag as dag:
                 "json":'{"status_id":3,"area_id":2}'
             }
         ],
-        to_cleanup=[GEOFILE,OKMFILE,HKMFILE,QKMFILE]
+        to_cleanup=[GEOFILE,OKMFILE,HKMFILE,QKMFILE,L2FILE]
     )
 
 

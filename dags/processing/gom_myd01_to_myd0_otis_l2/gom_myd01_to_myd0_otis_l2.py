@@ -100,6 +100,9 @@ with this_dag as dag:
     L2FILE = imars_etl_builder.tmp_filepath(dag.dag_id, 'l2')
     # l2gen usage usage docs:
     # https://seadas.gsfc.nasa.gov/help/seadas-processing/ProcessL2gen.html#COMMAND_LINE_HELP
+    # NOTE: filenames must be inserted inline here because they contain the
+    #       airflow macro `{{ts_nodash}}`. If passed as params the macro does
+    #       not get rendered resulting in a literal `{{ts_nodash}}` in the str.
     l2gen = BashOperator(
         task_id="l2gen",
         bash_command="""

@@ -1,9 +1,9 @@
 """
 example usage:
 ```
-product_id = 6
+# trigger wv2_unzip for files with product_id = 6
 this_dag = FileTriggerDAG(
-    product_id=6,
+    product_ids=[6],
     dags_to_trigger=[
         "wv2_unzip"
     ]
@@ -21,6 +21,7 @@ from airflow.operators.mysql_operator import MySqlOperator
 from imars_etl.get_metadata import get_metadata
 from imars_etl.id_lookup import id_lookup
 from imars_dags.util.globals import DEFAULT_ARGS
+from imars_dags.util.list_to_sql_or import list_to_sql_or
 
 from imars_dags.operators.MMTTriggerDagRunOperator import MMTTriggerDagRunOperator
 
@@ -34,18 +35,21 @@ class STATUS:  # status IDs from imars_product_metadata.status
 
 class FileTriggerDAG(DAG):
     DAWN_OF_TIME = datetime(2018, 5, 5, 5, 5)  # any date in past is fine
-    SCHEDULE_INTERVAL = timedelta(minutes=15)  # must be > POKE_INTERVAL
-    POKE_INTERVAL = 60*5  # use higher value for less load on prod meta server
+    SCHEDULE_INTERVAL = timedelta(minutes=1)
+    # SCHEDULE_INTERVAL must be >= POKE_INTERVAL.
+    # Also: NOTE: SCHEDULE_INTERVAL sets the maximum frequency that products
+    #   can be ingested at 1 per SCHEDULE_INTERVAL.
+    POKE_INTERVAL = 60  # use higher value for less load on prod meta server
     def __init__(self, *args, **kwargs):
         """
         parameters:
         -----------
-        product_id : int
-            product_id for the product we are watching.
+        product_ids : int[]
+            list of `product_ids` for the product we are watching.
         dags_to_trigger : str[]
             list of DAG names to trigger when we get a new product.
         """
-        self.product_id = kwargs.pop('product_id')
+        self.product_ids = kwargs.pop('product_ids')
         self.dags_to_trigger = kwargs.pop('dags_to_trigger')
 
         # === overload some arguments TODO: warn or something???
@@ -80,9 +84,9 @@ class FileTriggerDAG(DAG):
             # TODO: SQL watch for pid=={} & status_id==to_load
             # === mysql_sensor
             # =================================================================
-            sql_selection="status_id={} AND product_id={};".format(
+            sql_selection="status_id={} AND {};".format(
                 STATUS.TO_LOAD,
-                self.product_id
+                list_to_sql_or('product_id', self.product_ids)
             )
             sql_str="SELECT id FROM file WHERE " + sql_selection
             check_for_to_loads = SqlSensor(
@@ -198,18 +202,22 @@ class FileTriggerDAG(DAG):
                     trigger_rule='one_success'
                 )
                 branch_to_correct_region >> ROI_dummy
-                for processing_dag_name in self.dags_to_trigger:
-                    # processing_dag_name is root dag, but each region has a dag
-                    dag_to_trigger="{}_{}".format(roi_name, processing_dag_name)
-                    trigger_dag_operator_id = "trigger_{}".format(dag_to_trigger)
-                    ROI_processing_DAG = MMTTriggerDagRunOperator(
-                        task_id=trigger_dag_operator_id,
-                        python_callable=lambda context, dag_run_obj: dag_run_obj,
-                        retries=1,
-                        retry_delay=timedelta(minutes=2),
-                        trigger_dag_id=dag_to_trigger,
-                        execution_date="{{ ti.xcom_pull(task_ids='get_file_metadata', key='date_time').strftime('%Y-%m-%d %H:%M:%S') }}",
-                    )
-                    ROI_dummy >> ROI_processing_DAG
-                    ROI_processing_DAG >> set_product_status_to_std
-                    ROI_processing_DAG >> set_product_status_to_err
+                if len(self.dags_to_trigger) > 0:
+                    for processing_dag_name in self.dags_to_trigger:
+                        # processing_dag_name is root dag, but each region has a dag
+                        dag_to_trigger="{}_{}".format(roi_name, processing_dag_name)
+                        trigger_dag_operator_id = "trigger_{}".format(dag_to_trigger)
+                        ROI_processing_DAG = MMTTriggerDagRunOperator(
+                            task_id=trigger_dag_operator_id,
+                            python_callable=lambda context, dag_run_obj: dag_run_obj,
+                            retries=1,
+                            retry_delay=timedelta(minutes=2),
+                            trigger_dag_id=dag_to_trigger,
+                            execution_date="{{ ti.xcom_pull(task_ids='get_file_metadata', key='date_time').strftime('%Y-%m-%d %H:%M:%S') }}",
+                        )
+                        ROI_dummy >> ROI_processing_DAG
+                        ROI_processing_DAG >> set_product_status_to_std
+                        ROI_processing_DAG >> set_product_status_to_err
+                else:  # no dags_to_trigger means just set it std and do nothing
+                    ROI_dummy >> set_product_status_to_std
+                    ROI_dummy >> set_product_status_to_err

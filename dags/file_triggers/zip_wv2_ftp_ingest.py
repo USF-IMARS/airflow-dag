@@ -1,15 +1,11 @@
 # =========================================================================
-# wv2 unzip to final destination
+# wv2 zip from ftp ingest (manually requested from Digital Globe)
 # =========================================================================
-from datetime import datetime,timedelta
-
-from airflow import DAG
-from imars_dags.operators.MMTTriggerDagRunOperator import MMTTriggerDagRunOperator
-
+import airflow  # you need this here or else airflow will not find your dag
 from imars_dags.dags.file_triggers.FileTriggerDAG import FileTriggerDAG
 
 this_dag = FileTriggerDAG(
-    product_id=6,
+    product_ids=[6],
     dags_to_trigger=[
         "wv2_unzip"
     ],

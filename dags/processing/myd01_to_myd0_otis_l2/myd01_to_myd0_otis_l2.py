@@ -38,7 +38,7 @@ PARFILE=os.path.join(
 XCALFILE="$OCVARROOT/modisa/xcal/OPER/xcal_modisa_axc_oc_v1.12d"
 
 this_dag = DAG(
-    dag_id="gom_myd01_to_myd0_otis_l2",
+    dag_id="proc_myd01_to_myd0_otis_l2_"+AREA_SHORT_NAME,
     default_args=DEF_ARGS,
     schedule_interval=SCHEDULE_INTERVAL
 )

@@ -17,7 +17,7 @@ default_args.update({
 })
 
 this_dag = DAG(
-    dag_id="UNCUT_wv2_unzip",
+    dag_id="proc_wv2_unzip_na",
     default_args=default_args,
     schedule_interval=None,
 )

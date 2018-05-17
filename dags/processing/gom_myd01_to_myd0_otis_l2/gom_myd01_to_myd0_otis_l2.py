@@ -27,6 +27,7 @@ DEF_ARGS.update({
 
 SCHEDULE_INTERVAL=None
 REGION=gom
+AREA_SHORT_NAME="gom"
 PARFILE=os.path.join(
     os.path.dirname(os.path.realpath(__file__)),  # imars_dags/dags/gom/
     "moda_l2gen.par"
@@ -139,7 +140,7 @@ with this_dag as dag:
                 "product_id":35,
                 # "time":"2016-02-12T16:25:18",
                 # "datetime": datetime(2016,2,12,16,25,18),
-                "json":'{"status_id":3,"area_id":1}'
+                "json":'{"status_id":3,"area_id":1,"area_short_name":"' + AREA_SHORT_NAME +'"}'
             }
         ],
         to_cleanup=[GEOFILE,OKMFILE,HKMFILE,QKMFILE,L2FILE]

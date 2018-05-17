@@ -13,7 +13,7 @@ from airflow.utils.trigger_rule import TriggerRule
 from airflow import DAG
 
 # this package
-import imars_dags.dags.builders.imars_etl as imars_etl_builder
+import imars_dags.util.imars_etl as imars_etl_builder
 from imars_dags.util.globals import QUEUE, DEFAULT_ARGS
 from imars_dags.util import satfilename
 from imars_dags.settings import secrets  # NOTE: this file not in public repo!

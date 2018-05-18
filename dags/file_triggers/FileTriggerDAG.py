@@ -40,7 +40,7 @@ class FileTriggerDAG(DAG):
     # Also: NOTE: SCHEDULE_INTERVAL sets the maximum frequency that products
     #   can be ingested at 1 per SCHEDULE_INTERVAL.
     POKE_INTERVAL = 60  # use higher value for less load on prod meta server
-    def __init__(self, *args, **kwargs):
+    def __init__(self, area_names=['na'], *args, **kwargs):
         """
         parameters:
         -----------
@@ -48,16 +48,22 @@ class FileTriggerDAG(DAG):
             list of `product_ids` for the product we are watching.
         dags_to_trigger : str[]
             list of DAG names to trigger when we get a new product.
+        area_names: str[]
+            list of RoIs that we should consider triggering
+            example: ['na', 'gom', 'fgbnms']
+
         """
+        self.area_names = area_names
         self.product_ids = kwargs.pop('product_ids')
         self.dags_to_trigger = kwargs.pop('dags_to_trigger')
-
         # === overload some arguments TODO: warn or something???
         # NOTE: catchup & max_active_runs prevent duplicate extractions
         kwargs['catchup']=False
         kwargs['max_active_runs']=1
 
         # === set arguments if ommitted
+        # TODO: I think these can be done in the function declaration with
+        #       standard default argument notation (default_args=def_def_args)
         def_def_args = DEFAULT_ARGS.copy()
         def_def_args.update({
             'start_date': self.DAWN_OF_TIME,
@@ -191,9 +197,8 @@ class FileTriggerDAG(DAG):
             === trigger region processing dags
             =================================================================
             """
-            REGION_NAMES = ['UNCUT', 'gom', 'fgbnms']  # TODO: get this from elsewhere
             # trigger dag(s) for this product & for this region
-            for roi_name in REGION_NAMES:
+            for roi_name in self.area_names:
                 # the dummy operator is just a choke point so the
                 #   BranchPythonOperator above can trigger several operators
                 #   grouped by ROI under ${ROI}_dummy.
@@ -205,7 +210,7 @@ class FileTriggerDAG(DAG):
                 if len(self.dags_to_trigger) > 0:
                     for processing_dag_name in self.dags_to_trigger:
                         # processing_dag_name is root dag, but each region has a dag
-                        dag_to_trigger="{}_{}".format(roi_name, processing_dag_name)
+                        dag_to_trigger="{}_{}".format(processing_dag_name, roi_name)
                         trigger_dag_operator_id = "trigger_{}".format(dag_to_trigger)
                         ROI_processing_DAG = MMTTriggerDagRunOperator(
                             task_id=trigger_dag_operator_id,

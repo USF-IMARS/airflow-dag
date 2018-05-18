@@ -119,7 +119,7 @@ def add_tasks(
             else:
                 fname = imars_etl.extract({
                     "sql":sql_selection
-                })['filepath']
+                })
                 print(       "extracting product matching SQL:\n\t" + sql_selection)
                 logging.info("extracting product matching SQL:\n\t" + sql_selection)
                 # ti.xcom_push(key='fname', value=fname)

@@ -86,6 +86,9 @@ def add_tasks(
     local file name is loaded into the DAG context and can be accessed like:
         {{ ti.xcom_pull(task_ids="extract_file")}}
     """
+    to_cleanup.append("{{ ti.xcom_pull(task_ids='extract_file') }}")
+    # NOTE: ^ this cleans up the extracted file and means that HAS_CLEANUP is
+    #       always True. TODO: refactor code below to account for this
     HAS_CLEANUP = len(to_cleanup) > 0
     with dag as dag:
         # === Extract

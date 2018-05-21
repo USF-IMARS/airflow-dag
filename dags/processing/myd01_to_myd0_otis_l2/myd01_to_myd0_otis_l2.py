@@ -15,8 +15,6 @@ from airflow import DAG
 # this package
 import imars_dags.util.imars_etl as imars_etl_builder
 from imars_dags.util.globals import QUEUE, DEFAULT_ARGS
-from imars_dags.util import satfilename
-from imars_dags.settings import secrets  # NOTE: this file not in public repo!
 from imars_dags.regions import gom, fgbnms, ao1
 
 DEF_ARGS = DEFAULT_ARGS.copy()
@@ -181,6 +179,7 @@ with this_dag as dag:
 #     )
 # )
 #
+# from imars_dags.util import satfilename
 # create_granule_l3 = BashOperator(
 #     task_id="l3gen_granule",
 #     bash_command="""

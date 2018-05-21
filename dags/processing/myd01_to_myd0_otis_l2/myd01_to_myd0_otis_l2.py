@@ -15,7 +15,6 @@ from airflow import DAG
 # this package
 import imars_dags.util.imars_etl as imars_etl_builder
 from imars_dags.util.globals import QUEUE, DEFAULT_ARGS
-from imars_dags.regions import gom, fgbnms, ao1
 
 DEF_ARGS = DEFAULT_ARGS.copy()
 DEF_ARGS.update({
@@ -24,7 +23,6 @@ DEF_ARGS.update({
 })
 
 SCHEDULE_INTERVAL=None
-REGION=gom
 AREA_SHORT_NAME="gom"
 PARFILE=os.path.join(
     os.path.dirname(os.path.realpath(__file__)),  # imars_dags/dags/gom/
@@ -147,6 +145,7 @@ with this_dag as dag:
 
 
 # # TODO: these too...
+#from imars_dags.regions import gom, fgbnms, ao1
 # # === FGBNMS
 # fgb_dag = DAG(
 #     dag_id="fgbnms_modis_aqua_granule",

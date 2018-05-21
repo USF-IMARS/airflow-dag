@@ -38,6 +38,31 @@ def tmp_filepath(dag_id, suffix, ts="{{ts_nodash}}"):
 def tmp_format_str():
     return tmp_filepath("{dag_id}", "{tag}", ts="%Y%m%dT%H%M%S").split('/')[-1]
 
+def get_tmp_file_suffix(load_args):
+    """
+    gets suffix from load_args dict for appending to operator names.
+    eg for files:
+        file_args = {'filepath': tmp_filepath(this_dag.dag_id, 'mysuffix')}
+        name = 'load_' + get_tmp_file_suffix(file_args)
+        >>> name == 'load_mysuffix'
+
+    eg for directory:
+        dir_args = {
+            'directory': tmp_filepath(this_dag.dag_id, 'dir_name'),
+            'product_type_name': 'prod_name')
+        }
+        name = 'load_' + get_tmp_file_suffix(dir_args)
+        >>> name == 'load_dir_name_prod_name'
+    """
+    try:
+        return load_args['filepath'].split('_')[-1]  # suffix only
+    except KeyError:
+        return "{}_{}".format(
+            load_args['directory'].split('_')[-1],  # suffix only
+            load_args['product_type_name']
+        )
+
+
 def add_tasks(
     dag, sql_selector, first_transform_operators, last_transform_operators,
     files_to_load=None,
@@ -186,13 +211,17 @@ def add_tasks(
             load_args['verbose'] = 3
             load_args['load_format'] = tmp_format_str()
 
-            # apply macros on filepath arg:
+            # apply macros on all (template-enabled) args:
+            ARGS_TEMPLATE_FIELDS = ['filepath', 'directory']
             task = kwargs['task']
-            load_args['filepath'] = task.render_template(
-                '',
-                load_args['filepath'],
-                kwargs
-            )
+            for key in load_args:
+                if key in ARGS_TEMPLATE_FIELDS:
+                    load_args[key] = task.render_template(
+                        '',
+                        load_args[key],
+                        kwargs
+                    )
+                # else don't template the arg
 
             print('loading {}'.format(load_args))
             imars_etl.load(load_args)
@@ -209,16 +238,10 @@ def add_tasks(
             )
         for t_op in last_transform_operators:
             for load_args in to_load:
-                try:
-                    fpath = load_args['filepath'].split('_')[-1]  # suffix only
-                except KeyError:
-                    fpath = "{}_{}".format(
-                        load_args['directory'].split('_')[-1],  # suffix only
-                        load_args['product_type_name']
-                    )
+                operator_suffix = get_tmp_file_suffix(load_args)
 
                 load_operator = PythonOperator(
-                    task_id='load_' + fpath,
+                    task_id='load_' + operator_suffix,
                     python_callable=load_task,
                     op_kwargs={'load_args': load_args},
                     provide_context=True,

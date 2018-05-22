@@ -5,7 +5,6 @@ import logging
 import os, errno
 
 from airflow.operators.bash_operator import BashOperator
-from airflow.operators.python_operator import PythonOperator
 from airflow.operators.mysql_operator import MySqlOperator
 from airflow.operators.dummy_operator import DummyOperator
 
@@ -14,6 +13,7 @@ import imars_etl
 from imars_dags.util.etl_tools.extract import add_extract
 from imars_dags.util.etl_tools.tmp_file import tmp_format_str, get_tmp_file_suffix
 from imars_dags.util.etl_tools.cleanup import add_cleanup
+from imars_dags.util.etl_tools.load import add_load
 
 
 
@@ -71,60 +71,18 @@ def add_tasks(
     HAS_CLEANUP = len(to_cleanup) > 0
 
     extract_file = add_extract(dag, sql_selector, first_transform_operators, test)
-    tmp_cleanup = add_cleanup(dag, to_cleanup)
 
-    with dag as dag:
-        # tmp_mkdir >> extract_file
-        # === Load
-        # ======================================================================
-        # loop through each to_load and load it
+    if   products_to_load_from_dir is not None and files_to_load is not None:
+        to_load = products_to_load_from_dir + files_to_load
+    elif products_to_load_from_dir is not None:
+        to_load = products_to_load_from_dir
+    elif files_to_load is not None:
+        to_load = files_to_load
+    else:
+        raise AssertionError(
+            "products_to_load_from_dir or files_to_load required"
+        )
 
-        def load_task(**kwargs):
-            load_args = kwargs['load_args']
-            # default args we add to all load ops:
-            load_args['verbose'] = 3
-            load_args['load_format'] = tmp_format_str()
+    load_operators = add_load(dag, to_load, last_transform_operators)
 
-            # apply macros on all (template-enabled) args:
-            ARGS_TEMPLATE_FIELDS = ['filepath', 'directory']
-            task = kwargs['task']
-            for key in load_args:
-                if key in ARGS_TEMPLATE_FIELDS:
-                    load_args[key] = task.render_template(
-                        '',
-                        load_args[key],
-                        kwargs
-                    )
-                # else don't template the arg
-
-            print('loading {}'.format(load_args))
-            imars_etl.load(load_args)
-
-        if   products_to_load_from_dir is not None and files_to_load is not None:
-            to_load = products_to_load_from_dir + files_to_load
-        elif products_to_load_from_dir is not None:
-            to_load = products_to_load_from_dir
-        elif files_to_load is not None:
-            to_load = files_to_load
-        else:
-            raise AssertionError(
-                "products_to_load_from_dir or files_to_load required"
-            )
-        for t_op in last_transform_operators:
-            for load_args in to_load:
-                operator_suffix = get_tmp_file_suffix(load_args)
-
-                load_operator = PythonOperator(
-                    task_id='load_' + operator_suffix,
-                    python_callable=load_task,
-                    op_kwargs={'load_args': load_args},
-                    provide_context=True,
-                )
-                # transform(s) >> load(s)
-                t_op >> load_operator
-                # load(s) >> cleanup
-                if HAS_CLEANUP:
-                    load_operator >> tmp_cleanup
-
-                # TODO: if load operator fails with IntegrityError (duplicate)
-                #    mark success or skip or something...
+    tmp_cleanup = add_cleanup(dag, to_cleanup, load_operators)

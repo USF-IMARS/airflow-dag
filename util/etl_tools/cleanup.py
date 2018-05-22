@@ -8,7 +8,13 @@ from airflow.operators.sensors import SqlSensor
 from datetime import timedelta
 import shutil
 
-def add_cleanup(dag, to_cleanup):
+def add_cleanup(dag, to_cleanup, upstream_operators):
+    """
+    upstream_operators : airflow.operators.*[]
+        Operators which get wired before cleanup.
+        These are the very last thing. Make sure everything is loaded first.
+        Usually these are the operators doing the loading.
+    """
     with dag as dag:
         def tmp_cleanup_task(**kwargs):
             to_cleanup = kwargs['to_cleanup']
@@ -58,5 +64,9 @@ def add_cleanup(dag, to_cleanup):
         # start poking immediately
         # TODO: do we need another upstream task added here?
         # extract_file >> poke_until_tmp_cleanup_done
+
+        # load(s) >> cleanup
+        for up_operator in upstream_operators:
+            up_operator >> tmp_cleanup
 
     return tmp_cleanup

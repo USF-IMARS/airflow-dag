@@ -4,6 +4,7 @@ allows for easy set up of ETL operations within imars-etl.
 import logging
 import os, errno
 from datetime import timedelta
+import shutil
 
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import PythonOperator
@@ -13,6 +14,7 @@ from airflow.operators.sensors import SqlSensor
 
 import imars_etl
 
+TMP_PREFIX="/srv/imars-objects/airflow_tmp/"
 # TODO: if tmp_filepath was part of a class we could store tmp files on the
 #       instance and automatically add them to the `to_cleanup` list
 def tmp_filepath(dag_id, suffix, ts="{{ts_nodash}}"):
@@ -30,7 +32,7 @@ def tmp_filepath(dag_id, suffix, ts="{{ts_nodash}}"):
         example: 20180505T1345  # for date 2018-05-05T13:45
     """
     return (
-        "/srv/imars-objects/airflow_tmp/" + dag_id
+        TMP_PREFIX + dag_id
         + "_" + str(ts)
         + "_" + str(suffix)
     )
@@ -168,10 +170,29 @@ def add_tasks(
         # ======================================================================
         # loop through `to_cleanup` and rm instead of this:
         if HAS_CLEANUP:
-            tmp_cleanup = BashOperator(
-                task_id="tmp_cleanup",
-                trigger_rule="all_done",
-                bash_command="rm " + " ".join(to_cleanup),
+
+            def tmp_cleanup_task(**kwargs):
+                to_cleanup = kwargs['to_cleanup']
+                for cleanup_path in to_cleanup:
+                    cleanup_path = kwargs['task'].render_template(
+                        '',
+                        cleanup_path,
+                        kwargs
+                    )
+                    if (cleanup_path.startswith(TMP_PREFIX)) and len(cleanup_path.strip()) > len(TMP_PREFIX):
+                        print('rm -rf {}'.format(cleanup_path))
+                        # shutil.rmtree(cleanup_path)
+                    else:
+                        raise ValueError(
+                            "\ncleanup paths must be in /tmp/ dir '{}'".format(TMP_PREFIX) +
+                            "\n\t you attempted to 'rm -rf {}'".format(cleanup_path)
+                        )
+
+            tmp_cleanup = PythonOperator(
+                task_id='tmp_cleanup',
+                python_callable=tmp_cleanup_task,
+                op_kwargs={'to_cleanup': to_cleanup},
+                provide_context=True,
             )
 
             # to ensure we clean up even if something in the middle fails, we must

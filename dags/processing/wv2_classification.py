@@ -20,8 +20,9 @@ from airflow.utils.trigger_rule import TriggerRule
 from airflow import DAG
 
 # this package
-from imars_dags.util.etl_tools import etl_tools as imars_etl_builder
-from imars_dags.util.etl_tools.tmp_file import tmp_filepath
+from imars_dags.util.etl_tools.extract import add_extract
+from imars_dags.util.etl_tools.load import add_load
+from imars_dags.util.etl_tools.tmp_file import tmp_filepath, tmp_filedir
 from imars_dags.util.globals import DEFAULT_ARGS
 
 DEF_ARGS = DEFAULT_ARGS.copy()
@@ -48,40 +49,49 @@ this_dag = DAG(
 # $image is product_type 12 or 25?
 # |WV02_20170616150232_0000000000000000_17Jun16150232-M1BS-057796433010_01_P002.ntf | 12 |
 # |WV02_20170616150231_0000000000000000_17Jun16150231-P1BS-057796433010_01_P001.ntf | 25 |
+ntf_basename = "input_image"
+ntf_input_file = tmp_filepath(this_dag.dag_id, ntf_basename + '.ntf')
+extract_ntf = add_extract(this_dag, "product_id=12", ntf_input_file)
 
 # ===
 ## met=`ls $WORK/tmp/test/sunglint/*.[xX][mM][lL]`
 # $met is type 15 or 28?
 # | WV02_20170616150232_0000000000000000_17Jun16150232-M1BS-057796433010_01_P002.xml |15 |
 # | WV02_20170616150231_0000000000000000_17Jun16150231-P1BS-057796433010_01_P001.xml |28 |
+met_input_file = tmp_filepath(this_dag.dag_id, "input_met.xml")
+extract_met = add_extract(this_dag, "product_id=15", met_input_file)
 # ===========================================================================
 
 # output_dir1=/work/m/mjm8/tmp/test/ortho/
-ORTHO_DIR = tmp_filepath(this_dag.dag_id, 'ortho') + "/"
+ortho_dir = tmp_filedir(this_dag.dag_id, 'ortho')
+# TODO: BashOperator create ortho_dir
 pgc_ortho = BashOperator(
     dag=this_dag,
     task_id='pgc_ortho',
     bash_command="""
-        INPUT_FILE={{ ti.xcom_pull(task_ids="extract_file") }} &&
         python /work/m/mjm8/progs/pgc_ortho.py \
             -p 4326 \
             -c ns \
             -t UInt16 \
             -f GTiff \
             --no_pyramids \
-            $INPUT_FILE \
-            """ + ORTHO_DIR,
+            """ + ntf_input_file + " " + ortho_dir,
     # queue=QUEUE.WV2_PROC,
 )
+extract_ntf >> pgc_ortho
+
+# the filepath that pgc_ortho should have written to
+ortho_output_file = ortho_dir + ntf_basename + "_u16ns4326.tif"
 
 # ## Run Matlab code
-
+rrs_out   = tmp_filedir(this_dag.dag_id, 'output')  # "/work/m/mjm8/tmp/test/output/"
+class_out = tmp_filedir(this_dag.dag_id, 'output')  # "/work/m/mjm8/tmp/test/output/"
 wv2_proc_matlab = BashOperator(
     dag=this_dag,
     task_id='wv2_proc_matlab',
     bash_command="""
-        ORTH_FILE="""+ORTHO_DIR+"""{{ os.path.basename(ti.xcom_pull(task_ids="extract_file")) }}_u16ns4326.tif &&
-        MET={{ ti.xcom_pull(task_ids="extract_file") }}  &&
+        ORTH_FILE=""" + ortho_output_file + """ &&
+        MET=""" + met_input_file + """  &&
         matlab -nodisplay -nodesktop -r "WV2_Processing(\
             '$ORTH_FILE',\
             '$MET',\
@@ -92,13 +102,11 @@ wv2_proc_matlab = BashOperator(
             '{{params.stat}}',\
             '{{params.loc}}',\
             '{{params.SLURM_ARRAY_TASK_ID}}',\
-            '{{params.rrs_out}}',\
-            '{{params.class_out}}'\
+            '""" + rrs_out   + """',\
+            '""" + class_out + """'\
         )"
     """,
     params={
-        "rrs_out": "/work/m/mjm8/tmp/test/output/",
-        "class_out": "/work/m/mjm8/tmp/test/output/",
         "crd_sys": "EPSG:4326",
         "dt": "0",
         "sgw": "5",
@@ -109,21 +117,9 @@ wv2_proc_matlab = BashOperator(
     }
     # queue=QUEUE.MATLAB,
 )
+extract_met >> wv2_proc_matlab
+pgc_ortho >> wv2_proc_matlab
 
-# imars_etl_builder.add_tasks(
-#     this_dag,
-#     sql_selector="product_id=999",
-#     first_transform_operators=[l1a_2_geo],
-#     last_transform_operators=[l2gen],
-#     files_to_load=[
-#         {
-#             "filepath":L2FILE,  # required!
-#             "verbose":3,
-#             "product_id":35,
-#             # "time":"2016-02-12T16:25:18",
-#             # "datetime": datetime(2016,2,12,16,25,18),
-#             "json":'{"status_id":3,"area_id":1,"area_short_name":"' + AREA_SHORT_NAME +'"}'
-#         }
-#     ],
-#     to_cleanup=[GEOFILE,OKMFILE,HKMFILE,QKMFILE,L2FILE]
-# )
+to_load = []  # TODO: what goes here? rrs_out, class_out, ortho_dir ?
+
+add_load(this_dag, to_load, [wv2_proc_matlab])

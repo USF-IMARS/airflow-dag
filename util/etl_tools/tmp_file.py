@@ -21,8 +21,13 @@ def tmp_filepath(dag_id, suffix, ts="{{ts_nodash}}", n=0):
         TMP_PREFIX + dag_id
         + "_" + str(ts)
         + "_" + str(suffix)
-        + "_" + str(n)  # TODO
+        # + "_" + str(n)  # TODO ?
     )
+
+def tmp_filedir(dag_id, suffix, ts=None, n=None):
+    path = tmp_filepath(dag_id, suffix, ts, n) + "/"
+    # TODO: add mkdir BashOperator here
+    return path
 
 def tmp_format_str():
     return tmp_filepath("{dag_id}", "{tag}", ts="%Y%m%dT%H%M%S").split('/')[-1]

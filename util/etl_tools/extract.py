@@ -2,7 +2,7 @@ import logging
 
 from airflow.operators.python_operator import PythonOperator
 
-def add_extract(dag, sql_selector, downstream_operators, test=False):
+def add_extract(dag, sql_selector, output_path, downstream_operators, test=False):
     """
     sql_selector : str
         "WHERE ____" style SQL selector string to search metadata db for input.
@@ -40,11 +40,13 @@ def add_extract(dag, sql_selector, downstream_operators, test=False):
                 `{{ ti.xcom_pull(task_ids="extract_file") }}`
             """
             sql_selection = kwargs['templates_dict']['sql_selection']
+            output_path = kwargs['templates_dict']['output_path']
             if kwargs['templates_dict']['test'] == "True":
                 return "/tmp/fake/file.name"
             else:
                 fname = imars_etl.extract({
-                    "sql":sql_selection
+                    "sql":sql_selection,
+                    "output_path": output_path
                 })
                 print(       "extracting product matching SQL:\n\t" + sql_selection)
                 logging.info("extracting product matching SQL:\n\t" + sql_selection)
@@ -57,6 +59,7 @@ def add_extract(dag, sql_selector, downstream_operators, test=False):
             python_callable=extract_file,
             templates_dict={
                 "sql_selection": 'date_time="{{ execution_date }}" AND (' + sql_selector + ')',
+                "output_path": output_path,
                 "test": str(test)
             }
         )

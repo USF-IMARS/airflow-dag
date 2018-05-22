@@ -1,7 +1,7 @@
 TMP_PREFIX="/srv/imars-objects/airflow_tmp/"
 # TODO: if tmp_filepath was part of a class we could store tmp files on the
 #       instance and automatically add them to the `to_cleanup` list
-def tmp_filepath(dag_id, suffix, ts="{{ts_nodash}}"):
+def tmp_filepath(dag_id, suffix, ts="{{ts_nodash}}", n=0):
     """
     returns temporary directory (template) for given dag.
 
@@ -11,6 +11,8 @@ def tmp_filepath(dag_id, suffix, ts="{{ts_nodash}}"):
     suffix : str
         suffix to append to filepath, use this like your filename.
         examples: myFile.txt, fileToLoad, output_file.csv
+    n  : int
+        file number. useful if extracting multiple files
     ts : str
         timestring for the current file in the form of ts_nodash
         example: 20180505T1345  # for date 2018-05-05T13:45
@@ -19,6 +21,7 @@ def tmp_filepath(dag_id, suffix, ts="{{ts_nodash}}"):
         TMP_PREFIX + dag_id
         + "_" + str(ts)
         + "_" + str(suffix)
+        + "_" + str(n)  # TODO
     )
 
 def tmp_format_str():

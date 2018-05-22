@@ -13,7 +13,7 @@ from airflow.utils.trigger_rule import TriggerRule
 from airflow import DAG
 
 # this package
-import imars_dags.util.imars_etl as imars_etl_builder
+from imars_dags.util.etl_tools import etl_tools as imars_etl_builder
 from imars_dags.util.globals import QUEUE, DEFAULT_ARGS
 
 DEF_ARGS = DEFAULT_ARGS.copy()

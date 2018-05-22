@@ -14,6 +14,7 @@ from airflow import DAG
 
 # this package
 from imars_dags.util.etl_tools import etl_tools as imars_etl_builder
+from imars_dags.util.etl_tools.tmp_file import tmp_filepath
 from imars_dags.util.globals import QUEUE, DEFAULT_ARGS
 
 DEF_ARGS = DEFAULT_ARGS.copy()
@@ -43,7 +44,7 @@ with this_dag as dag:
     # =========================================================================
     # === modis GEO
     # =========================================================================
-    GEOFILE = imars_etl_builder.tmp_filepath(dag.dag_id, 'geofile')
+    GEOFILE = tmp_filepath(dag.dag_id, 'geofile')
     l1a_2_geo = BashOperator(
         task_id='l1a_2_geo',
         bash_command="""
@@ -65,9 +66,9 @@ with this_dag as dag:
     # =========================================================================
     # === modis l1a + geo -> l1b
     # =========================================================================
-    OKMFILE = imars_etl_builder.tmp_filepath(dag.dag_id, 'okm')  # aka L1b
-    HKMFILE = imars_etl_builder.tmp_filepath(dag.dag_id, 'hkm')
-    QKMFILE = imars_etl_builder.tmp_filepath(dag.dag_id, 'qkm')
+    OKMFILE = tmp_filepath(dag.dag_id, 'okm')  # aka L1b
+    HKMFILE = tmp_filepath(dag.dag_id, 'hkm')
+    QKMFILE = tmp_filepath(dag.dag_id, 'qkm')
 
     # NOTE: we need write access to the input file
     #       [ref](https://oceancolor.gsfc.nasa.gov/forum/oceancolor/topic_show.pl?tid=5333)
@@ -94,7 +95,7 @@ with this_dag as dag:
     # =========================================================================
     # === l2gen l1b -> l2
     # =========================================================================
-    L2FILE = imars_etl_builder.tmp_filepath(dag.dag_id, 'l2')
+    L2FILE = tmp_filepath(dag.dag_id, 'l2')
     # l2gen usage usage docs:
     # https://seadas.gsfc.nasa.gov/help/seadas-processing/ProcessL2gen.html#COMMAND_LINE_HELP
     # NOTE: filenames must be inserted inline here because they contain the

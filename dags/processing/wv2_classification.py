@@ -21,6 +21,7 @@ from airflow import DAG
 
 # this package
 from imars_dags.util.etl_tools import etl_tools as imars_etl_builder
+from imars_dags.util.etl_tools.tmp_file import tmp_filepath
 from imars_dags.util.globals import DEFAULT_ARGS
 
 DEF_ARGS = DEFAULT_ARGS.copy()
@@ -56,7 +57,7 @@ this_dag = DAG(
 # ===========================================================================
 
 # output_dir1=/work/m/mjm8/tmp/test/ortho/
-ORTHO_DIR = imars_etl_builder.tmp_filepath(this_dag.dag_id, 'ortho') + "/"
+ORTHO_DIR = tmp_filepath(this_dag.dag_id, 'ortho') + "/"
 pgc_ortho = BashOperator(
     dag=this_dag,
     task_id='pgc_ortho',

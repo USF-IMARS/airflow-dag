@@ -8,6 +8,7 @@ from airflow.operators.bash_operator import BashOperator
 
 from imars_dags.util.globals import DEFAULT_ARGS
 from imars_dags.util.etl_tools import etl_tools as imars_etl_builder
+from imars_dags.util.etl_tools.tmp_file import tmp_filepath
 
 default_args = DEFAULT_ARGS.copy()
 default_args.update({
@@ -22,7 +23,7 @@ this_dag = DAG(
     schedule_interval=None,
 )
 
-UNZIP_DIR = imars_etl_builder.tmp_filepath(this_dag.dag_id, "unzip_dir")
+UNZIP_DIR = tmp_filepath(this_dag.dag_id, "unzip_dir")
 unzip_wv2_ingest = BashOperator(
     task_id="unzip_wv2_ingest",
     dag = this_dag,

@@ -9,14 +9,10 @@ classification on WorldView-2 images
 # #SBATCH --array=0-3
 """
 # std libs
-from datetime import datetime, timedelta
-import subprocess
-import configparser
-import os
+from datetime import datetime
 
 # deps
 from airflow.operators.bash_operator import BashOperator
-from airflow.utils.trigger_rule import TriggerRule
 from airflow import DAG
 
 # this package
@@ -40,12 +36,8 @@ this_dag = DAG(
     schedule_interval=SCHEDULE_INTERVAL
 )
 
-# === INPUT FILES ===
-# TODO: need to figure out how to extract two inputs...
+# === EXTRACT INPUT FILES ===
 # ===========================================================================
-## images1=`ls $WORK/tmp/test/sunglint/*.[nN][tT][fF]`
-## images1a=($images1)
-## image=${images1a[$SLURM_ARRAY_TASK_ID]}
 # $image is product_type 12 or 25?
 # |WV02_20170616150232_0000000000000000_17Jun16150232-M1BS-057796433010_01_P002.ntf | 12 |
 # |WV02_20170616150231_0000000000000000_17Jun16150231-P1BS-057796433010_01_P001.ntf | 25 |
@@ -54,7 +46,6 @@ ntf_input_file = tmp_filepath(this_dag.dag_id, ntf_basename + '.ntf')
 extract_ntf = add_extract(this_dag, "product_id=12", ntf_input_file)
 
 # ===
-## met=`ls $WORK/tmp/test/sunglint/*.[xX][mM][lL]`
 # $met is type 15 or 28?
 # | WV02_20170616150232_0000000000000000_17Jun16150232-M1BS-057796433010_01_P002.xml |15 |
 # | WV02_20170616150231_0000000000000000_17Jun16150231-P1BS-057796433010_01_P001.xml |28 |
@@ -62,9 +53,10 @@ met_input_file = tmp_filepath(this_dag.dag_id, "input_met.xml")
 extract_met = add_extract(this_dag, "product_id=15", met_input_file)
 # ===========================================================================
 
+# === DEFINE PROCESSING TRANSFORM OPERATORS ===
+# ===========================================================================
 # output_dir1=/work/m/mjm8/tmp/test/ortho/
 ortho_dir = tmp_filedir(this_dag.dag_id, 'ortho')
-# TODO: BashOperator create ortho_dir
 pgc_ortho = BashOperator(
     dag=this_dag,
     task_id='pgc_ortho',
@@ -119,7 +111,13 @@ wv2_proc_matlab = BashOperator(
 )
 extract_met >> wv2_proc_matlab
 pgc_ortho >> wv2_proc_matlab
+# ===========================================================================
 
-to_load = []  # TODO: what goes here? rrs_out, class_out, ortho_dir ?
+# === (UP)LOAD RESULTS ===
+# ===========================================================================
+# TODO: what goes here? rrs_out, class_out, ortho_dir ?
+#       do we want to save all of these files or only some of them?
+to_load = []
 
 add_load(this_dag, to_load, [wv2_proc_matlab])
+# ===========================================================================

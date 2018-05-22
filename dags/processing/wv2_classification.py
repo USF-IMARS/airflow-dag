@@ -33,7 +33,7 @@ SCHEDULE_INTERVAL=None
 AREA_SHORT_NAME="na"
 
 this_dag = DAG(
-    dag_id="wv2_classification_"+AREA_SHORT_NAME,
+    dag_id="proc_wv2_classification_"+AREA_SHORT_NAME,
     default_args=DEF_ARGS,
     schedule_interval=SCHEDULE_INTERVAL
 )

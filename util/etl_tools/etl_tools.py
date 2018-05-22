@@ -70,22 +70,14 @@ def add_tasks(
     #       always True. TODO: refactor code below to account for this
     HAS_CLEANUP = len(to_cleanup) > 0
 
-    extract_file = add_extract(dag, sql_selector, test)
+    extract_file = add_extract(dag, sql_selector, first_transform_operators, test)
     tmp_cleanup = add_cleanup(dag, to_cleanup)
 
     with dag as dag:
         # tmp_mkdir >> extract_file
-
-        # === /tmp/ cleanup
-        # ======================================================================
-        # loop through `to_cleanup` and rm instead of this:
-
         # === Load
         # ======================================================================
         # loop through each to_load and load it
-        for t_op in first_transform_operators:
-            # extract(s) >> transform(s)
-            extract_file >> t_op
 
         def load_task(**kwargs):
             load_args = kwargs['load_args']

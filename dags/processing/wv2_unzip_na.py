@@ -7,7 +7,7 @@ from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 
 from imars_dags.util.globals import DEFAULT_ARGS
-import imars_dags.util.imars_etl as imars_etl_builder
+from imars_dags.util.etl_tools import etl_tools as imars_etl_builder
 
 default_args = DEFAULT_ARGS.copy()
 default_args.update({

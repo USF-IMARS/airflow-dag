@@ -2,7 +2,17 @@ import logging
 
 from airflow.operators.python_operator import PythonOperator
 
-def add_extract(dag, sql_selector, test):
+def add_extract(dag, sql_selector, downstream_operators, test=False):
+    """
+    sql_selector : str
+        "WHERE ____" style SQL selector string to search metadata db for input.
+        This is to find the input file of your DAG.
+        Example:
+        "product_id=6 AND is_day_pass=1"
+    downstream_operators : airflow.operators.*[]
+        Operators which get wired after extract. These are the first in your
+        processing chain.
+    """
     with dag as dag:
         # === Extract
         # ======================================================================
@@ -50,5 +60,9 @@ def add_extract(dag, sql_selector, test):
                 "test": str(test)
             }
         )
+
+        for down_op in downstream_operators:
+            # extract(s) >> transform(s)
+            extract_file >> down_op
 
     return extract_file

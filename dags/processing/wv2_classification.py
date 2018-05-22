@@ -56,7 +56,7 @@ this_dag = DAG(
 # ===========================================================================
 
 # output_dir1=/work/m/mjm8/tmp/test/ortho/
-OUTPUT_DIR1 = imars_etl_builder.tmp_filepath(this_dag.dag_id, 'ortho') + "/"
+ORTHO_DIR = imars_etl_builder.tmp_filepath(this_dag.dag_id, 'ortho') + "/"
 pgc_ortho = BashOperator(
     dag=this_dag,
     task_id='pgc_ortho',
@@ -69,7 +69,7 @@ pgc_ortho = BashOperator(
             -f GTiff \
             --no_pyramids \
             $INPUT_FILE \
-            """ + OUTPUT_DIR1,
+            """ + ORTHO_DIR,
     # queue=QUEUE.WV2_PROC,
 )
 
@@ -79,7 +79,7 @@ wv2_proc_matlab = BashOperator(
     dag=this_dag,
     task_id='wv2_proc_matlab',
     bash_command="""
-        ORTH_FILE="""+OUTPUT_DIR1+"""{{ os.path.basename(ti.xcom_pull(task_ids="extract_file")) }}_u16ns4326.tif &&
+        ORTH_FILE="""+ORTHO_DIR+"""{{ os.path.basename(ti.xcom_pull(task_ids="extract_file")) }}_u16ns4326.tif &&
         MET={{ ti.xcom_pull(task_ids="extract_file") }}  &&
         matlab -nodisplay -nodesktop -r "WV2_Processing(\
             '$ORTH_FILE',\

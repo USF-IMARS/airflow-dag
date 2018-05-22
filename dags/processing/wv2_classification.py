@@ -108,3 +108,21 @@ wv2_proc_matlab = BashOperator(
     }
     # queue=QUEUE.MATLAB,
 )
+
+# imars_etl_builder.add_tasks(
+#     this_dag,
+#     sql_selector="product_id=999",
+#     first_transform_operators=[l1a_2_geo],
+#     last_transform_operators=[l2gen],
+#     files_to_load=[
+#         {
+#             "filepath":L2FILE,  # required!
+#             "verbose":3,
+#             "product_id":35,
+#             # "time":"2016-02-12T16:25:18",
+#             # "datetime": datetime(2016,2,12,16,25,18),
+#             "json":'{"status_id":3,"area_id":1,"area_short_name":"' + AREA_SHORT_NAME +'"}'
+#         }
+#     ],
+#     to_cleanup=[GEOFILE,OKMFILE,HKMFILE,QKMFILE,L2FILE]
+# )

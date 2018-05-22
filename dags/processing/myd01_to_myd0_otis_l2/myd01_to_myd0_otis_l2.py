@@ -128,6 +128,7 @@ with this_dag as dag:
     imars_etl_builder.add_tasks(
         this_dag,
         sql_selector="product_id=5",
+        input_file_suffix="myd01",
         first_transform_operators=[l1a_2_geo],
         last_transform_operators=[l2gen],
         files_to_load=[

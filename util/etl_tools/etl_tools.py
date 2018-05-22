@@ -11,14 +11,13 @@ from airflow.operators.dummy_operator import DummyOperator
 import imars_etl
 
 from imars_dags.util.etl_tools.extract import add_extract
-from imars_dags.util.etl_tools.tmp_file import tmp_format_str, get_tmp_file_suffix
+from imars_dags.util.etl_tools.tmp_file import tmp_filepath
 from imars_dags.util.etl_tools.cleanup import add_cleanup
 from imars_dags.util.etl_tools.load import add_load
 
 
-
 def add_tasks(
-    dag, sql_selector, first_transform_operators, last_transform_operators,
+    dag, sql_selector, input_file_suffix, first_transform_operators, last_transform_operators,
     files_to_load=None,
     products_to_load_from_dir=None,
     to_cleanup=[], common_load_params={}, test=False
@@ -65,12 +64,16 @@ def add_tasks(
     local file name is loaded into the DAG context and can be accessed like:
         {{ ti.xcom_pull(task_ids="extract_file")}}
     """
-    to_cleanup.append("{{ ti.xcom_pull(task_ids='extract_file') }}")
+    output_path = tmp_filepath(
+        dag.dag_id,
+        input_file_suffix
+    )
+    to_cleanup.append(output_path)
     # NOTE: ^ this cleans up the extracted file and means that HAS_CLEANUP is
     #       always True. TODO: refactor code below to account for this
     HAS_CLEANUP = len(to_cleanup) > 0
 
-    extract_file = add_extract(dag, sql_selector, first_transform_operators, test)
+    extract_file = add_extract(dag, sql_selector, output_path, first_transform_operators, test)
 
     if   products_to_load_from_dir is not None and files_to_load is not None:
         to_load = products_to_load_from_dir + files_to_load

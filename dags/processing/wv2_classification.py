@@ -56,7 +56,7 @@ extract_met = add_extract(this_dag, "product_id=15", met_input_file)
 # === DEFINE PROCESSING TRANSFORM OPERATORS ===
 # ===========================================================================
 # output_dir1=/work/m/mjm8/tmp/test/ortho/
-ortho_dir = tmp_filedir(this_dag.dag_id, 'ortho')
+ortho_dir, create_ortho_tmp_dir = tmp_filedir(this_dag, 'ortho')
 pgc_ortho = BashOperator(
     dag=this_dag,
     task_id='pgc_ortho',
@@ -70,14 +70,15 @@ pgc_ortho = BashOperator(
             """ + ntf_input_file + " " + ortho_dir,
     # queue=QUEUE.WV2_PROC,
 )
+create_ortho_tmp_dir >> pgc_ortho
 extract_ntf >> pgc_ortho
 
 # the filepath that pgc_ortho should have written to
 ortho_output_file = ortho_dir + ntf_basename + "_u16ns4326.tif"
 
 # ## Run Matlab code
-rrs_out   = tmp_filedir(this_dag.dag_id, 'output')  # "/work/m/mjm8/tmp/test/output/"
-class_out = tmp_filedir(this_dag.dag_id, 'output')  # "/work/m/mjm8/tmp/test/output/"
+rrs_out, create_ouput_tmp_dir = tmp_filedir(this_dag, 'output')  # "/work/m/mjm8/tmp/test/output/"
+class_out = rrs_out  # same as above  "/work/m/mjm8/tmp/test/output/"
 wv2_proc_matlab = BashOperator(
     dag=this_dag,
     task_id='wv2_proc_matlab',
@@ -109,6 +110,7 @@ wv2_proc_matlab = BashOperator(
     }
     # queue=QUEUE.MATLAB,
 )
+create_ouput_tmp_dir >> wv2_proc_matlab
 extract_met >> wv2_proc_matlab
 pgc_ortho >> wv2_proc_matlab
 # ===========================================================================

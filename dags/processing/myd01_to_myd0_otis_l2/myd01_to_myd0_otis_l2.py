@@ -13,8 +13,10 @@ from airflow.utils.trigger_rule import TriggerRule
 from airflow import DAG
 
 # this package
-from imars_dags.util.etl_tools import etl_tools as imars_etl_builder
 from imars_dags.util.etl_tools.tmp_file import tmp_filepath
+from imars_dags.util.etl_tools.extract import add_extract
+from imars_dags.util.etl_tools.load import add_load
+from imars_dags.util.etl_tools.cleanup import add_cleanup
 from imars_dags.util.globals import QUEUE, DEFAULT_ARGS
 
 DEF_ARGS = DEFAULT_ARGS.copy()
@@ -41,6 +43,11 @@ this_dag = DAG(
 )
 
 with this_dag as dag:
+    # === EXTRACT INPUT FILES ===
+    # ===========================================================================
+    MYD01FILE = tmp_filepath(this_dag.dag_id, 'myd01.hdf')
+    extract_myd01 = add_extract(this_dag, "product_id=5", MYD01FILE)
+
     # =========================================================================
     # === modis GEO
     # =========================================================================
@@ -53,7 +60,7 @@ with this_dag as dag:
             OUT_PATH="""+GEOFILE+"""         && \n\
             $OCSSWROOT/scripts/modis_GEO.py \\\n\
                 --output=$OUT_PATH \\\n\
-                {{ ti.xcom_pull(task_ids="extract_file") }} && \n\
+                """ + MYD01FILE + """ && \n\
             [[ -s $OUT_PATH ]]
         """,
         queue=QUEUE.SAT_SCRIPTS,
@@ -85,7 +92,7 @@ with this_dag as dag:
                 --okm $OKM_PATH \\\n\
                 --hkm $HKM_PATH \\\n\
                 --qkm $QKM_PATH \\\n\
-                {{ ti.xcom_pull(task_ids="extract_file") }} \\\n\
+                """+MYD01FILE+""" \\\n\
                 """+GEOFILE+""" && \n\
             [[ -s $OKM_PATH ]]
         """,  # NOTE: might want to add `&& -s $HKM_PATH && -s $QKM_PATH` too
@@ -105,7 +112,7 @@ with this_dag as dag:
         task_id="l2gen",
         bash_command="""
             export OCSSWROOT=/opt/ocssw && source /opt/ocssw/OCSSW_bash.env && \n\
-            $OCSSWROOT/run/bin/linux_64/l2gen \\\n\
+            $OCSSWROOT/bin/l2gen \\\n\
                 ifile="""+OKMFILE+""" \\\n\
                 ofile="""+L2FILE+""" \\\n\
                 geofile="""+GEOFILE+""" \\\n\
@@ -120,18 +127,9 @@ with this_dag as dag:
         queue=QUEUE.SAT_SCRIPTS
     )
     # =========================================================================
-
-    l1a_2_geo >> make_l1b
-    make_l1b >> l2gen
-    l1a_2_geo >> l2gen
-
-    imars_etl_builder.add_tasks(
+    load_l2_list = add_load(
         this_dag,
-        sql_selector="product_id=5",
-        input_file_suffix="myd01",
-        first_transform_operators=[l1a_2_geo],
-        last_transform_operators=[l2gen],
-        files_to_load=[
+        to_load=[
             {
                 "filepath":L2FILE,  # required!
                 "verbose":3,
@@ -141,10 +139,25 @@ with this_dag as dag:
                 "json":'{"status_id":3,"area_id":1,"area_short_name":"' + AREA_SHORT_NAME +'"}'
             }
         ],
-        to_cleanup=[GEOFILE,OKMFILE,HKMFILE,QKMFILE,L2FILE]
+        upstream_operators=[l2gen]
     )
 
+    cleanup_task = add_cleanup(
+        this_dag,
+        to_cleanup=[MYD01FILE,GEOFILE,OKMFILE,HKMFILE,QKMFILE,L2FILE],
+        upstream_operators=load_l2_list
+    )
 
+    # =========================================================================
+    # === connect it all up
+    # =========================================================================
+    extract_myd01 >> l1a_2_geo
+    l1a_2_geo >> make_l1b
+    make_l1b >> l2gen
+    l1a_2_geo >> l2gen
+    # `l2gen >> load_l2_list` done by `upstream_operators=[l2gen]`
+    # `load_l2_list >> cleanup_task` done by `upstream_operators=[load_l2_list]`
+    # =========================================================================
 
 # # TODO: these too...
 #from imars_dags.regions import gom, fgbnms, ao1

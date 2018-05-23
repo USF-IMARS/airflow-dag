@@ -39,19 +39,24 @@ this_dag = DAG(
 
 # === EXTRACT INPUT FILES ===
 # ===========================================================================
-# $image is product_type 12 or 25?
-# |WV02_20170616150232_0000000000000000_17Jun16150232-M1BS-057796433010_01_P002.ntf | 12 |
-# |WV02_20170616150231_0000000000000000_17Jun16150231-P1BS-057796433010_01_P001.ntf | 25 |
+# === ntf image is product_id # 11
+# [imars_product_metadata]> SELECT id,short_name,full_name FROM product
+#                           WHERE short_name="ntf_wv2_m1bs";
+# | id | short_name   | full_name                 |
+# +----+--------------+---------------------------+
+# | 11 | ntf_wv2_m1bs | wv2 1b multispectral .ntf |
 ntf_basename = "input_image"
 ntf_input_file = tmp_filepath(this_dag.dag_id, ntf_basename + '.ntf')
-extract_ntf = add_extract(this_dag, "product_id=12", ntf_input_file)
+extract_ntf = add_extract(this_dag, "product_id=11", ntf_input_file)
 
-# ===
-# $met is type 15 or 28?
-# | WV02_20170616150232_0000000000000000_17Jun16150232-M1BS-057796433010_01_P002.xml |15 |
-# | WV02_20170616150231_0000000000000000_17Jun16150231-P1BS-057796433010_01_P001.xml |28 |
+# === met xml is product_id # 14
+# [imars_product_metadata]> SELECT id,short_name,full_name FROM product
+#                           WHERE short_name="xml_wv2_m1bs";
+# | id | short_name   | full_name                 |
+# +----+--------------+---------------------------+
+# | 14 | xml_wv2_m1bs | wv2 1b multispectral .xml |
 met_input_file = tmp_filepath(this_dag.dag_id, "input_met.xml")
-extract_met = add_extract(this_dag, "product_id=15", met_input_file)
+extract_met = add_extract(this_dag, "product_id=14", met_input_file)
 # ===========================================================================
 
 # === DEFINE PROCESSING TRANSFORM OPERATORS ===

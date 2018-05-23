@@ -1,3 +1,5 @@
+from airflow.operators.bash_operator import BashOperator
+
 TMP_PREFIX="/srv/imars-objects/airflow_tmp/"
 # TODO: if tmp_filepath was part of a class we could store tmp files on the
 #       instance and automatically add them to the `to_cleanup` list
@@ -21,8 +23,24 @@ def tmp_filepath(dag_id, suffix, ts="{{ts_nodash}}", n=0):
         TMP_PREFIX + dag_id
         + "_" + str(ts)
         + "_" + str(suffix)
-        + "_" + str(n)  # TODO
+        # + "_" + str(n)  # TODO ?
     )
+
+def tmp_filedir(dag, suffix, ts=None, n=None):
+    """
+    before : Operator[]
+        list of operators that need this dir made before they run
+    """
+    path = tmp_filepath(dag.dag_id, suffix, ts, n) + "/"
+    # TODO: what if the directory already exists or this gets called with same
+    #       args twice?
+    # mkdir BashOperator here
+    mk_tmp_dir = BashOperator(
+        dag=dag,
+        task_id='tmp_filedir_{}_{}'.format(suffix,n),
+        bash_command="mkdir " + path,
+    )
+    return path, mk_tmp_dir
 
 def tmp_format_str():
     return tmp_filepath("{dag_id}", "{tag}", ts="%Y%m%dT%H%M%S").split('/')[-1]

@@ -51,7 +51,7 @@ with this_dag as dag:
             export OCSSWROOT=/opt/ocssw      && \n\
             source /opt/ocssw/OCSSW_bash.env && \n\
             OUT_PATH="""+GEOFILE+"""         && \n\
-            /opt/ocssw/run/scripts/modis_GEO.py \\\n\
+            $OCSSWROOT/scripts/modis_GEO.py \\\n\
                 --output=$OUT_PATH \\\n\
                 {{ ti.xcom_pull(task_ids="extract_file") }} && \n\
             [[ -s $OUT_PATH ]]
@@ -81,7 +81,7 @@ with this_dag as dag:
             OKM_PATH="""+OKMFILE+""" && \n\
             HKM_PATH="""+HKMFILE+""" && \n\
             QKM_PATH="""+QKMFILE+""" && \n\
-            $OCSSWROOT/run/scripts/modis_L1B.py \\\n\
+            $OCSSWROOT/scripts/modis_L1B.py \\\n\
                 --okm $OKM_PATH \\\n\
                 --hkm $HKM_PATH \\\n\
                 --qkm $QKM_PATH \\\n\

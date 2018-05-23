@@ -7,8 +7,10 @@ from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 
 from imars_dags.util.globals import DEFAULT_ARGS
-from imars_dags.util.etl_tools import etl_tools as imars_etl_builder
 from imars_dags.util.etl_tools.tmp_file import tmp_filepath
+from imars_dags.util.etl_tools.extract import add_extract
+from imars_dags.util.etl_tools.load import add_load
+from imars_dags.util.etl_tools.cleanup import add_cleanup
 
 default_args = DEFAULT_ARGS.copy()
 default_args.update({
@@ -23,14 +25,17 @@ this_dag = DAG(
     schedule_interval=None,
 )
 
+# === EXTRACT INPUT FILES ===
+# ===========================================================================
+WV2_ZIP_INPUT = tmp_filepath(this_dag.dag_id, 'wv2_batch.zip')
+extract_wv2_zip = add_extract(this_dag, "product_id=6", WV2_ZIP_INPUT)
+
+
 UNZIP_DIR = tmp_filepath(this_dag.dag_id, "unzip_dir")
 unzip_wv2_ingest = BashOperator(
     task_id="unzip_wv2_ingest",
     dag = this_dag,
-    bash_command="""
-        unzip \
-            {{ ti.xcom_pull(task_ids="extract_file") }} \
-            -d """ + UNZIP_DIR
+    bash_command="unzip " + WV2_ZIP_INPUT +" -d " + UNZIP_DIR
 )
 
 # these GIS_FILES need to be removed so they don't get accidentally ingested
@@ -42,7 +47,6 @@ rm_spurrious_gis_files = BashOperator(
         rm -r """ + UNZIP_DIR + """/*/*/GIS_FILES
     """
 )
-unzip_wv2_ingest >> rm_spurrious_gis_files
 
 COMMON_JSON='{"status_id":3, "area_id":5}'
 # a list of params for products we are loading from the output directory
@@ -214,9 +218,18 @@ to_load=[
     }
 ]
 
-imars_etl_builder.add_tasks(
-    this_dag, "product_id=6", "wv2_zip",
-    [unzip_wv2_ingest], [rm_spurrious_gis_files],
-    products_to_load_from_dir=to_load,
-    to_cleanup=[UNZIP_DIR]
+load_tasks = add_load(
+    this_dag,
+    to_load=to_load,
+    upstream_operators=[rm_spurrious_gis_files]
 )
+
+cleanup_task = add_cleanup(
+    this_dag,
+    to_cleanup=[WV2_ZIP_INPUT, UNZIP_DIR],
+    upstream_operators=load_tasks
+)
+
+# === connect things up
+extract_wv2_zip >> unzip_wv2_ingest
+unzip_wv2_ingest >> rm_spurrious_gis_files

@@ -1,6 +1,6 @@
 import os
 
-from imars_dags.util.DAGType import DAGType
+from imars_dags.util.DAGType import DAGType, dag_type_from_filepath
 
 def get_dag_id(filepath=None, region=None, dag_type=None, dag_name=None):
     """
@@ -28,13 +28,6 @@ def get_dag_id(filepath=None, region=None, dag_type=None, dag_name=None):
         dag_id += '_' + region
 
     return dag_id
-
-def dag_type_from_filepath(dag_filepath):
-    for d_type in DAGType.all():
-        if d_type in dag_filepath:
-            return d_type
-    else:
-        raise ValueError("could not determine dag_type from filepath")
 
 def dag_name_from_filepath(dag_filepath):
     return os.path.basename(dag_filepath).replace('.py','')

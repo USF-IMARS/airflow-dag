@@ -58,10 +58,12 @@ def add_extract(dag, sql_selector, output_path, downstream_operators=[], test=Fa
 
         blacklist = "{}/"
         sanitized_output_path = os.path.basename(output_path)
+        sanitized_output_path = sanitized_output_path.replace(dag.dag_id, "")
+        sanitized_output_path = sanitized_output_path.replace("{{ts_nodash}}", "")
         for char in blacklist:
             sanitized_output_path = sanitized_output_path.replace(char, "_")
         extract_file = PythonOperator(
-            task_id='extract_file_' + sanitized_output_path,
+            task_id='extract_' + sanitized_output_path,
             provide_context=True,
             python_callable=extract_file,
             templates_dict={

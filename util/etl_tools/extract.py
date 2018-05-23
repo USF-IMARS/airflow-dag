@@ -3,6 +3,8 @@ import os
 
 from airflow.operators.python_operator import PythonOperator
 
+import imars_etl
+
 def add_extract(dag, sql_selector, output_path, downstream_operators=[], test=False):
     """
     sql_selector : str

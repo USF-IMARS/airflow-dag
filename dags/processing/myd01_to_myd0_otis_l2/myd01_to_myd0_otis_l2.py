@@ -144,7 +144,7 @@ with this_dag as dag:
 
     cleanup_task = add_cleanup(
         this_dag,
-        to_cleanup=[MYD01FILE,GEOFILE,OKMFILE,HKMFILE,QKMFILE,L2FILE],
+        to_cleanup=[MYD01FILE, GEOFILE, OKMFILE, HKMFILE, QKMFILE, L2FILE],
         upstream_operators=load_l2_list
     )
 

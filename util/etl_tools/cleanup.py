@@ -2,11 +2,13 @@
 # === /tmp/ cleanup
 # ======================================================================
 """
+from datetime import timedelta
+import shutil
 
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.sensors import SqlSensor
-from datetime import timedelta
-import shutil
+
+from imars_dags.util.etl_tools.tmp_file import TMP_PREFIX
 
 def add_cleanup(dag, to_cleanup, upstream_operators):
     """

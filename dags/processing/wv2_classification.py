@@ -122,10 +122,10 @@ pgc_ortho >> wv2_proc_matlab
 #       do we want to save all of these files or only some of them?
 to_load = []
 
-add_load(this_dag, to_load, [wv2_proc_matlab])
+load_tasks = add_load(this_dag, to_load, [wv2_proc_matlab])
 # ===========================================================================
 cleanup_task = add_cleanup(
     this_dag,
     to_cleanup=[ntf_input_file, met_input_file, rrs_out, ortho_dir],
-    upstream_operators=load_l2_list
+    upstream_operators=load_tasks
 )

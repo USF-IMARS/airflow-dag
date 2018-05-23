@@ -1,8 +1,11 @@
 import logging
+import os
 
 from airflow.operators.python_operator import PythonOperator
 
-def add_extract(dag, sql_selector, output_path, downstream_operators, test=False):
+import imars_etl
+
+def add_extract(dag, sql_selector, output_path, downstream_operators=[], test=False):
     """
     sql_selector : str
         "WHERE ____" style SQL selector string to search metadata db for input.
@@ -53,8 +56,14 @@ def add_extract(dag, sql_selector, output_path, downstream_operators, test=False
                 # ti.xcom_push(key='fname', value=fname)
                 return fname
 
+        blacklist = "{}/"
+        sanitized_output_path = os.path.basename(output_path)
+        sanitized_output_path = sanitized_output_path.replace(dag.dag_id, "")
+        sanitized_output_path = sanitized_output_path.replace("{{ts_nodash}}", "")
+        for char in blacklist:
+            sanitized_output_path = sanitized_output_path.replace(char, "_")
         extract_file = PythonOperator(
-            task_id='extract_file',
+            task_id='extract_' + sanitized_output_path,
             provide_context=True,
             python_callable=extract_file,
             templates_dict={

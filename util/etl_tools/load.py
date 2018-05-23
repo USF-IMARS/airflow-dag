@@ -6,6 +6,8 @@
 
 from airflow.operators.python_operator import PythonOperator
 
+import imars_etl
+
 from imars_dags.util.etl_tools.tmp_file import tmp_format_str, get_tmp_file_suffix
 
 def add_load(dag, to_load, upstream_operators):

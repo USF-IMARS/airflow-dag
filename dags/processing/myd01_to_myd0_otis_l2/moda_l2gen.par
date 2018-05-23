@@ -6,7 +6,8 @@
 suite=OC
 
 # PRODUCTS
-l2prod=Rrs_412 Rrs_443 Rrs_488 Rrs_531 Rrs_547 Rrs_667 Rrs_678 adg_443_giop aph_443_giop bbp_s_giop chlor_a nflh opp_cbpm2 par l2_flags
+# opp_cbpm2 rm see : https://oceancolor.gsfc.nasa.gov/forum/oceancolor/topic_show.pl?tid=8708
+l2prod=Rrs_412 Rrs_443 Rrs_488 Rrs_531 Rrs_547 Rrs_667 Rrs_678 adg_443_giop aph_443_giop bbp_s_giop chlor_a nflh par l2_flags
 
 # PROCESSING OPTIONS
 cirrus_opt=false

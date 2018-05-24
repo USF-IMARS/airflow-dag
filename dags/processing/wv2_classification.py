@@ -67,14 +67,14 @@ pgc_ortho = BashOperator(
     dag=this_dag,
     task_id='pgc_ortho',
     bash_command="""
-        python /work/m/mjm8/progs/pgc_ortho.py \
+        python /opt/wv2_processing/pgc_ortho.py \
             -p 4326 \
             -c ns \
             -t UInt16 \
             -f GTiff \
             --no_pyramids \
             """ + ntf_input_file + " " + ortho_dir,
-    # queue=QUEUE.WV2_PROC,
+    queue=QUEUE.WV2_PROC,
 )
 create_ortho_tmp_dir >> pgc_ortho
 extract_ntf >> pgc_ortho
@@ -91,19 +91,23 @@ wv2_proc_matlab = BashOperator(
     bash_command="""
         ORTH_FILE=""" + ortho_output_file + """ &&
         MET=""" + met_input_file + """  &&
-        matlab -nodisplay -nodesktop -r "WV2_Processing(\
-            '$ORTH_FILE',\
-            '$MET',\
-            '{{params.crd_sys}}',\
-            '{{params.dt}}',\
-            '{{params.sgw}}',\
-            '{{params.filt}}',\
-            '{{params.stat}}',\
-            '{{params.loc}}',\
-            '{{params.SLURM_ARRAY_TASK_ID}}',\
-            '""" + rrs_out   + """',\
-            '""" + class_out + """'\
-        )"
+        matlab -nodisplay -nodesktop -r "\
+            cd('/opt/wv2_processing');\
+            WV2_Processing(\
+                '$ORTH_FILE',\
+                '$MET',\
+                '{{params.crd_sys}}',\
+                '{{params.dt}}',\
+                '{{params.sgw}}',\
+                '{{params.filt}}',\
+                '{{params.stat}}',\
+                '{{params.loc}}',\
+                '{{params.SLURM_ARRAY_TASK_ID}}',\
+                '""" + rrs_out   + """',\
+                '""" + class_out + """'\
+            );\
+            exit\
+        "
     """,
     params={
         "crd_sys": "EPSG:4326",
@@ -114,7 +118,7 @@ wv2_proc_matlab = BashOperator(
         "loc": "'testnew'",
         "SLURM_ARRAY_TASK_ID" : 0  # TODO: need to rm this
     }
-    # queue=QUEUE.MATLAB,
+    queue=QUEUE.WV2_PROC,
 )
 create_ouput_tmp_dir >> wv2_proc_matlab
 extract_met >> wv2_proc_matlab

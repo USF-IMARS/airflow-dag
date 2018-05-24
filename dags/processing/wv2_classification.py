@@ -20,7 +20,7 @@ from imars_dags.util.etl_tools.cleanup import add_cleanup
 from imars_dags.util.etl_tools.extract import add_extract
 from imars_dags.util.etl_tools.load import add_load
 from imars_dags.util.etl_tools.tmp_file import tmp_filepath, tmp_filedir
-from imars_dags.util.globals import DEFAULT_ARGS
+from imars_dags.util.globals import DEFAULT_ARGS, QUEUE
 
 DEF_ARGS = DEFAULT_ARGS.copy()
 DEF_ARGS.update({
@@ -117,7 +117,7 @@ wv2_proc_matlab = BashOperator(
         "stat": "3",
         "loc": "'testnew'",
         "SLURM_ARRAY_TASK_ID" : 0  # TODO: need to rm this
-    }
+    },
     queue=QUEUE.WV2_PROC,
 )
 create_ouput_tmp_dir >> wv2_proc_matlab

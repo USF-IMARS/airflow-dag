@@ -26,18 +26,18 @@ def tmp_filepath(dag_id, suffix, ts="{{ts_nodash}}", n=0):
         # + "_" + str(n)  # TODO ?
     )
 
-def tmp_filedir(dag, suffix, ts=None, n=None):
+def tmp_filedir(dag, suffix, **kwargs):
     """
     before : Operator[]
         list of operators that need this dir made before they run
     """
-    path = tmp_filepath(dag.dag_id, suffix, ts, n) + "/"
+    path = tmp_filepath(dag.dag_id, suffix, **kwargs) + "/"
     # TODO: what if the directory already exists or this gets called with same
     #       args twice?
     # mkdir BashOperator here
     mk_tmp_dir = BashOperator(
         dag=dag,
-        task_id='tmp_filedir_{}_{}'.format(suffix,n),
+        task_id='tmp_filedir_{}_{}'.format(suffix, kwargs.get('n', 0)),
         bash_command="mkdir " + path,
     )
     return path, mk_tmp_dir

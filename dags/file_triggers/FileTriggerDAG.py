@@ -33,6 +33,8 @@ class STATUS:  # status IDs from imars_product_metadata.status
     TO_LOAD = 3
     ERROR   = 4
 
+METADATA_CONN_ID="imars_test_metadata"
+
 class FileTriggerDAG(DAG):
     DAWN_OF_TIME = datetime(2018, 5, 5, 5, 5)  # any date in past is fine
     SCHEDULE_INTERVAL = timedelta(minutes=1)
@@ -97,7 +99,7 @@ class FileTriggerDAG(DAG):
             sql_str="SELECT id FROM file WHERE " + sql_selection
             check_for_to_loads = SqlSensor(
                 task_id='check_for_to_loads',
-                conn_id="imars_metadata",
+                conn_id=METADATA_CONN_ID,
                 sql=sql_str,
                 soft_fail=True,
                 poke_interval=self.POKE_INTERVAL,
@@ -177,7 +179,7 @@ class FileTriggerDAG(DAG):
             set_product_status_to_std = MySqlOperator(
                 task_id="set_product_status_to_std",
                 sql=""" UPDATE file SET status_id=1 WHERE filepath="{{ ti.xcom_pull(task_ids="get_file_metadata")["filepath"] }}" """,
-                mysql_conn_id='imars_metadata',
+                mysql_conn_id=METADATA_CONN_ID,
                 autocommit=False,  # TODO: True?
                 parameters=None,
                 trigger_rule="one_success"
@@ -187,7 +189,7 @@ class FileTriggerDAG(DAG):
             set_product_status_to_err = MySqlOperator(
                 task_id="set_product_status_to_err",
                 sql=""" UPDATE file SET status_id=4 WHERE filepath="{{ ti.xcom_pull(task_ids="get_file_metadata")["filepath"] }}" """,
-                mysql_conn_id='imars_metadata',
+                mysql_conn_id=METADATA_CONN_ID,
                 autocommit=False,  # TODO: True?
                 parameters=None,
                 trigger_rule="one_failed"

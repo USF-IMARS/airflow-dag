@@ -15,9 +15,14 @@ class QUEUE:
     pick up tasks from the SAT_SCRIPTS queue.
     """
     DEFAULT = 'default'  # default queue any worker can pick up tasks from
+
     SAT_SCRIPTS = 'sat_scripts'  # https://github.com/USF-IMARS/sat-scripts/
     PYCMR = 'pycmr'  # https://github.com/7yl4r/pyCMR
     SNAP = 'snap'  # https://github.com/USF-IMARS/snap-puppet
+
+    MATLAB = 'matlab'
+    WV2_PROC = 'wv2_proc'  # https://github.com/USF-IMARS/wv2-processing
+    # WV2_PROC requires MATLAB... so WV2_PROC should imply MATLAB as well?!?
 
 class POOL:
     """

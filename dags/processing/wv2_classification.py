@@ -20,7 +20,7 @@ from imars_dags.util.etl_tools.cleanup import add_cleanup
 from imars_dags.util.etl_tools.extract import add_extract
 from imars_dags.util.etl_tools.load import add_load
 from imars_dags.util.etl_tools.tmp_file import tmp_filepath, tmp_filedir
-from imars_dags.util.globals import DEFAULT_ARGS
+from imars_dags.util.globals import DEFAULT_ARGS, QUEUE
 
 DEF_ARGS = DEFAULT_ARGS.copy()
 DEF_ARGS.update({
@@ -45,7 +45,7 @@ this_dag = DAG(
 # | id | short_name   | full_name                 |
 # +----+--------------+---------------------------+
 # | 11 | ntf_wv2_m1bs | wv2 1b multispectral .ntf |
-ntf_basename = "input_image"
+ntf_basename = "input"
 ntf_input_file = tmp_filepath(this_dag.dag_id, ntf_basename + '.ntf')
 extract_ntf = add_extract(this_dag, "product_id=11", ntf_input_file)
 
@@ -55,7 +55,7 @@ extract_ntf = add_extract(this_dag, "product_id=11", ntf_input_file)
 # | id | short_name   | full_name                 |
 # +----+--------------+---------------------------+
 # | 14 | xml_wv2_m1bs | wv2 1b multispectral .xml |
-met_input_file = tmp_filepath(this_dag.dag_id, "input_met.xml")
+met_input_file = tmp_filepath(this_dag.dag_id, ntf_basename + ".xml")
 extract_met = add_extract(this_dag, "product_id=14", met_input_file)
 # ===========================================================================
 
@@ -67,14 +67,14 @@ pgc_ortho = BashOperator(
     dag=this_dag,
     task_id='pgc_ortho',
     bash_command="""
-        python /work/m/mjm8/progs/pgc_ortho.py \
+        python /opt/wv2_processing/pgc_ortho.py \
             -p 4326 \
             -c ns \
             -t UInt16 \
             -f GTiff \
             --no_pyramids \
             """ + ntf_input_file + " " + ortho_dir,
-    # queue=QUEUE.WV2_PROC,
+    queue=QUEUE.WV2_PROC,
 )
 create_ortho_tmp_dir >> pgc_ortho
 extract_ntf >> pgc_ortho
@@ -91,19 +91,23 @@ wv2_proc_matlab = BashOperator(
     bash_command="""
         ORTH_FILE=""" + ortho_output_file + """ &&
         MET=""" + met_input_file + """  &&
-        matlab -nodisplay -nodesktop -r "WV2_Processing(\
-            '$ORTH_FILE',\
-            '$MET',\
-            '{{params.crd_sys}}',\
-            '{{params.dt}}',\
-            '{{params.sgw}}',\
-            '{{params.filt}}',\
-            '{{params.stat}}',\
-            '{{params.loc}}',\
-            '{{params.SLURM_ARRAY_TASK_ID}}',\
-            '""" + rrs_out   + """',\
-            '""" + class_out + """'\
-        )"
+        /opt/matlab/R2018a/bin/matlab -nodisplay -nodesktop -r "\
+            cd('/opt/wv2_processing');\
+            WV2_Processing(\
+                '$ORTH_FILE',\
+                '$MET',\
+                '{{params.crd_sys}}',\
+                '{{params.dt}}',\
+                '{{params.sgw}}',\
+                '{{params.filt}}',\
+                '{{params.stat}}',\
+                '{{params.loc}}',\
+                '{{params.SLURM_ARRAY_TASK_ID}}',\
+                '""" + rrs_out   + """',\
+                '""" + class_out + """'\
+            );\
+            exit\
+        "
     """,
     params={
         "crd_sys": "EPSG:4326",
@@ -113,8 +117,8 @@ wv2_proc_matlab = BashOperator(
         "stat": "3",
         "loc": "'testnew'",
         "SLURM_ARRAY_TASK_ID" : 0  # TODO: need to rm this
-    }
-    # queue=QUEUE.MATLAB,
+    },
+    queue=QUEUE.WV2_PROC,
 )
 create_ouput_tmp_dir >> wv2_proc_matlab
 extract_met >> wv2_proc_matlab
@@ -127,10 +131,11 @@ pgc_ortho >> wv2_proc_matlab
 #       do we want to save all of these files or only some of them?
 to_load = []
 
-load_tasks = add_load(this_dag, to_load, [wv2_proc_matlab])
+# load_tasks = add_load(this_dag, to_load, [wv2_proc_matlab])
 # ===========================================================================
-cleanup_task = add_cleanup(
-    this_dag,
-    to_cleanup=[ntf_input_file, met_input_file, rrs_out, ortho_dir],
-    upstream_operators=load_tasks
-)
+# TODO: turn this back on after to_load is figured out
+# cleanup_task = add_cleanup(
+#     this_dag,
+#     to_cleanup=[ntf_input_file, met_input_file, rrs_out, ortho_dir],
+#     upstream_operators=load_tasks
+# )

@@ -5,6 +5,8 @@ from imars_dags.util.globals import QUEUE
 from imars_dags.util import satfilename
 from imars_dags.settings.png_export_transforms import png_export_transforms
 
+# TODO: replace usage of satfilename
+
 def add_png_exports(dag, region_name, variable_names):
     # =========================================================================
     # === export png(s) from l3 netCDF4 file

@@ -7,6 +7,14 @@ confused or something isn't working for you.
 This is under heavy development so documentation or code may contain errors.
 
 ## DAG development guidelines
+### Basic DAG Development Workflow
+0. `ssh` into test server (probably `imars-airflow-test.marine.usf.edu`)
+1. Edit DAGs on github (or directly on server)
+2. Download your changes from github to the test server (if applicable)
+    * `git pull` from `/home/airflow/airflow/dags/imars_dags`
+3. Use airflow [test command(s)](https://airflow.apache.org/tutorial.html#testing) to test a DAG run on the server.
+    * `airflow list_dags` should show your DAG and no errors
+    * `airflow test $dag_name $task_name $dt` will create a test DAG Run
 
 ### organizational rules
 0. A DAG (Directed Acyclic Graph) defines a processing pipeline.
@@ -17,7 +25,7 @@ This is under heavy development so documentation or code may contain errors.
 
 ### Tips for IMaRS data processing DAGs
 Data procesing DAGs in general follow the ETL pattern by using the helpers in
- `dags/builders/imars_etl.py`.
+ `dags/util/etl_tools/`.
 
 A typical automated processing pipeline should look something like:
 
@@ -69,7 +77,7 @@ general:
 The imars-etl package aims to simplify the "extract" and "load" steps by hiding
 the complexity of IMaRS' data systems behind a nice CLI.
 
-To make things even more simple for airflow DAGs `./dags/builders/imars_etl.py`
+To make things even more simple for airflow DAGs `./dags/util/etl_tools`
 includes some helper functions to set up imars-etl operators automatically.
 The helper will add extract, load, and cleanup operators to your DAG to wrap
 around your processing operators like so:
@@ -82,13 +90,6 @@ around your processing operators like so:
 #### FileTriggerDAG
 A `FileTriggerDAG` is a DAG which checks the IMaRS product metadata database for
 new files and starts up processing DAGs.
-
-### dev workflow
-0. edit DAG
-1. `airflow list_dags` to check for syntax errs
-2. `airflow test $dag_name $task_name 2017-07-07T07:07:07` to test operators
-3. test in the LocalExecutor test environment if possible
-4. push to master & await production deployment (at next puppet run)
 
 ## installation
 installation should be handled by the imars_airflow puppet module,

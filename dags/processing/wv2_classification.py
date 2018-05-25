@@ -45,7 +45,7 @@ this_dag = DAG(
 # | id | short_name   | full_name                 |
 # +----+--------------+---------------------------+
 # | 11 | ntf_wv2_m1bs | wv2 1b multispectral .ntf |
-ntf_basename = "input_image"
+ntf_basename = "input"
 ntf_input_file = tmp_filepath(this_dag.dag_id, ntf_basename + '.ntf')
 extract_ntf = add_extract(this_dag, "product_id=11", ntf_input_file)
 
@@ -55,7 +55,7 @@ extract_ntf = add_extract(this_dag, "product_id=11", ntf_input_file)
 # | id | short_name   | full_name                 |
 # +----+--------------+---------------------------+
 # | 14 | xml_wv2_m1bs | wv2 1b multispectral .xml |
-met_input_file = tmp_filepath(this_dag.dag_id, "input_met.xml")
+met_input_file = tmp_filepath(this_dag.dag_id, ntf_basename + ".xml")
 extract_met = add_extract(this_dag, "product_id=14", met_input_file)
 # ===========================================================================
 
@@ -91,7 +91,7 @@ wv2_proc_matlab = BashOperator(
     bash_command="""
         ORTH_FILE=""" + ortho_output_file + """ &&
         MET=""" + met_input_file + """  &&
-        matlab -nodisplay -nodesktop -r "\
+        /opt/matlab/R2018a/bin/matlab -nodisplay -nodesktop -r "\
             cd('/opt/wv2_processing');\
             WV2_Processing(\
                 '$ORTH_FILE',\
@@ -131,10 +131,11 @@ pgc_ortho >> wv2_proc_matlab
 #       do we want to save all of these files or only some of them?
 to_load = []
 
-load_tasks = add_load(this_dag, to_load, [wv2_proc_matlab])
+# load_tasks = add_load(this_dag, to_load, [wv2_proc_matlab])
 # ===========================================================================
-cleanup_task = add_cleanup(
-    this_dag,
-    to_cleanup=[ntf_input_file, met_input_file, rrs_out, ortho_dir],
-    upstream_operators=load_tasks
-)
+# TODO: turn this back on after to_load is figured out
+# cleanup_task = add_cleanup(
+#     this_dag,
+#     to_cleanup=[ntf_input_file, met_input_file, rrs_out, ortho_dir],
+#     upstream_operators=load_tasks
+# )

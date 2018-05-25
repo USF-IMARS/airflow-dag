@@ -51,7 +51,7 @@ def add_cleanup(dag, to_cleanup, upstream_operators):
             conn_id='airflow_metadata',
             soft_fail=False,
             poke_interval=60*2,              # check every two minutes
-            timeout=60*9,                    # for the first 9 minutes
+            timeout=60*20,                    # for the first 20 minutes
             retries=10,                      # don't give up easily
             retry_delay=timedelta(hours=1),  # but be patient between checks
             retry_exponential_backoff=True,

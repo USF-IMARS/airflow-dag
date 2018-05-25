@@ -33,7 +33,7 @@ class STATUS:  # status IDs from imars_product_metadata.status
     TO_LOAD = 3
     ERROR   = 4
 
-METADATA_CONN_ID="imars_test_metadata"
+METADATA_CONN_ID="imars_metadata"
 
 class FileTriggerDAG(DAG):
     DAWN_OF_TIME = datetime(2018, 5, 5, 5, 5)  # any date in past is fine

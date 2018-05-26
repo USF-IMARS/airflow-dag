@@ -43,7 +43,6 @@ def add_tasks(dag, region, process_pass_dag_name):
         )
         # =============================================================================
         # =========================================================================
-        # === Trigger pass-level proc dag for the RoI if covered by the granule.
         # === Checks if this granule covers our RoI using metadata from CMR.
         # =========================================================================
         trigger_granule_dag_id = 'trigger_' + process_pass_dag_name
@@ -61,24 +60,12 @@ def add_tasks(dag, region, process_pass_dag_name):
         )
         wait_for_data_delay >> coverage_check
 
-        # we must trigger these manually because pass-level processing is not run
-        # on a consistent schedule; it is only triggered when we have a granule
-        # that covers one of our RoIs.
-
-        trigger_pass_processing_REGION = MMTTriggerDagRunOperator(
-            trigger_dag_id=process_pass_dag_name,
-            python_callable=lambda context, dag_run_obj: dag_run_obj,
-            execution_date="{{execution_date}}",
-            task_id=trigger_granule_dag_id,
-            params={
-                'roi':region
-            },
-            retries=10,
-            retry_delay=timedelta(hours=3),
-            queue=QUEUE.PYCMR
+        # =========================================================================
+        # TODO: do we want to trigger something here? maybe a FileTrigger? Hmm..
+        trigger_pass_processing_REGION = add_trigger_granule_dag(
+            dag, process_pass_dag_name, trigger_granule_dag_id, region
         )
         coverage_check >> trigger_pass_processing_REGION
-        # =========================================================================
 
         skip_granule = DummyOperator(
             task_id='skip_granule',
@@ -156,6 +143,8 @@ def _coverage_check(ds, **kwargs):
         name of the next operator that should trigger (ie the first in the
         branch that we want to follow)
     """
+
+    # TODO: this should write to imars_product_metadata instead!!!
     check_region = kwargs['roi']
     exec_date = kwargs['execution_date']
     granule_result = get_downloadable_granule_in_roi(exec_date, check_region)
@@ -174,3 +163,22 @@ def _coverage_check(ds, **kwargs):
 
         # === execute the processing dag for this granule & ROI
         return kwargs['success_branch_id']
+
+def add_trigger_granule_dag(dag, process_pass_dag_name, trigger_granule_dag_id, region):
+    # we must trigger these manually because pass-level processing is not run
+    # on a consistent schedule; it is only triggered when we have a granule
+    # that covers one of our RoIs.
+    with dag as dag:
+        trigger_pass_processing_REGION = MMTTriggerDagRunOperator(
+            trigger_dag_id=process_pass_dag_name,
+            python_callable=lambda context, dag_run_obj: dag_run_obj,
+            execution_date="{{execution_date}}",
+            task_id=trigger_granule_dag_id,
+            params={
+                'roi':region
+            },
+            retries=10,
+            retry_delay=timedelta(hours=3),
+            queue=QUEUE.PYCMR
+        )
+        return trigger_pass_processing_REGION

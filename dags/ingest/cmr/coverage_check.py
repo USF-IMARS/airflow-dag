@@ -25,7 +25,21 @@ from imars_dags.settings import secrets  # NOTE: this file not in public repo!
 
 schedule_interval=timedelta(minutes=5)
 
-def add_tasks(dag, region, process_pass_dag_name):
+def add_tasks(dag, region, ingest_callback_dag_id):
+    """
+    Parameters:
+    ----------
+    dag : airflow.DAG
+        dag to add tasks to
+    region : imars_dags.regions.*
+        region module (TODO: replace this)
+    ingest_callback_dag_id : str
+        id of DAG to trigger once ingest is complete.
+        Example usages:
+            1. trigger granuleProcDAG once granule is ingested into data lake
+            2. trigger downloadFileDAG once granule is ingested into metadatadb
+            3. trigger FileTriggerDAG immediately upon ingest
+    """
     with dag as dag:
         # =============================================================================
         # === delay to wait for upstream data to become available.
@@ -45,7 +59,7 @@ def add_tasks(dag, region, process_pass_dag_name):
         # =========================================================================
         # === Checks if this granule covers our RoI using metadata from CMR.
         # =========================================================================
-        trigger_granule_dag_id = 'trigger_' + process_pass_dag_name
+        trigger_granule_dag_id = 'trigger_' + ingest_callback_dag_id
         coverage_check = BranchPythonOperator(
             task_id='coverage_check',
             python_callable=_coverage_check,
@@ -63,7 +77,7 @@ def add_tasks(dag, region, process_pass_dag_name):
         # =========================================================================
         # TODO: do we want to trigger something here? maybe a FileTrigger? Hmm..
         trigger_pass_processing_REGION = add_trigger_granule_dag(
-            dag, process_pass_dag_name, trigger_granule_dag_id, region
+            dag, ingest_callback_dag_id, trigger_granule_dag_id, region
         )
         coverage_check >> trigger_pass_processing_REGION
 

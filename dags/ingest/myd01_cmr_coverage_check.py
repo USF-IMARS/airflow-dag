@@ -28,5 +28,5 @@ this_dag = DAG(
 coverage_check.add_tasks(
     this_dag,
     region=gom,
-    process_pass_dag_name="gom_modis_aqua_granule"
+    ingest_callback_dag_id="gom_modis_aqua_granule"
 )

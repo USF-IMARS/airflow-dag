@@ -64,6 +64,8 @@ def add_tasks(dag, region, ingest_callback_dag_id=None):
         # =========================================================================
         # === Checks if this granule covers our RoI using metadata from CMR.
         # =========================================================================
+        ROI_COVERED_BRANCH_ID = 'download_granule'
+        ROI_NOT_COVERED_BRANCH_ID = 'skip_granule'
         coverage_check = BranchPythonOperator(
             task_id='coverage_check',
             python_callable=_coverage_check,
@@ -73,19 +75,20 @@ def add_tasks(dag, region, ingest_callback_dag_id=None):
             queue=QUEUE.PYCMR,
             op_kwargs={
                 'roi':region,
-                'success_branch_id': 'download_granule'
+                'success_branch_id': ROI_COVERED_BRANCH_ID,
+                'fail_branch_id': ROI_NOT_COVERED_BRANCH_ID,
             }
         )
         # ======================================================================
         # TODO: actual download_granule
         download_granule = DummyOperator(
-            task_id='download_granule',
+            task_id=ROI_COVERED_BRANCH_ID,
             trigger_rule='one_success'
         )
 
         # ======================================================================
         skip_granule = DummyOperator(
-            task_id='skip_granule',
+            task_id=ROI_NOT_COVERED_BRANCH_ID,
             trigger_rule='one_success'
         )
         # ======================================================================
@@ -187,7 +190,7 @@ def _coverage_check(ds, **kwargs):
     exec_date = kwargs['execution_date']
     granule_result = get_downloadable_granule_in_roi(exec_date, check_region)
     if granule_result is None:
-        return 'skip_granule'  # skip granule
+        return kwargs['fail_branch_id']  # skip granule
     else:
 
         # TODO: this should write to imars_product_metadata instead!!!
@@ -202,5 +205,4 @@ def _coverage_check(ds, **kwargs):
         with open(cfg_path, 'w') as meta_file:
             cfg.write(meta_file)
 
-        # === execute the processing dag for this granule & ROI
-        return kwargs['success_branch_id']
+        return kwargs['success_branch_id']  # download granule

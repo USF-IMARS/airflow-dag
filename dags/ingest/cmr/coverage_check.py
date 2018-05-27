@@ -97,10 +97,8 @@ def add_tasks(dag, region, product_id, area_id, ingest_callback_dag_id=None):
             task_id=ROI_COVERED_BRANCH_ID,
             bash_command="""
                 METADATA_FILE="""+METADATA_FILE_FILEPATH+""" &&
-                OUT_PATH="""+DOWNLOADED_FILEPATH+"""&&
+                OUT_PATH="""+DOWNLOADED_FILEPATH+""" &&
                 FILE_URL=$(grep "^upstream_download_link" $METADATA_FILE | cut -d'=' -f2-) &&
-                [[ -s $OUT_PATH ]] &&
-                echo "file already exists; skipping download." ||
                 curl --user {{params.username}}:{{params.password}} -f $FILE_URL -o $OUT_PATH
                 && [[ -s $OUT_PATH ]]
             """,
@@ -238,7 +236,14 @@ def _coverage_check(ds, **kwargs):
         # TODO: this should write to imars_product_metadata instead?!?
 
         # === update (or create) the metadata ini file
+        # path might have airflow macros, so we need to render
+        task = kwargs['task']
         cfg_path = kwargs['metadata_filepath']
+        cfg_path = task.render_template(
+            '',
+            cfg_path,
+            kwargs
+        )
         cfg = configparser.ConfigParser()
         cfg.read(cfg_path)  # returns empty config if no file
         if 'myd01' not in cfg.sections():  # + section if not exists

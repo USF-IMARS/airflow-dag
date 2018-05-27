@@ -7,6 +7,7 @@ region.
 from datetime import timedelta, datetime
 import subprocess
 import configparser
+import os
 
 # deps
 from airflow import DAG
@@ -18,12 +19,19 @@ from pyCMR.pyCMR import CMR
 
 # this package
 from imars_dags.operators.MMTTriggerDagRunOperator import MMTTriggerDagRunOperator
-from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, CMR_CFG_PATH, SLEEP_ARGS
+from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, SLEEP_ARGS
 from imars_dags.settings import secrets  # NOTE: this file not in public repo!
 from imars_dags.util.etl_tools.tmp_file import tmp_filepath
 from imars_dags.util.etl_tools.load import add_load
 
 schedule_interval=timedelta(minutes=5)
+CHECK_DELAY=timedelta(hours=3)  # delay before checking CMR
+
+# path to cmr.cfg file for accessing common metadata repository
+CMR_CFG_PATH=os.path.join(
+    os.path.dirname(os.path.realpath(__file__)),  # imars_dags/dags/ingest/cmr
+    "cmr.cfg"
+)
 
 def add_tasks(dag, region, product_id, area_id, ingest_callback_dag_id=None):
     """
@@ -56,7 +64,7 @@ def add_tasks(dag, region, product_id, area_id, ingest_callback_dag_id=None):
         # `delta` is the amount of time we expect between satellite measurement and
         # the metadata being available in the CMR. Usually something like 2-48 hours.
         wait_for_data_delay = TimeDeltaSensor(
-            delta=timedelta(hours=3),
+            delta=CHECK_DELAY,
             task_id='wait_for_data_delay',
             **SLEEP_ARGS
         )
@@ -110,7 +118,7 @@ def add_tasks(dag, region, product_id, area_id, ingest_callback_dag_id=None):
                 "product_id":product_id,
                 # "time":"2016-02-12T16:25:18",
                 # "datetime": datetime(2016,2,12,16,25,18),
-                "json":'{{"status_id":3,"area_id":{},"area_short_name":"{}"}}'.format(
+                "json":'{{"status_id":2,"area_id":{},"area_short_name":"{}"}}'.format(
                     area_id,
                     region.place_name
                 )

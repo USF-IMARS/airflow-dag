@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from airflow import DAG
 
@@ -8,8 +8,9 @@ from imars_dags.util.globals import DEFAULT_ARGS
 from imars_dags.util.get_dag_id import get_dag_id
 
 default_args = DEFAULT_ARGS.copy()
-default_args.update({
-    'start_date': datetime(2002, 7, 4, 0, 0),
+delay_ago = datetime.utcnow()-coverage_check.CHECK_DELAY
+default_args.update({  # round to
+    'start_date': delay_ago.replace(minute=0,second=0,microsecond=0),
     'retries': 1
 })
 
@@ -21,7 +22,7 @@ this_dag = DAG(
     ),
     default_args=default_args,
     schedule_interval=coverage_check.schedule_interval,
-    catchup=False,
+    catchup=True,
     max_active_runs=1
 )
 

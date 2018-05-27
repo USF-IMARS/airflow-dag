@@ -27,5 +27,7 @@ this_dag = DAG(
 
 coverage_check.add_tasks(
     this_dag,
-    region=gom
+    region=gom,
+    product_id=5, # myd01 TODO: rm this
+    area_id=1,  # gom TODO: rm this
 )

@@ -110,7 +110,10 @@ def add_tasks(dag, region, product_id, area_id, ingest_callback_dag_id=None):
                 "product_id":product_id,
                 # "time":"2016-02-12T16:25:18",
                 # "datetime": datetime(2016,2,12,16,25,18),
-                "json":'{"status_id":3,"area_id":'+area_id+',"area_short_name":"' + region.place_name +'"}'
+                "json":'{{"status_id":3,"area_id":{},"area_short_name":"{}"}}'.format(
+                    area_id,
+                    region.place_name
+                )
             }
         ]
         load_tasks = add_load(

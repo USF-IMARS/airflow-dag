@@ -19,9 +19,9 @@ from pyCMR.pyCMR import CMR
 # this package
 from imars_dags.operators.MMTTriggerDagRunOperator import MMTTriggerDagRunOperator
 from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, CMR_CFG_PATH, SLEEP_ARGS
-from imars_dags.util import satfilename
 from imars_dags.settings import secrets  # NOTE: this file not in public repo!
-
+from imars_dags.util.etl_tools.tmp_file import tmp_filepath
+from imars_dags.util.etl_tools.load import add_load
 
 schedule_interval=timedelta(minutes=5)
 
@@ -66,6 +66,7 @@ def add_tasks(dag, region, ingest_callback_dag_id=None):
         # =========================================================================
         ROI_COVERED_BRANCH_ID = 'download_granule'
         ROI_NOT_COVERED_BRANCH_ID = 'skip_granule'
+        METADATA_FILE_FILEPATH = tmp_filepath(dag.dag_id, "metadata.ini")
         coverage_check = BranchPythonOperator(
             task_id='coverage_check',
             python_callable=_coverage_check,
@@ -77,25 +78,56 @@ def add_tasks(dag, region, ingest_callback_dag_id=None):
                 'roi':region,
                 'success_branch_id': ROI_COVERED_BRANCH_ID,
                 'fail_branch_id': ROI_NOT_COVERED_BRANCH_ID,
+                'metadata_filepath': METADATA_FILE_FILEPATH,
             }
         )
         # ======================================================================
-        # TODO: actual download_granule
-        download_granule = DummyOperator(
+        # reads the download url from a metadata file created in the last step and
+        # downloads the file iff the file does not already exist.
+        DOWNLOADED_FILEPATH = tmp_filepath(dag.dag_id, "cmr_download")
+        download_granule = BashOperator(
             task_id=ROI_COVERED_BRANCH_ID,
+            bash_command="""
+                METADATA_FILE="""+METADATA_FILE_FILEPATH+""" &&
+                OUT_PATH="""+DOWNLOADED_FILEPATH+"""&&
+                FILE_URL=$(grep "^upstream_download_link" $METADATA_FILE | cut -d'=' -f2-) &&
+                [[ -s $OUT_PATH ]] &&
+                echo "file already exists; skipping download." ||
+                curl --user {{params.username}}:{{params.password}} -f $FILE_URL -o $OUT_PATH
+                && [[ -s $OUT_PATH ]]
+            """,
+            params={
+                "username": secrets.ESDIS_USER,
+                "password": secrets.ESDIS_PASS,
+            },
             trigger_rule='one_success'
         )
-
+        # ======================================================================
+        to_load = [
+            {  # TODO: !!!
+                "filepath":DOWNLOADED_FILEPATH,  # required!
+                "verbose":3,
+                "product_id":35,
+                # "time":"2016-02-12T16:25:18",
+                # "datetime": datetime(2016,2,12,16,25,18),
+                "json":'{"status_id":3,"area_id":1,"area_short_name":"' + region.place_name +'"}'
+            }
+        ]
+        load_tasks = add_load(
+            dag,
+            to_load=to_load,
+            upstream_operators=[download_granule]
+        )
+        assert len(load_tasks) == 1  # right?
+        load_downloaded_file = load_tasks[0]  # no point looping just use this
         # ======================================================================
         skip_granule = DummyOperator(
             task_id=ROI_NOT_COVERED_BRANCH_ID,
             trigger_rule='one_success'
         )
         # ======================================================================
-
         if ingest_callback_dag_id is not None:
             trigger_callback_dag_id = 'trigger_' + ingest_callback_dag_id
-            # TODO: do we want to trigger something here? maybe a FileTrigger? Hmm..
             trigger_callback_dag = MMTTriggerDagRunOperator(
                 trigger_dag_id=ingest_callback_dag_id,
                 python_callable=lambda context, dag_run_obj: dag_run_obj,
@@ -108,13 +140,12 @@ def add_tasks(dag, region, ingest_callback_dag_id=None):
                 retry_delay=timedelta(hours=3),
                 queue=QUEUE.PYCMR
             )
-            coverage_check >> trigger_callback_dag
-
+            load_downloaded_file >> trigger_callback_dag
         # ======================================================================
-
         wait_for_data_delay >> coverage_check
         coverage_check >> skip_granule
         coverage_check >> download_granule
+        # download_granule >> load_downloaded_file  # implied by upstream_operators=[download_granule]
 
 def get_downloadable_granule_in_roi(exec_datetime, roi):
     """
@@ -193,10 +224,10 @@ def _coverage_check(ds, **kwargs):
         return kwargs['fail_branch_id']  # skip granule
     else:
 
-        # TODO: this should write to imars_product_metadata instead!!!
+        # TODO: this should write to imars_product_metadata instead?!?
 
         # === update (or create) the metadata ini file
-        cfg_path = satfilename.metadata(exec_date, check_region.place_name)
+        cfg_path = kwargs['metadata_filepath']
         cfg = configparser.ConfigParser()
         cfg.read(cfg_path)  # returns empty config if no file
         if 'myd01' not in cfg.sections():  # + section if not exists

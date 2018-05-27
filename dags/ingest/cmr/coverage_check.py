@@ -25,7 +25,7 @@ from imars_dags.util.etl_tools.load import add_load
 
 schedule_interval=timedelta(minutes=5)
 
-def add_tasks(dag, region, ingest_callback_dag_id=None):
+def add_tasks(dag, region, product_id, area_id, ingest_callback_dag_id=None):
     """
     Checks for coverage of given region using CMR iff the region is covered in
     the granule represented by the {{execution_date}}:
@@ -104,13 +104,13 @@ def add_tasks(dag, region, ingest_callback_dag_id=None):
         )
         # ======================================================================
         to_load = [
-            {  # TODO: !!!
+            {
                 "filepath":DOWNLOADED_FILEPATH,  # required!
                 "verbose":3,
-                "product_id":35,
+                "product_id":product_id,
                 # "time":"2016-02-12T16:25:18",
                 # "datetime": datetime(2016,2,12,16,25,18),
-                "json":'{"status_id":3,"area_id":1,"area_short_name":"' + region.place_name +'"}'
+                "json":'{"status_id":3,"area_id":'+area_id+',"area_short_name":"' + region.place_name +'"}'
             }
         ]
         load_tasks = add_load(

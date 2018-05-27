@@ -106,6 +106,3 @@ SLEEP_ARGS = {
     'priority_weight': PRIORITY.SLEEP
     # 'pool': POOL.SLEEP
 }
-
-""" path to cmr.cfg file for accessing common metadata repository """
-CMR_CFG_PATH="/root/airflow/dags/imars_dags/settings/cmr.cfg"

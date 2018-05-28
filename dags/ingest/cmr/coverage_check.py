@@ -99,8 +99,8 @@ def add_tasks(dag, region, product_id, area_id, ingest_callback_dag_id=None):
                 METADATA_FILE="""+METADATA_FILE_FILEPATH+""" &&
                 OUT_PATH="""+DOWNLOADED_FILEPATH+""" &&
                 FILE_URL=$(grep "^upstream_download_link" $METADATA_FILE | cut -d'=' -f2-) &&
-                curl --user {{params.username}}:{{params.password}} -f $FILE_URL -o $OUT_PATH
-                && [[ -s $OUT_PATH ]]
+                curl --user {{params.username}}:{{params.password}} -f $FILE_URL -o $OUT_PATH &&
+                [[ -s $OUT_PATH ]]
             """,
             params={
                 "username": secrets.ESDIS_USER,

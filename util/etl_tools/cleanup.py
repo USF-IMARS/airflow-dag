@@ -45,24 +45,24 @@ def add_cleanup(dag, to_cleanup, upstream_operators):
         # to ensure we clean up even if something in the middle fails, we must
         # do some weird stuff. For details see:
         # https://github.com/USF-IMARS/imars_dags/issues/44
-        poke_until_tmp_cleanup_done = SqlSensor(
-            # poke until the cleanup is done
-            task_id='poke_until_tmp_cleanup_done',
-            conn_id='airflow_metadata',
-            soft_fail=False,
-            poke_interval=60*10,             # check every ten minutes
-            timeout=60*60,                   # for the first 60 minutes
-            retries=0,                       # do~~n't~~ give up easily
-            retry_delay=timedelta(hours=3),  # ~~but be patient between checks~~
-            retry_exponential_backoff=False,
-            sql="""
-            SELECT * FROM task_instance WHERE
-                task_id="tmp_cleanup"
-                AND state IN ('success','failed')
-                AND dag_id="{{ dag.dag_id }}"
-                AND execution_date="{{ execution_date }}";
-            """
-        )
+        # poke_until_tmp_cleanup_done = SqlSensor(
+        #     # poke until the cleanup is done
+        #     task_id='poke_until_tmp_cleanup_done',
+        #     conn_id='airflow_metadata',
+        #     soft_fail=False,
+        #     poke_interval=60*10,             # check every ten minutes
+        #     timeout=60*60,                   # for the first 60 minutes
+        #     retries=0,                       # do~~n't~~ give up easily
+        #     retry_delay=timedelta(hours=3),  # ~~but be patient between checks~~
+        #     retry_exponential_backoff=False,
+        #     sql="""
+        #     SELECT * FROM task_instance WHERE
+        #         task_id="tmp_cleanup"
+        #         AND state IN ('success','failed')
+        #         AND dag_id="{{ dag.dag_id }}"
+        #         AND execution_date="{{ execution_date }}";
+        #     """
+        # )
         # start poking immediately
         # TODO: do we need another upstream task added here?
         # extract_file >> poke_until_tmp_cleanup_done

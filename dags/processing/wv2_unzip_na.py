@@ -15,7 +15,6 @@ from imars_dags.util.etl_tools.cleanup import add_cleanup
 default_args = DEFAULT_ARGS.copy()
 default_args.update({
     'start_date': datetime(1980, 1, 1),
-    'retries': 1,
     'retry_delay': timedelta(minutes=3),
 })
 

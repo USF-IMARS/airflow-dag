@@ -11,7 +11,7 @@
         # #         'filepather': satfilename,
         # #         'roi': region.place_name
         # #     },
-        # #     retries=1,
+        # #     retries=0,
         # #     retry_delay=timedelta(seconds=3)
         # # )
         # # === option 2: unzip bz2 file from our local archive
@@ -26,7 +26,7 @@
         #         'roi': region.place_name
         #     },
         #     trigger_rule=TriggerRule.ALL_FAILED,  # only run if upstream fails
-        #     retries=1,
+        #     retries=0,
         #     retry_delay=timedelta(seconds=5)
         # )
         # # check_for_extant_l1a_file >> unzip_l1a_bz2

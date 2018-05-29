@@ -15,7 +15,6 @@ default_args = DEFAULT_ARGS.copy()
 # NOTE: start_date must be 12:00 (see _wait_for_passes_subdag)
 default_args.update({
     'start_date': datetime(2018, 1, 8, 0, 0),
-    'retries': 1
 })
 
 AREA_SHORT_NAME="gom"

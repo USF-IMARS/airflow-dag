@@ -14,7 +14,7 @@ from imars_dags.util.globals import DEFAULT_ARGS
 default_args = DEFAULT_ARGS.copy()
 default_args.update({
     'start_date': datetime(2018, 3, 1, 20, 0),
-    'retries': 1,
+    'retries': 0,
     'retry_delay': timedelta(minutes=3),
 })
 

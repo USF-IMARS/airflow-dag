@@ -50,11 +50,11 @@ def add_cleanup(dag, to_cleanup, upstream_operators):
             task_id='poke_until_tmp_cleanup_done',
             conn_id='airflow_metadata',
             soft_fail=False,
-            poke_interval=60*2,              # check every two minutes
-            timeout=60*20,                    # for the first 20 minutes
-            retries=10,                      # don't give up easily
-            retry_delay=timedelta(hours=1),  # but be patient between checks
-            retry_exponential_backoff=True,
+            poke_interval=60*10,             # check every ten minutes
+            timeout=60*60,                   # for the first 60 minutes
+            retries=0,                       # do~~n't~~ give up easily
+            retry_delay=timedelta(hours=3),  # ~~but be patient between checks~~
+            retry_exponential_backoff=False,
             sql="""
             SELECT * FROM task_instance WHERE
                 task_id="tmp_cleanup"

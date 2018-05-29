@@ -22,7 +22,6 @@ from imars_dags.util.globals import QUEUE, DEFAULT_ARGS
 DEF_ARGS = DEFAULT_ARGS.copy()
 DEF_ARGS.update({
     'start_date': datetime.utcnow(),
-    'retries': 1
 })
 
 SCHEDULE_INTERVAL=None

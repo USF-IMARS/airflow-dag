@@ -79,7 +79,7 @@ def add_tasks(dag, region, product_id, area_id, ingest_callback_dag_id=None):
             task_id='coverage_check',
             python_callable=_coverage_check,
             provide_context=True,
-            retries=1,
+            retries=0,
             retry_delay=timedelta(minutes=1),
             queue=QUEUE.PYCMR,
             op_kwargs={
@@ -146,7 +146,7 @@ def add_tasks(dag, region, product_id, area_id, ingest_callback_dag_id=None):
                 params={
                     'roi':region
                 },
-                retries=10,
+                retries=0,
                 retry_delay=timedelta(hours=3),
                 queue=QUEUE.PYCMR
             )

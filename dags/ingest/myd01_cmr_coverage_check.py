@@ -11,7 +11,6 @@ default_args = DEFAULT_ARGS.copy()
 delay_ago = datetime.utcnow()-coverage_check.CHECK_DELAY
 default_args.update({  # round to
     'start_date': delay_ago.replace(minute=0,second=0,microsecond=0),
-    'retries': 1
 })
 
 this_dag = DAG(

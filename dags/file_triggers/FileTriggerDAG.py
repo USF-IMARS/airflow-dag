@@ -217,7 +217,7 @@ class FileTriggerDAG(DAG):
                         ROI_processing_DAG = MMTTriggerDagRunOperator(
                             task_id=trigger_dag_operator_id,
                             python_callable=lambda context, dag_run_obj: dag_run_obj,
-                            retries=1,
+                            retries=0,
                             retry_delay=timedelta(minutes=2),
                             trigger_dag_id=dag_to_trigger,
                             execution_date="{{ ti.xcom_pull(task_ids='get_file_metadata', key='date_time').strftime('%Y-%m-%d %H:%M:%S') }}",

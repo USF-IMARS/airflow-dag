@@ -44,7 +44,12 @@ this_dag = DAG(
 # | id | short_name   | full_name                 |
 # +----+--------------+---------------------------+
 # | 11 | ntf_wv2_m1bs | wv2 1b multispectral .ntf |
-ntf_basename = "input"
+# basename has to have subsring that matches one of the regexes in
+# [imagery_utils.lib.utils.get_sensor](https://github.com/PolarGeospatialCenter/imagery_utils/blob/v1.5.1/lib/utils.py#L57)
+# (if not we get USF-IMARS/imars_dags#64) so here we match
+# "(?P<ts>\d\d[a-z]{3}\d{8})-(?P<prod>\w{4})?(?P<tile>\w+)?-(?P<oid>\d{12}_\d\d)_(?P<pnum>p\d{3})"
+# using a hard-coded sensor "wv02" + a fake date & catalog id
+ntf_basename = "input_wv02_19890607101112_fake0catalog0id0"
 ntf_input_file = tmp_filepath(this_dag.dag_id, ntf_basename + '.ntf')
 extract_ntf = add_extract(this_dag, "product_id=11", ntf_input_file)
 
@@ -66,12 +71,12 @@ pgc_ortho = BashOperator(
     dag=this_dag,
     task_id='pgc_ortho',
     bash_command="""
-        python /opt/wv2_processing/pgc_ortho.py \
+        python /opt/imagery_utils/pgc_ortho.py \
             -p 4326 \
             -c ns \
             -t UInt16 \
             -f GTiff \
-            --no_pyramids \
+            --no-pyramids \
             """ + ntf_input_file + " " + ortho_dir,
     queue=QUEUE.WV2_PROC,
 )

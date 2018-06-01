@@ -33,6 +33,7 @@ PARFILE=os.path.join(
 # NOTE: xcalfile must be set for v7.4 and will need to be updated ~ 1/mo
 #     for more info see:
 #     https://oceancolor.gsfc.nasa.gov/forum/oceancolor/topic_show.pl?pid=37506
+# TODO: (I think) this can be removed now that all nodes are v7.5+
 XCALFILE="$OCVARROOT/modisa/xcal/OPER/xcal_modisa_axc_oc_v1.12d"
 
 this_dag = DAG(

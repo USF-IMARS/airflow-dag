@@ -186,14 +186,15 @@ class FileTriggerDAG(DAG):
             )
             # === else failed
             # TODO: use STATUS.ERROR here
-            set_product_status_to_err = MySqlOperator(
-                task_id="set_product_status_to_err",
-                sql=""" UPDATE file SET status_id=4 WHERE filepath="{{ ti.xcom_pull(task_ids="get_file_metadata")["filepath"] }}" """,
-                mysql_conn_id=METADATA_CONN_ID,
-                autocommit=False,  # TODO: True?
-                parameters=None,
-                trigger_rule="one_failed"
-            )
+            # TODO: re-enable this?
+            # set_product_status_to_err = MySqlOperator(
+            #     task_id="set_product_status_to_err",
+            #     sql=""" UPDATE file SET status_id=4 WHERE filepath="{{ ti.xcom_pull(task_ids="get_file_metadata")["filepath"] }}" """,
+            #     mysql_conn_id=METADATA_CONN_ID,
+            #     autocommit=False,  # TODO: True?
+            #     parameters=None,
+            #     trigger_rule="one_failed"
+            # )
 
             """
             === trigger region processing dags
@@ -224,7 +225,7 @@ class FileTriggerDAG(DAG):
                         )
                         ROI_dummy >> ROI_processing_DAG
                         ROI_processing_DAG >> set_product_status_to_std
-                        ROI_processing_DAG >> set_product_status_to_err
+                        # ROI_processing_DAG >> set_product_status_to_err  # TODO: re-enable this?
                 else:  # no dags_to_trigger means just set it std and do nothing
                     ROI_dummy >> set_product_status_to_std
-                    ROI_dummy >> set_product_status_to_err
+                    # ROI_dummy >> set_product_status_to_err  # TODO: re-enable this?

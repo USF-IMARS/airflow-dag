@@ -10,6 +10,7 @@ classification on WorldView-2 images
 """
 # std libs
 from datetime import datetime
+import os
 
 # deps
 from airflow.operators.bash_operator import BashOperator
@@ -84,7 +85,15 @@ create_ortho_tmp_dir >> pgc_ortho
 extract_ntf >> pgc_ortho
 
 # the filepath that pgc_ortho should have written to
-ortho_output_file = ortho_dir + ntf_basename + "_u16ns4326.tif"
+ortho_output_file = tmp_filepath(
+    this_dag.dag_id,
+    ntf_basename + "_u16ns4326.tif"
+)
+# filepath is actually inside the ortho_dir though...
+ortho_output_file = os.path.join(
+    ortho_dir,
+    os.path.basename(ortho_output_file)
+)
 
 # ## Run Matlab code
 rrs_out, create_ouput_tmp_dir = tmp_filedir(this_dag, 'output')  # "/work/m/mjm8/tmp/test/output/"
@@ -97,7 +106,7 @@ wv2_proc_matlab = BashOperator(
         MET=""" + met_input_file + """  &&
         /opt/matlab/R2018a/bin/matlab -nodisplay -nodesktop -r "\
             cd('/opt/wv2_processing');\
-            WV2_Processing(\
+            wv2_processing(\
                 '$ORTH_FILE',\
                 '$MET',\
                 '{{params.crd_sys}}',\
@@ -119,7 +128,7 @@ wv2_proc_matlab = BashOperator(
         "sgw": "5",
         "filt": "0",
         "stat": "3",
-        "loc": "'testnew'",
+        "loc": "testnew",
         "SLURM_ARRAY_TASK_ID" : 0  # TODO: need to rm this
     },
     queue=QUEUE.WV2_PROC,

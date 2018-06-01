@@ -15,7 +15,7 @@ MariaDB [imars_product_metadata]> select id,short_name from product ORDER BY id;
 |  8 | att_wv2_p1bs           |
 |  9 | geo_wv2_m1bs           |
 | 10 | imd_wv2_m1bs           |
-| 11 | ntf_wv2_m1bs           |
+
 | 12 | rpb_wv2_m1bs           |
 | 13 | til_wv2_m1bs           |
 | 14 | xml_wv2_m1bs           |
@@ -42,7 +42,7 @@ MariaDB [imars_product_metadata]> select id,short_name from product ORDER BY id;
 +----+------------------------+
 """
 this_dag = FileTriggerDAG(
-    product_ids=list(range(7,35)),
+    product_ids=[x for x in range(7,35) if x not in [11]],
     dags_to_trigger=[],
     dag_id="file_trigger_catchall_unused"
 )

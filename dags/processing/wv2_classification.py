@@ -39,6 +39,7 @@ this_dag = DAG(
 
 # === EXTRACT INPUT FILES ===
 # ===========================================================================
+input_dir, create_input_tmp_dir = tmp_filedir(this_dag, 'input')
 # === ntf image is product_id # 11
 # [imars_product_metadata]> SELECT id,short_name,full_name FROM product
 #                           WHERE short_name="ntf_wv2_m1bs";
@@ -50,8 +51,8 @@ this_dag = DAG(
 # (if not we get USF-IMARS/imars_dags#64) so here we match
 # "(?P<ts>\d\d[a-z]{3}\d{8})-(?P<prod>\w{4})?(?P<tile>\w+)?-(?P<oid>\d{12}_\d\d)_(?P<pnum>p\d{3})"
 # using a hard-coded sensor "wv02" + a fake date & catalog id
-ntf_basename = "input_wv02_19890607101112_fake0catalog0id0"
-ntf_input_file = tmp_filepath(this_dag.dag_id, ntf_basename + '.ntf')
+ntf_basename = "wv02_19890607101112_fake0catalog0id0"
+ntf_input_file = os.path.join(input_dir, ntf_basename + ".ntf")
 extract_ntf = add_extract(this_dag, "product_id=11", ntf_input_file)
 
 # === met xml is product_id # 14
@@ -60,7 +61,7 @@ extract_ntf = add_extract(this_dag, "product_id=11", ntf_input_file)
 # | id | short_name   | full_name                 |
 # +----+--------------+---------------------------+
 # | 14 | xml_wv2_m1bs | wv2 1b multispectral .xml |
-met_input_file = tmp_filepath(this_dag.dag_id, ntf_basename + ".xml")
+met_input_file = os.path.join(input_dir, ntf_basename + ".xml")
 extract_met = add_extract(this_dag, "product_id=14", met_input_file)
 # ===========================================================================
 
@@ -78,22 +79,12 @@ pgc_ortho = BashOperator(
             -t UInt16 \
             -f GTiff \
             --no-pyramids \
-            """ + ntf_input_file + " " + ortho_dir,
+            """ + input_dir + " " + ortho_dir,
     queue=QUEUE.WV2_PROC,
 )
-create_ortho_tmp_dir >> pgc_ortho
-extract_ntf >> pgc_ortho
 
-# the filepath that pgc_ortho should have written to
-ortho_output_file = tmp_filepath(
-    this_dag.dag_id,
-    ntf_basename + "_u16ns4326.tif"
-)
 # filepath is actually inside the ortho_dir though...
-ortho_output_file = os.path.join(
-    ortho_dir,
-    os.path.basename(ortho_output_file)
-)
+ortho_output_file = os.path.join(ortho_dir, ntf_basename + "_u16ns4326.tif")
 
 # ## Run Matlab code
 rrs_out, create_ouput_tmp_dir = tmp_filedir(this_dag, 'output')  # "/work/m/mjm8/tmp/test/output/"
@@ -101,6 +92,9 @@ class_out = rrs_out  # same as above  "/work/m/mjm8/tmp/test/output/"
 wv2_proc_matlab = BashOperator(
     dag=this_dag,
     task_id='wv2_proc_matlab',
+    # WV2_Processing(
+    #   images,id,met,crd_sys,dt,sgwin,filt,stat,loc,idnumber,rrs_out,class_out
+    # )
     bash_command="""
         ORTH_FILE=""" + ortho_output_file + """ &&
         MET=""" + met_input_file + """  &&
@@ -108,6 +102,7 @@ wv2_proc_matlab = BashOperator(
             cd('/opt/wv2_processing');\
             wv2_processing(\
                 '$ORTH_FILE',\
+                '0',\
                 '$MET',\
                 '{{params.crd_sys}}',\
                 '{{params.dt}}',\
@@ -133,9 +128,6 @@ wv2_proc_matlab = BashOperator(
     },
     queue=QUEUE.WV2_PROC,
 )
-create_ouput_tmp_dir >> wv2_proc_matlab
-extract_met >> wv2_proc_matlab
-pgc_ortho >> wv2_proc_matlab
 # ===========================================================================
 
 # === (UP)LOAD RESULTS ===
@@ -152,3 +144,13 @@ to_load = []
 #     to_cleanup=[ntf_input_file, met_input_file, rrs_out, ortho_dir],
 #     upstream_operators=load_tasks
 # )
+
+create_input_tmp_dir >> extract_ntf
+create_input_tmp_dir >> extract_met
+
+create_ortho_tmp_dir >> pgc_ortho
+extract_ntf          >> pgc_ortho
+
+create_ouput_tmp_dir >> wv2_proc_matlab
+extract_met          >> wv2_proc_matlab
+pgc_ortho            >> wv2_proc_matlab

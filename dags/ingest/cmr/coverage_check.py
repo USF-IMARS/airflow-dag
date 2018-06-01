@@ -25,7 +25,6 @@ from imars_dags.util.etl_tools.tmp_file import tmp_filepath
 from imars_dags.util.etl_tools.load import add_load
 
 schedule_interval=timedelta(minutes=5)
-CHECK_DELAY=timedelta(hours=3)  # delay before checking CMR
 
 # path to cmr.cfg file for accessing common metadata repository
 CMR_CFG_PATH=os.path.join(
@@ -33,7 +32,9 @@ CMR_CFG_PATH=os.path.join(
     "cmr.cfg"
 )
 
-def add_tasks(dag, region, product_id, area_id, ingest_callback_dag_id=None):
+def add_tasks(dag, region, product_id, area_id, cmr_search_kwargs, check_delay,
+        ingest_callback_dag_id=None
+    ):
     """
     Checks for coverage of given region using CMR iff the region is covered in
     the granule represented by the {{execution_date}}:
@@ -46,6 +47,14 @@ def add_tasks(dag, region, product_id, area_id, ingest_callback_dag_id=None):
         dag to add tasks to
     region : imars_dags.regions.*
         region module (TODO: replace this)
+    product_id : int
+        product_id number from imars_product_metadata db
+    area_id : int
+        area_id number from imars_product_metadata db
+    cmr_search_kwargs : dict
+        search_kwargs dict to pass to pyCMR.
+        Example:
+            {'short_name': 'MYD01'}
     ingest_callback_dag_id : str
         id of DAG to trigger once ingest is complete.
         Example usages:
@@ -64,7 +73,7 @@ def add_tasks(dag, region, product_id, area_id, ingest_callback_dag_id=None):
         # `delta` is the amount of time we expect between satellite measurement and
         # the metadata being available in the CMR. Usually something like 2-48 hours.
         wait_for_data_delay = TimeDeltaSensor(
-            delta=CHECK_DELAY,
+            delta=check_delay,
             task_id='wait_for_data_delay',
             **SLEEP_ARGS
         )
@@ -87,6 +96,7 @@ def add_tasks(dag, region, product_id, area_id, ingest_callback_dag_id=None):
                 'success_branch_id': ROI_COVERED_BRANCH_ID,
                 'fail_branch_id': ROI_NOT_COVERED_BRANCH_ID,
                 'metadata_filepath': METADATA_FILE_FILEPATH,
+                'cmr_search_kwargs': cmr_search_kwargs
             }
         )
         # ======================================================================
@@ -157,7 +167,7 @@ def add_tasks(dag, region, product_id, area_id, ingest_callback_dag_id=None):
         coverage_check >> download_granule
         # download_granule >> load_downloaded_file  # implied by upstream_operators=[download_granule]
 
-def get_downloadable_granule_in_roi(exec_datetime, roi):
+def get_downloadable_granule_in_roi(exec_datetime, roi, cmr_search_kwargs):
     """
     returns pyCMR.Result if granule for given datetime is in one of our ROIs
     and is downloadable and is during the day, else returns None
@@ -176,15 +186,13 @@ def get_downloadable_granule_in_roi(exec_datetime, roi):
         (exec_datetime + timedelta(           seconds=1 )).strftime(TIME_FMT) + ',' +
         (exec_datetime + timedelta(minutes=4, seconds=59)).strftime(TIME_FMT)
     )
-    search_kwargs={
-        'limit':10,
-        'short_name':"MYD01",  # [M]odis (Y)aqua (D) (0) level [1]
-        'temporal':time_range,
-        'sort_key': "-revision_date"  # this puts most recently updated first
-    }
-    print(search_kwargs)
+    cmr_search_kwargs['limit'] = 10
+    cmr_search_kwargs['temporal'] = time_range
+    cmr_search_kwargs['sort_key'] = "-revision_date" # most recently updated 1st
+
+    print(cmr_search_kwargs)
     # === initial metadata check
-    results = cmr.searchGranule(**search_kwargs)
+    results = cmr.searchGranule(**cmr_search_kwargs)
     print("results:")
     print(results)
     assert(len(results) > 0)
@@ -192,14 +200,13 @@ def get_downloadable_granule_in_roi(exec_datetime, roi):
     # === check if bounding box in res intersects with any of our ROIs and
     # === that the granule is downloadable
     # re-use the original search_kwargs, but add bounding box
-    search_kwargs['bounding_box']="{},{},{},{}".format(
+    cmr_search_kwargs['bounding_box']="{},{},{},{}".format(
         roi.lonmin,  # low l long
         roi.latmin,  # low l lat
         roi.lonmax,  # up r long
         roi.latmax   # up r lat
     )
-    search_kwargs['day_night_flag']='day',  # also day only for ocean color
-    bounded_results = cmr.searchGranule(**search_kwargs)
+    bounded_results = cmr.searchGranule(**cmr_search_kwargs)
     if (len(bounded_results) > 0):  # granule intersects our ROI
         return bounded_results[0]  # use first granule (should be most recently updated)
     elif (len(bounded_results) == 0):  # granule does not intersect our ROI
@@ -229,7 +236,10 @@ def _coverage_check(ds, **kwargs):
     """
     check_region = kwargs['roi']
     exec_date = kwargs['execution_date']
-    granule_result = get_downloadable_granule_in_roi(exec_date, check_region)
+    cmr_search_kwargs = kwargs['cmr_search_kwargs']
+    granule_result = get_downloadable_granule_in_roi(
+        exec_date, check_region, cmr_search_kwargs
+    )
     if granule_result is None:
         return kwargs['fail_branch_id']  # skip granule
     else:

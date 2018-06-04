@@ -23,6 +23,7 @@ from imars_dags.util.globals import QUEUE, DEFAULT_ARGS, SLEEP_ARGS
 from imars_dags.settings import secrets  # NOTE: this file not in public repo!
 from imars_dags.util.etl_tools.tmp_file import tmp_filepath
 from imars_dags.util.etl_tools.load import add_load
+from imars_dags.util.etl_tools.cleanup import add_cleanup
 
 schedule_interval=timedelta(minutes=5)
 
@@ -166,6 +167,13 @@ def add_tasks(dag, region, product_id, area_id, cmr_search_kwargs, check_delay,
         coverage_check >> skip_granule
         coverage_check >> download_granule
         # download_granule >> load_downloaded_file  # implied by upstream_operators=[download_granule]
+
+        cleanup_task = add_cleanup(
+            dag,
+            to_cleanup=[DOWNLOADED_FILEPATH, METADATA_FILE_FILEPATH],
+            upstream_operators=[download_granule, coverage_check]
+        )
+
 
 def get_downloadable_granule_in_roi(exec_datetime, roi, cmr_search_kwargs):
     """

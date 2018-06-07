@@ -158,8 +158,7 @@ to_load = [
         "filepath":Rrs_output,
         "verbose":3,
         "product_id":37,
-        # "time":"2016-02-12T16:25:18",
-        # "datetime": datetime(2016,2,12,16,25,18),
+        "load_format": os.join( tmp_format_str(), Rrs_output.split('/')[-1]),
         "json":'{"status_id":3,"area_id":5}'
     }
 ]
@@ -174,15 +173,13 @@ elif DT in [1,2]:
             "filepath":rrs_output,
             "verbose":3,
             "product_id":38,
-            # "time":"2016-02-12T16:25:18",
-            # "datetime": datetime(2016,2,12,16,25,18),
+            "load_format": os.join( tmp_format_str(), rrs_output.split('/')[-1]),
             "json":'{"status_id":3,"area_id":5}'
         },{
             "filepath":bth_output,
             "verbose":3,
             "product_id":39,
-            # "time":"2016-02-12T16:25:18",
-            # "datetime": datetime(2016,2,12,16,25,18),
+            "load_format": os.join( tmp_format_str(), bth_output.split('/')[-1]),
             "json":'{"status_id":3,"area_id":5}'
         }
     ]
@@ -196,8 +193,7 @@ if DT==1:
         "filepath":classf_output,
         "verbose":3,
         "product_id":40,
-        # "time":"2016-02-12T16:25:18",
-        # "datetime": datetime(2016,2,12,16,25,18),
+        "load_format": os.join( tmp_format_str(), classf_output.split('/')[-1]), 
         "json":'{"status_id":3,"area_id":5}'
     })
 

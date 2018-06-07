@@ -35,7 +35,9 @@ def add_load(dag, to_load, upstream_operators=[]):
             load_args = kwargs['load_args']
             # default args we add to all load ops:
             load_args['verbose'] = 3
-            load_args['load_format'] = tmp_format_str()
+            load_args['load_format'] = load_args.get(
+                'load_format', tmp_format_str()
+            )
 
             # apply macros on all (template-enabled) args:
             ARGS_TEMPLATE_FIELDS = ['filepath', 'directory']

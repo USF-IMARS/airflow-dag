@@ -12,10 +12,7 @@ import os
 # deps
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
-from airflow.operators.python_operator import BranchPythonOperator
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.sensors import TimeDeltaSensor
-from pyCMR.pyCMR import CMR
 
 # this package
 from imars_dags.operators.MMTTriggerDagRunOperator import MMTTriggerDagRunOperator
@@ -24,14 +21,10 @@ from imars_dags.settings import secrets  # NOTE: this file not in public repo!
 from imars_dags.util.etl_tools.tmp_file import tmp_filepath
 from imars_dags.util.etl_tools.load import add_load
 from imars_dags.util.etl_tools.cleanup import add_cleanup
+from imars_dags.dags.ingest.CoverageCheckDAG import WaitForDataPublishSensor
+from imars_dags.dags.ingest.cmr.CMRCoverageBranchOperator import CMRCoverageBranchOperator
 
 schedule_interval=timedelta(minutes=5)
-
-# path to cmr.cfg file for accessing common metadata repository
-CMR_CFG_PATH=os.path.join(
-    os.path.dirname(os.path.realpath(__file__)),  # imars_dags/dags/ingest/cmr
-    "cmr.cfg"
-)
 
 def add_tasks(dag, region, product_id, area_id, cmr_search_kwargs, check_delay,
         ingest_callback_dag_id=None
@@ -64,48 +57,19 @@ def add_tasks(dag, region, product_id, area_id, cmr_search_kwargs, check_delay,
             3. trigger FileTriggerDAG immediately upon ingest
     """
     with dag as dag:
-        # =============================================================================
-        # === delay to wait for upstream data to become available.
-        # =============================================================================
-        # ie wait for download from  OB.DAAC to complete.
-        # this makes sure that we don't try to run this DAG until `delta` amount of time
-        # past the `execution_date` (which is the datetime of the satellite recording).
-        #
-        # `delta` is the amount of time we expect between satellite measurement and
-        # the metadata being available in the CMR. Usually something like 2-48 hours.
-        wait_for_data_delay = TimeDeltaSensor(
-            delta=check_delay,
-            task_id='wait_for_data_delay',
-            **SLEEP_ARGS
-        )
-        # =============================================================================
-        # =========================================================================
-        # === Checks if this granule covers our RoI using metadata from CMR.
-        # =========================================================================
-        ROI_COVERED_BRANCH_ID = 'download_granule'
-        ROI_NOT_COVERED_BRANCH_ID = 'skip_granule'
+        wait_for_data_delay = WaitForDataPublishSensor(delta=check_delay)
         METADATA_FILE_FILEPATH = tmp_filepath(dag.dag_id, "metadata.ini")
-        coverage_check = BranchPythonOperator(
-            task_id='coverage_check',
-            python_callable=_coverage_check,
-            provide_context=True,
-            retries=0,
-            retry_delay=timedelta(minutes=1),
-            queue=QUEUE.PYCMR,
-            op_kwargs={
-                'roi':region,
-                'success_branch_id': ROI_COVERED_BRANCH_ID,
-                'fail_branch_id': ROI_NOT_COVERED_BRANCH_ID,
-                'metadata_filepath': METADATA_FILE_FILEPATH,
-                'cmr_search_kwargs': cmr_search_kwargs
-            }
+        coverage_check = CMRCoverageBranchOperator(
+                cmr_search_kwargs=cmr_search_kwargs,
+                roi=region,
+                metadata_filepath=METADATA_FILE_FILEPATH,
         )
         # ======================================================================
         # reads the download url from a metadata file created in the last step and
         # downloads the file iff the file does not already exist.
         DOWNLOADED_FILEPATH = tmp_filepath(dag.dag_id, "cmr_download")
         download_granule = BashOperator(
-            task_id=ROI_COVERED_BRANCH_ID,
+            task_id=CMRCoverageBranchOperator.ROI_COVERED_BRANCH_ID,
             bash_command="""
                 METADATA_FILE="""+METADATA_FILE_FILEPATH+""" &&
                 OUT_PATH="""+DOWNLOADED_FILEPATH+""" &&
@@ -143,7 +107,7 @@ def add_tasks(dag, region, product_id, area_id, cmr_search_kwargs, check_delay,
         load_downloaded_file = load_tasks[0]  # no point looping just use this
         # ======================================================================
         skip_granule = DummyOperator(
-            task_id=ROI_NOT_COVERED_BRANCH_ID,
+            task_id=CMRCoverageBranchOperator.ROI_NOT_COVERED_BRANCH_ID,
             trigger_rule='one_success'
         )
         # ======================================================================
@@ -173,102 +137,3 @@ def add_tasks(dag, region, product_id, area_id, cmr_search_kwargs, check_delay,
             to_cleanup=[DOWNLOADED_FILEPATH, METADATA_FILE_FILEPATH],
             upstream_operators=[download_granule, coverage_check]
         )
-
-
-def get_downloadable_granule_in_roi(exec_datetime, roi, cmr_search_kwargs):
-    """
-    returns pyCMR.Result if granule for given datetime is in one of our ROIs
-    and is downloadable and is during the day, else returns None
-
-    NOTE: we get the granule metadata *without* server-side ROI check first
-    & then do ROI check so we can be sure that the data
-    has published. We want this to fail if we can't find the metadata, else
-    we could end up thinking granules are not in our ROI when actually they may
-    just be late to publish.
-    """
-    # === set up basic query for CMR
-    # this basic query should ALWAYS return at least 1 result
-    TIME_FMT = "%Y-%m-%dT%H:%M:%SZ"  # iso 8601
-    cmr = CMR(CMR_CFG_PATH)
-    time_range = str(
-        (exec_datetime + timedelta(           seconds=1 )).strftime(TIME_FMT) + ',' +
-        (exec_datetime + timedelta(minutes=4, seconds=59)).strftime(TIME_FMT)
-    )
-    cmr_search_kwargs['limit'] = 10
-    cmr_search_kwargs['temporal'] = time_range
-    cmr_search_kwargs['sort_key'] = "-revision_date" # most recently updated 1st
-
-    print(cmr_search_kwargs)
-    # === initial metadata check
-    results = cmr.searchGranule(**cmr_search_kwargs)
-    print("results:")
-    print(results)
-    assert(len(results) > 0)
-
-    # === check if bounding box in res intersects with any of our ROIs and
-    # === that the granule is downloadable
-    # re-use the original search_kwargs, but add bounding box
-    cmr_search_kwargs['bounding_box']="{},{},{},{}".format(
-        roi.lonmin,  # low l long
-        roi.latmin,  # low l lat
-        roi.lonmax,  # up r long
-        roi.latmax   # up r lat
-    )
-    bounded_results = cmr.searchGranule(**cmr_search_kwargs)
-    if (len(bounded_results) > 0):  # granule intersects our ROI
-        return bounded_results[0]  # use first granule (should be most recently updated)
-    elif (len(bounded_results) == 0):  # granule does not intersect our ROI
-        return None
-    else:
-        raise ValueError("unexpected # of results from ROI CMR search:"+str(len(bounded_results)))
-
-def _coverage_check(ds, **kwargs):
-    """
-    Performs metadata check using pyCMR to decide which path the DAG should
-    take. If the metadata shows the granule is in our ROI then the download
-    url is written to a metadata ini file and the processing branch is followed,
-    else the skip branch is followed.
-
-    Parameters
-    -----------
-    ds : datetime?
-        *I think* this is the execution_date for the operator instance
-    kwargs['execution_date'] : datetime.datetime
-        the execution_date for the operator instance (same as `ds`?)
-
-    Returns
-    -----------
-    str
-        name of the next operator that should trigger (ie the first in the
-        branch that we want to follow)
-    """
-    check_region = kwargs['roi']
-    exec_date = kwargs['execution_date']
-    cmr_search_kwargs = kwargs['cmr_search_kwargs']
-    granule_result = get_downloadable_granule_in_roi(
-        exec_date, check_region, cmr_search_kwargs
-    )
-    if granule_result is None:
-        return kwargs['fail_branch_id']  # skip granule
-    else:
-
-        # TODO: this should write to imars_product_metadata instead?!?
-
-        # === update (or create) the metadata ini file
-        # path might have airflow macros, so we need to render
-        task = kwargs['task']
-        cfg_path = kwargs['metadata_filepath']
-        cfg_path = task.render_template(
-            '',
-            cfg_path,
-            kwargs
-        )
-        cfg = configparser.ConfigParser()
-        cfg.read(cfg_path)  # returns empty config if no file
-        if 'myd01' not in cfg.sections():  # + section if not exists
-            cfg['myd01'] = {}
-        cfg['myd01']['upstream_download_link'] = str(granule_result.getDownloadUrl())
-        with open(cfg_path, 'w') as meta_file:
-            cfg.write(meta_file)
-
-        return kwargs['success_branch_id']  # download granule

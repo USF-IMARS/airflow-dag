@@ -13,7 +13,7 @@ class CoverageCheckDAG(DAG):
         super(CoverageCheckDAG, self).__init__(
             **kwargs
         )
-        wait_for_data_delay = WaitForDataPublishSensor(
+        WaitForDataPublishSensor(
             dag=self, delta=check_delay
         )
 

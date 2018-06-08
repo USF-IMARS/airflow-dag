@@ -4,13 +4,12 @@ import os
 from airflow.operators.python_operator import BranchPythonOperator
 from pyCMR.pyCMR import CMR
 
-from imars_dags.util.etl_tools.tmp_file import tmp_filepath
-
 # path to cmr.cfg file for accessing common metadata repository
-CMR_CFG_PATH=os.path.join(
+CMR_CFG_PATH = os.path.join(
     os.path.dirname(os.path.realpath(__file__)),  # imars_dags/dags/ingest/cmr
     "cmr.cfg"
 )
+
 
 def get_downloadable_granule_in_roi(exec_datetime, roi, cmr_search_kwargs):
     """

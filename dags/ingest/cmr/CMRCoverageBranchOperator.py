@@ -120,6 +120,7 @@ class CMRCoverageBranchOperator(BranchPythonOperator):
     # =========================================================================
     # === Checks if this granule covers our RoI using metadata.
     # =========================================================================
+    writes download url to ini file at metadata_filepath
     """
     ROI_COVERED_BRANCH_ID='download_granule'
     ROI_NOT_COVERED_BRANCH_ID='skip_granule'

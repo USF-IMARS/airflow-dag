@@ -23,6 +23,7 @@ from imars_dags.util.etl_tools.load import add_load
 from imars_dags.util.etl_tools.cleanup import add_cleanup
 from imars_dags.dags.ingest.CoverageCheckDAG import WaitForDataPublishSensor
 from imars_dags.dags.ingest.cmr.CMRCoverageBranchOperator import CMRCoverageBranchOperator
+from imars_dags.dags.ingest.DownloadFromMetadataFileOperator import DownloadFromMetadataFileOperator
 
 schedule_interval=timedelta(minutes=5)
 
@@ -65,23 +66,13 @@ def add_tasks(dag, region, product_id, area_id, cmr_search_kwargs, check_delay,
                 metadata_filepath=METADATA_FILE_FILEPATH,
         )
         # ======================================================================
-        # reads the download url from a metadata file created in the last step and
-        # downloads the file iff the file does not already exist.
         DOWNLOADED_FILEPATH = tmp_filepath(dag.dag_id, "cmr_download")
-        download_granule = BashOperator(
-            task_id=CMRCoverageBranchOperator.ROI_COVERED_BRANCH_ID,
-            bash_command="""
-                METADATA_FILE="""+METADATA_FILE_FILEPATH+""" &&
-                OUT_PATH="""+DOWNLOADED_FILEPATH+""" &&
-                FILE_URL=$(grep "^upstream_download_link" $METADATA_FILE | cut -d'=' -f2-) &&
-                curl --user {{params.username}}:{{params.password}} -f $FILE_URL -o $OUT_PATH &&
-                [[ -s $OUT_PATH ]]
-            """,
-            params={
-                "username": secrets.ESDIS_USER,
-                "password": secrets.ESDIS_PASS,
-            },
-            trigger_rule='one_success'
+        download_granule = DownloadFromMetadataFileOperator(
+            METADATA_FILE_FILEPATH,
+            DOWNLOADED_FILEPATH,
+            username=secrets.ESDIS_USER,
+            password=secrets.ESDIS_PASS,
+            task_id=CMRCoverageBranchOperator.ROI_COVERED_BRANCH_ID
         )
         # ======================================================================
         to_load = [

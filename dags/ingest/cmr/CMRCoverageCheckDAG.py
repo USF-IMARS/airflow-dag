@@ -19,7 +19,7 @@ from imars_dags.settings import secrets  # NOTE: this file not in public repo!
 from imars_dags.util.etl_tools.tmp_file import tmp_filepath
 from imars_dags.util.etl_tools.load import add_load
 from imars_dags.util.etl_tools.cleanup import add_cleanup
-from imars_dags.dags.ingest.CoverageCheckDAG import WaitForDataPublishSensor
+from imars_dags.dags.ingest.CoverageCheckDAG import CoverageCheckDAG
 from imars_dags.dags.ingest.cmr.CMRCoverageBranchOperator \
     import CMRCoverageBranchOperator
 from imars_dags.dags.ingest.DownloadFromMetadataFileOperator \
@@ -28,25 +28,25 @@ from imars_dags.dags.ingest.DownloadFromMetadataFileOperator \
 
 schedule_interval = timedelta(minutes=5)
 
-CHECK_DELAY = timedelta(hours=3)
-default_args = DEFAULT_ARGS.copy()
-delay_ago = datetime.utcnow()-CHECK_DELAY
-default_args.update({  # round to
-    'start_date': delay_ago.replace(minute=0, second=0, microsecond=0),
-})
 
-
-class CMRCoverageCheckDAG(DAG):
+class CMRCoverageCheckDAG(CoverageCheckDAG):
     def __init__(
         self,
         region, region_short_name, region_id,
         product_id, product_short_name,
         cmr_search_kwargs,
         granule_len,
+        check_delay,
         **kwargs
     ):
+        default_args = DEFAULT_ARGS.copy()
+        delay_ago = datetime.utcnow()-check_delay
+        default_args.update({  # round to
+            'start_date': delay_ago.replace(minute=0, second=0, microsecond=0),
+        })
 
         super(CMRCoverageCheckDAG, self).__init__(
+            check_delay,
             dag_id=get_dag_id(
                 __file__,
                 region=region_short_name,
@@ -60,12 +60,11 @@ class CMRCoverageCheckDAG(DAG):
         )
 
         self.add_tasks(
-            self,
             region=region,
             product_id=product_id,
             area_id=region_id,
             cmr_search_kwargs=cmr_search_kwargs,
-            check_delay=CHECK_DELAY,
+            check_delay=check_delay,
         )
 
     def add_tasks(
@@ -100,7 +99,6 @@ class CMRCoverageCheckDAG(DAG):
                 3. trigger FileTriggerDAG immediately upon ingest
         """
         with self as dag:
-            wait_for_data_delay = WaitForDataPublishSensor(delta=check_delay)
             METADATA_FILE_FILEPATH = tmp_filepath(dag.dag_id, "metadata.ini")
             coverage_check = CMRCoverageBranchOperator(
                     cmr_search_kwargs=cmr_search_kwargs,
@@ -166,7 +164,7 @@ class CMRCoverageCheckDAG(DAG):
                 )
                 load_downloaded_file >> trigger_callback_dag
             # ======================================================================
-            wait_for_data_delay >> coverage_check
+            self.get_task("wait_for_data_delay") >> coverage_check
             coverage_check >> skip_granule
             coverage_check >> download_granule
             # implied by upstream_operators=[download_granule] :

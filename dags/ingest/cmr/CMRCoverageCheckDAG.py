@@ -7,7 +7,6 @@ region.
 from datetime import datetime, timedelta
 
 # deps
-from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 
 # this package

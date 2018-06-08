@@ -20,7 +20,7 @@ from airflow import DAG
 from imars_dags.util.etl_tools.cleanup import add_cleanup
 from imars_dags.util.etl_tools.extract import add_extract
 from imars_dags.util.etl_tools.load import add_load
-from imars_dags.util.etl_tools.tmp_file import tmp_filepath, tmp_filedir
+from imars_dags.util.etl_tools.tmp_file import tmp_filepath, tmp_filedir, tmp_format_str
 from imars_dags.util.globals import DEFAULT_ARGS, QUEUE
 
 DEF_ARGS = DEFAULT_ARGS.copy()
@@ -158,7 +158,7 @@ to_load = [
         "filepath":Rrs_output,
         "verbose":3,
         "product_id":37,
-        "load_format": os.join( tmp_format_str(), Rrs_output.split('/')[-1]),
+        "load_format": os.path.join( tmp_format_str(), Rrs_output.split('/')[-1]),
         "json":'{"status_id":3,"area_id":5}'
     }
 ]
@@ -193,7 +193,7 @@ if DT==1:
         "filepath":classf_output,
         "verbose":3,
         "product_id":40,
-        "load_format": os.join( tmp_format_str(), classf_output.split('/')[-1]), 
+        "load_format": os.join( tmp_format_str(), classf_output.split('/')[-1]),
         "json":'{"status_id":3,"area_id":5}'
     })
 

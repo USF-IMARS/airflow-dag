@@ -78,14 +78,24 @@ class WaitForDataPublishSensor(TimeDeltaSensor):
         )
 
 
+def validate_op_obj(dag, op_obj):
+    """
+    if op_obj is str, then gets op_obj using op_obj as task_id.
+    """
+    if type(op_obj) == str:
+        return dag.get_task(op_obj)
+    else:
+        return op_obj
+
+
 def add_load_cleanup_trigger(
     dag, DOWNLOADED_FILEPATH, METADATA_FILE_FILEPATH,
     region,
     product_id,
     area_id,
-    download_granule,
-    wait_for_data_delay,
-    coverage_check,
+    download_granule_op,
+    coverage_check_op,
+    wait_for_data_delay_op=WaitForDataPublishSensor.DEFAULT_TASK_ID,
     ingest_callback_dag_id=None
 ):
     """
@@ -98,12 +108,17 @@ def add_load_cleanup_trigger(
     ----------
     dag : airflow.DAG
         dag to add tasks to
+    DOWNLOADED_FILEPATH : TODO
+    METADATA_FILE_FILEPATH : TODO
     region : imars_dags.regions.*
         region module (TODO: replace this)
     product_id : int
         product_id number from imars_product_metadata db
     area_id : int
         area_id number from imars_product_metadata db
+    download_granule_op : airflow.Operator || str
+    coverage_check_op : airflow.Operator || str
+    wait_for_data_delay_op : airflow.Operator || str
     ingest_callback_dag_id : str
         id of DAG to trigger once ingest is complete.
         Example usages:
@@ -111,6 +126,9 @@ def add_load_cleanup_trigger(
             2. trigger downloadFileDAG once ingested into metadatadb
             3. trigger FileTriggerDAG immediately upon ingest
     """
+    download_granule = validate_op_obj(dag, download_granule_op)
+    wait_for_data_delay = validate_op_obj(dag, wait_for_data_delay_op)
+    coverage_check = validate_op_obj(dag, coverage_check_op)
     with dag as dag:
         # ======================================================================
         to_load = [

@@ -1,13 +1,11 @@
 from datetime import timedelta
 import os
+import configparser
 
 from pyCMR.pyCMR import CMR
 
 from imars_dags.dags.ingest.CoverageBranchOperator \
     import CoverageBranchOperator
-from imars_dags.dags.ingest.CoverageCheckDAG import \
-    ROI_COVERED_BRANCH_ID, ROI_NOT_COVERED_BRANCH_ID
-
 
 # path to cmr.cfg file for accessing common metadata repository
 CMR_CFG_PATH = os.path.join(
@@ -32,12 +30,13 @@ def get_downloadable_granule_in_roi(exec_datetime, roi, cmr_search_kwargs):
     TIME_FMT = "%Y-%m-%dT%H:%M:%SZ"  # iso 8601
     cmr = CMR(CMR_CFG_PATH)
     time_range = str(
-        (exec_datetime + timedelta(           seconds=1 )).strftime(TIME_FMT) + ',' +
+        (exec_datetime + timedelta(seconds=1)).strftime(TIME_FMT) +
+        ',' +
         (exec_datetime + timedelta(minutes=4, seconds=59)).strftime(TIME_FMT)
     )
     cmr_search_kwargs['limit'] = 10
     cmr_search_kwargs['temporal'] = time_range
-    cmr_search_kwargs['sort_key'] = "-revision_date" # most recently updated 1st
+    cmr_search_kwargs['sort_key'] = "-revision_date"  # recently updated 1st
 
     print(cmr_search_kwargs)
     # === initial metadata check
@@ -49,7 +48,7 @@ def get_downloadable_granule_in_roi(exec_datetime, roi, cmr_search_kwargs):
     # === check if bounding box in res intersects with any of our ROIs and
     # === that the granule is downloadable
     # re-use the original search_kwargs, but add bounding box
-    cmr_search_kwargs['bounding_box']="{},{},{},{}".format(
+    cmr_search_kwargs['bounding_box'] = "{},{},{},{}".format(
         roi.lonmin,  # low l long
         roi.latmin,  # low l lat
         roi.lonmax,  # up r long
@@ -57,7 +56,7 @@ def get_downloadable_granule_in_roi(exec_datetime, roi, cmr_search_kwargs):
     )
     bounded_results = cmr.searchGranule(**cmr_search_kwargs)
     if (len(bounded_results) > 0):  # granule intersects our ROI
-        return bounded_results[0]  # use first granule (should be most recently updated)
+        return bounded_results[0]  # use first granule (most recently updated)
     elif (len(bounded_results) == 0):  # granule does not intersect our ROI
         return None
     else:
@@ -71,7 +70,7 @@ def _coverage_check(ds, **kwargs):
     """
     Performs metadata check using pyCMR to decide which path the DAG should
     take. If the metadata shows the granule is in our ROI then the download
-    url is written to a metadata ini file and the processing branch is followed,
+    url is written to a metadata file and the processing branch is followed,
     else the skip branch is followed.
 
     Parameters
@@ -112,7 +111,9 @@ def _coverage_check(ds, **kwargs):
         cfg.read(cfg_path)  # returns empty config if no file
         if 'myd01' not in cfg.sections():  # + section if not exists
             cfg['myd01'] = {}
-        cfg['myd01']['upstream_download_link'] = str(granule_result.getDownloadUrl())
+        cfg['myd01']['upstream_download_link'] = str(
+            granule_result.getDownloadUrl()
+        )
         with open(cfg_path, 'w') as meta_file:
             cfg.write(meta_file)
 

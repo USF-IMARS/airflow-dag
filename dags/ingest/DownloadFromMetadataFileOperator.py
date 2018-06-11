@@ -5,6 +5,7 @@ Reads the download url from a metadata .ini file created previously
 
 from airflow.operators.bash_operator import BashOperator
 
+
 class DownloadFromMetadataFileOperator(BashOperator):
     def __init__(
         self,
@@ -27,7 +28,10 @@ class DownloadFromMetadataFileOperator(BashOperator):
             bash_command="""
                 METADATA_FILE="""+metadata_file_filepath+""" &&
                 OUT_PATH="""+downloaded_filepath+""" &&
-                FILE_URL=$(grep "^upstream_download_link" $METADATA_FILE | cut -d'=' -f2-) &&
+                FILE_URL=$(\
+                    grep "^upstream_download_link" $METADATA_FILE | \
+                    cut -d'=' -f2-\
+                ) &&
                 curl """+auth_string+""" -f $FILE_URL -o $OUT_PATH &&
                 [[ -s $OUT_PATH ]]
             """,

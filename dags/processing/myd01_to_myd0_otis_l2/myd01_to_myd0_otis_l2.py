@@ -2,9 +2,7 @@
 manually triggered dag that runs processing for one modis pass
 """
 # std libs
-from datetime import datetime, timedelta
-import subprocess
-import configparser
+from datetime import datetime
 import os
 
 # deps
@@ -24,9 +22,9 @@ DEF_ARGS.update({
     'start_date': datetime.utcnow(),
 })
 
-SCHEDULE_INTERVAL=None
-AREA_SHORT_NAME="gom"
-PARFILE=os.path.join(
+SCHEDULE_INTERVAL = None
+AREA_SHORT_NAME = "gom"
+PARFILE = os.path.join(
     os.path.dirname(os.path.realpath(__file__)),  # imars_dags/dags/gom/
     "moda_l2gen.par"
 )
@@ -34,7 +32,7 @@ PARFILE=os.path.join(
 #     for more info see:
 #     https://oceancolor.gsfc.nasa.gov/forum/oceancolor/topic_show.pl?pid=37506
 # TODO: (I think) this can be removed now that all nodes are v7.5+
-XCALFILE="$OCVARROOT/modisa/xcal/OPER/xcal_modisa_axc_oc_v1.12d"
+XCALFILE = "$OCVARROOT/modisa/xcal/OPER/xcal_modisa_axc_oc_v1.12d"
 
 this_dag = DAG(
     dag_id="proc_myd01_to_myd0_otis_l2_"+AREA_SHORT_NAME,
@@ -68,7 +66,8 @@ with this_dag as dag:
     )
     # =========================================================================
 
-    # TODO: insert day/night check branch operator here? else ocssw will run on night granules too
+    # TODO: insert day/night check branch operator here?
+    #       else ocssw will run on night granules too
 
     # =========================================================================
     # === modis l1a + geo -> l1b
@@ -84,7 +83,8 @@ with this_dag as dag:
     make_l1b = BashOperator(
         task_id='make_l1b',
         bash_command="""
-            export OCSSWROOT=/opt/ocssw && source /opt/ocssw/OCSSW_bash.env && \n\
+            export OCSSWROOT=/opt/ocssw && \n\
+            source /opt/ocssw/OCSSW_bash.env && \n\
             OKM_PATH="""+OKMFILE+""" && \n\
             HKM_PATH="""+HKMFILE+""" && \n\
             QKM_PATH="""+QKMFILE+""" && \n\
@@ -111,7 +111,8 @@ with this_dag as dag:
     l2gen = BashOperator(
         task_id="l2gen",
         bash_command="""
-            export OCSSWROOT=/opt/ocssw && source /opt/ocssw/OCSSW_bash.env && \n\
+            export OCSSWROOT=/opt/ocssw && \n\
+            source /opt/ocssw/OCSSW_bash.env && \n\
             $OCSSWROOT/bin/l2gen \\\n\
                 ifile="""+OKMFILE+""" \\\n\
                 ofile="""+L2FILE+""" \\\n\
@@ -131,12 +132,16 @@ with this_dag as dag:
         this_dag,
         to_load=[
             {
-                "filepath":L2FILE,  # required!
-                "verbose":3,
-                "product_id":35,
+                "filepath": L2FILE,  # required!
+                "verbose": 3,
+                "product_id": 35,
                 # "time":"2016-02-12T16:25:18",
                 # "datetime": datetime(2016,2,12,16,25,18),
-                "json":'{"status_id":3,"area_id":1,"area_short_name":"' + AREA_SHORT_NAME +'"}'
+                "json": '{'
+                    '"status_id":3,'  # noqa E131
+                    '"area_id":1,'
+                    '"area_short_name":"' + AREA_SHORT_NAME + '"'
+                '}'
             }
         ],
         upstream_operators=[l2gen]
@@ -156,7 +161,7 @@ with this_dag as dag:
     make_l1b >> l2gen
     l1a_2_geo >> l2gen
     # `l2gen >> load_l2_list` done by `upstream_operators=[l2gen]`
-    # `load_l2_list >> cleanup_task` done by `upstream_operators=[load_l2_list]`
+    # `load_l2_list >> cleanup_task` via `upstream_operators=[load_l2_list]`
     # =========================================================================
 
 # # TODO: these too...

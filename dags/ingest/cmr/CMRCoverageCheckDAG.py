@@ -2,11 +2,7 @@
 Checks the coverage of each granule using NASA's CMR
 (Common Metadata Repository).
 """
-# std libs
-from datetime import datetime, timedelta
-
 # this package
-from imars_dags.util.globals import DEFAULT_ARGS
 from imars_dags.util.get_dag_id import get_dag_id
 from imars_dags.settings import secrets  # NOTE: this file not in public repo!
 from imars_dags.util.etl_tools.tmp_file import tmp_filepath
@@ -18,9 +14,6 @@ from imars_dags.dags.ingest.DownloadFromMetadataFileOperator \
     import DownloadFromMetadataFileOperator
 
 
-schedule_interval = timedelta(minutes=5)
-
-
 class CMRCoverageCheckDAG(CoverageCheckDAG):
     def __init__(
         self,
@@ -28,7 +21,6 @@ class CMRCoverageCheckDAG(CoverageCheckDAG):
         product_id, product_short_name,
         cmr_search_kwargs,
         granule_len,
-        check_delay,
         **kwargs
     ):
         """
@@ -43,23 +35,13 @@ class CMRCoverageCheckDAG(CoverageCheckDAG):
                 search_kwargs dict to pass to pyCMR.
                 Example:
                     {'short_name': 'MYD01'}
-            check_delay : datetime.timedelta
-                amount of time to wait before checking
         """
-        default_args = DEFAULT_ARGS.copy()
-        delay_ago = datetime.utcnow()-check_delay
-        default_args.update({  # round to
-            'start_date': delay_ago.replace(minute=0, second=0, microsecond=0),
-        })
-
         super(CMRCoverageCheckDAG, self).__init__(
-            check_delay,
             dag_id=get_dag_id(
                 __file__,
                 region=region_short_name,
                 dag_name="{}_cmr_coverage_check".format(product_short_name)
             ),
-            default_args=default_args,
             schedule_interval=granule_len,
             catchup=True,
             max_active_runs=1,
@@ -82,7 +64,6 @@ class CMRCoverageCheckDAG(CoverageCheckDAG):
             password=secrets.ESDIS_PASS,
             task_id=ROI_COVERED_BRANCH_ID
         )
-
         add_load_cleanup_trigger(
             self,
             DOWNLOADED_FILEPATH,

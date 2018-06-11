@@ -4,7 +4,6 @@
 from setuptools import setup
 import io
 
-import imars_dags
 
 def read(*filenames, **kwargs):
     encoding = kwargs.get('encoding', 'utf-8')
@@ -15,10 +14,11 @@ def read(*filenames, **kwargs):
             buf.append(f.read())
     return sep.join(buf)
 
-long_description = read('README.md') #, 'CHANGES.txt')
+long_description = read('README.md')  # , 'CHANGES.txt')
 
-setup(name='imars_dags',
-    version=imars_dags.__version__,
+setup(
+    name='imars_dags',
+    version='0.0.0',
     description='USF IMaRS Airflow DAGs',
     long_description=long_description,
     author='Tylar Murray',
@@ -27,10 +27,10 @@ setup(name='imars_dags',
 
     tests_require=['nose'],
     install_requires=[
-        'git+https://git}@github.com/7yl4r/pycmr.git/@prod'
+        # 'git+https://git}@github.com/7yl4r/pycmr.git/@prod'
         # TODO: add imars-etl here?
     ],
-    #cmdclass={'test': PyTest},
+    # cmdclass={'test': PyTest},
 
     packages=['imars_dags']
 )

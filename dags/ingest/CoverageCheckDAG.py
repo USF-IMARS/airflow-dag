@@ -58,6 +58,7 @@ class WaitForDataPublishSensor(TimeDeltaSensor):
     the metadata being available in the CMR. Usually something like 2-48 hours.
     =============================================================================
     """
+    DEFAULT_TASK_ID = 'wait_for_data_delay'
 
     def __init__(
         self,
@@ -65,7 +66,7 @@ class WaitForDataPublishSensor(TimeDeltaSensor):
         priority_weight=SLEEP_ARGS['priority_weight'],
         retries=SLEEP_ARGS['retries'],
         retry_delay=SLEEP_ARGS['retries'],
-        task_id='wait_for_data_delay',
+        task_id=DEFAULT_TASK_ID,
         **kwargs
     ):
         super(WaitForDataPublishSensor, self).__init__(
@@ -82,6 +83,9 @@ def add_load_cleanup_trigger(
     region,
     product_id,
     area_id,
+    download_granule,
+    wait_for_data_delay,
+    coverage_check,
     ingest_callback_dag_id=None
 ):
     """
@@ -108,9 +112,6 @@ def add_load_cleanup_trigger(
             3. trigger FileTriggerDAG immediately upon ingest
     """
     with dag as dag:
-        download_granule = dag.get_task("download_granule")
-        wait_for_data_delay = dag.get_task("wait_for_data_delay")
-        coverage_check = dag.get_task("coverage_check")
         # ======================================================================
         to_load = [
             {

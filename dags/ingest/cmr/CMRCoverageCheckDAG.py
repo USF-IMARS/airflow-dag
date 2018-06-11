@@ -7,8 +7,7 @@ from imars_dags.util.get_dag_id import get_dag_id
 from imars_dags.settings import secrets  # NOTE: this file not in public repo!
 from imars_dags.util.etl_tools.tmp_file import tmp_filepath
 from imars_dags.dags.ingest.CoverageCheckDAG \
-    import CoverageCheckDAG, add_load_cleanup_trigger, ROI_COVERED_BRANCH_ID, \
-    WaitForDataPublishSensor
+    import CoverageCheckDAG, add_load_cleanup_trigger, ROI_COVERED_BRANCH_ID
 from imars_dags.dags.ingest.cmr.CMRCoverageBranchOperator \
     import CMRCoverageBranchOperator
 from imars_dags.dags.ingest.DownloadFromMetadataFileOperator \
@@ -72,9 +71,6 @@ class CMRCoverageCheckDAG(CoverageCheckDAG):
             region=region,
             product_id=product_id,
             area_id=region_id,
-            download_granule=download_granule,
-            wait_for_data_delay=self.get_task(
-                WaitForDataPublishSensor.DEFAULT_TASK_ID
-            ),
-            coverage_check=coverage_check
+            download_granule_op=download_granule,
+            coverage_check_op=coverage_check
         )

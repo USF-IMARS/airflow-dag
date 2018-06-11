@@ -1,5 +1,5 @@
 # std libs
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 # deps
 from airflow.operators.dummy_operator import DummyOperator
@@ -7,7 +7,7 @@ from airflow.operators.sensors import TimeDeltaSensor
 from airflow import DAG
 
 # this package
-from imars_dags.util.globals import SLEEP_ARGS, QUEUE
+from imars_dags.util.globals import SLEEP_ARGS, QUEUE, DEFAULT_ARGS
 from imars_dags.util.etl_tools.load import add_load
 from imars_dags.util.etl_tools.cleanup import add_cleanup
 from imars_dags.operators.MMTTriggerDagRunOperator \
@@ -19,12 +19,24 @@ ROI_NOT_COVERED_BRANCH_ID = 'skip_granule'
 
 
 class CoverageCheckDAG(DAG):
+    """
+    Parameters:
+    -----------
+        check_delay : datetime.timedelta
+            amount of time to wait before checking
+    """
     def __init__(
         self,
-        check_delay,
+        check_delay=timedelta(seconds=0),
         **kwargs
     ):
+        default_args = DEFAULT_ARGS.copy()
+        delay_ago = datetime.utcnow()-check_delay
+        default_args.update({  # round to
+            'start_date': delay_ago.replace(minute=0, second=0, microsecond=0),
+        })
         super(CoverageCheckDAG, self).__init__(
+            default_args=default_args,
             **kwargs
         )
         WaitForDataPublishSensor(

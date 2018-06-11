@@ -4,6 +4,10 @@ import os
 from airflow.operators.python_operator import BranchPythonOperator
 from pyCMR.pyCMR import CMR
 
+from imars_dags.dags.ingest.CoverageCheckDAG import \
+    ROI_COVERED_BRANCH_ID, ROI_NOT_COVERED_BRANCH_ID
+
+
 # path to cmr.cfg file for accessing common metadata repository
 CMR_CFG_PATH = os.path.join(
     os.path.dirname(os.path.realpath(__file__)),  # imars_dags/dags/ingest/cmr
@@ -121,8 +125,6 @@ class CMRCoverageBranchOperator(BranchPythonOperator):
     # =========================================================================
     writes download url to ini file at metadata_filepath
     """
-    ROI_COVERED_BRANCH_ID='download_granule'
-    ROI_NOT_COVERED_BRANCH_ID='skip_granule'
     def __init__(
         self,
         cmr_search_kwargs,

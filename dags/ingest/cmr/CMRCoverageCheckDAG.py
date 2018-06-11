@@ -1,7 +1,6 @@
 """
-Airflow processing pipeline definition for MODIS aqua per-pass processing.
-Checks the coverage of each granule and triggers pass-level processing for each
-region.
+Checks the coverage of each granule using NASA's CMR
+(Common Metadata Repository).
 """
 # std libs
 from datetime import datetime, timedelta
@@ -38,6 +37,21 @@ class CMRCoverageCheckDAG(CoverageCheckDAG):
         check_delay,
         **kwargs
     ):
+        """
+        Checks for coverage of given region using CMR iff the region is covered
+        in the granule represented by the {{execution_date}}:
+            1. loads the file using imars-etl
+            2. triggers the given DAG (optional)
+
+        Parameters:
+        -----------
+            cmr_search_kwargs : dict
+                search_kwargs dict to pass to pyCMR.
+                Example:
+                    {'short_name': 'MYD01'}
+            check_delay : datetime.timedelta
+                amount of time to wait before checking
+        """
         default_args = DEFAULT_ARGS.copy()
         delay_ago = datetime.utcnow()-check_delay
         default_args.update({  # round to
@@ -58,119 +72,125 @@ class CMRCoverageCheckDAG(CoverageCheckDAG):
             **kwargs
         )
 
-        self.add_tasks(
+        METADATA_FILE_FILEPATH = tmp_filepath(self.dag_id, "metadata.ini")
+        DOWNLOADED_FILEPATH = tmp_filepath(self.dag_id, "cmr_download")
+        CMRCoverageBranchOperator(
+            dag=self,
+            cmr_search_kwargs=cmr_search_kwargs,
+            roi=region,
+            metadata_filepath=METADATA_FILE_FILEPATH,
+        )
+        DownloadFromMetadataFileOperator(
+            METADATA_FILE_FILEPATH,
+            DOWNLOADED_FILEPATH,
+            dag=self,
+            username=secrets.ESDIS_USER,
+            password=secrets.ESDIS_PASS,
+            task_id=CMRCoverageBranchOperator.ROI_COVERED_BRANCH_ID
+        )
+
+        add_load_cleanup_trigger(
+            self,
+            DOWNLOADED_FILEPATH,
+            METADATA_FILE_FILEPATH,
             region=region,
             product_id=product_id,
             area_id=region_id,
-            cmr_search_kwargs=cmr_search_kwargs,
-            check_delay=check_delay,
         )
 
-    def add_tasks(
-        self, region, product_id, area_id, cmr_search_kwargs, check_delay,
-        ingest_callback_dag_id=None
-    ):
-        """
-        Checks for coverage of given region using CMR iff the region is covered
-        in the granule represented by the {{execution_date}}:
-            1. loads the file using imars-etl
-            2. triggers the given DAG (optional)
 
-        Parameters:
-        ----------
-        dag : airflow.DAG
-            dag to add tasks to
-        region : imars_dags.regions.*
-            region module (TODO: replace this)
-        product_id : int
-            product_id number from imars_product_metadata db
-        area_id : int
-            area_id number from imars_product_metadata db
-        cmr_search_kwargs : dict
-            search_kwargs dict to pass to pyCMR.
-            Example:
-                {'short_name': 'MYD01'}
-        ingest_callback_dag_id : str
-            id of DAG to trigger once ingest is complete.
-            Example usages:
-                1. trigger granuleProcDAG once granule ingested into data lake
-                2. trigger downloadFileDAG once ingested into metadatadb
-                3. trigger FileTriggerDAG immediately upon ingest
-        """
-        with self as dag:
-            METADATA_FILE_FILEPATH = tmp_filepath(dag.dag_id, "metadata.ini")
-            coverage_check = CMRCoverageBranchOperator(
-                    cmr_search_kwargs=cmr_search_kwargs,
-                    roi=region,
-                    metadata_filepath=METADATA_FILE_FILEPATH,
-            )
-            # ======================================================================
-            DOWNLOADED_FILEPATH = tmp_filepath(dag.dag_id, "cmr_download")
-            download_granule = DownloadFromMetadataFileOperator(
-                METADATA_FILE_FILEPATH,
-                DOWNLOADED_FILEPATH,
-                username=secrets.ESDIS_USER,
-                password=secrets.ESDIS_PASS,
-                task_id=CMRCoverageBranchOperator.ROI_COVERED_BRANCH_ID
-            )
-            # ======================================================================
-            to_load = [
-                {
-                    "filepath": DOWNLOADED_FILEPATH,  # required!
-                    "verbose": 3,
-                    "product_id": product_id,
-                    # "time":"2016-02-12T16:25:18",
-                    # "datetime": datetime(2016,2,12,16,25,18),
-                    # NOTE: `is_day_pass` b/c of `day_night_flag` in CMR req.
-                    "json":
-                        '{{'
-                        'status_id":3,' +
-                        '"is_day_pass":1,' +
-                        '"area_id":{},' +
-                        '"area_short_name":"{}"' +
-                        '}}'.format(
-                            area_id,
-                            region.place_name
-                        )
-                }
-            ]
-            load_tasks = add_load(
-                dag,
-                to_load=to_load,
-                upstream_operators=[download_granule]
-            )
-            assert len(load_tasks) == 1  # right?
-            load_downloaded_file = load_tasks[0]  # no point looping
-            # ======================================================================
-            skip_granule = DummyOperator(
-                task_id=CMRCoverageBranchOperator.ROI_NOT_COVERED_BRANCH_ID,
-                trigger_rule='one_success'
-            )
-            # ======================================================================
-            if ingest_callback_dag_id is not None:
-                trigger_callback_dag_id = 'trigger_' + ingest_callback_dag_id
-                trigger_callback_dag = MMTTriggerDagRunOperator(
-                    trigger_dag_id=ingest_callback_dag_id,
-                    python_callable=lambda context, dag_run_obj: dag_run_obj,
-                    execution_date="{{execution_date}}",
-                    task_id=trigger_callback_dag_id,
-                    params={
-                        'roi': region
-                    },
-                    retries=0,
-                    retry_delay=timedelta(hours=3),
-                    queue=QUEUE.PYCMR
-                )
-                load_downloaded_file >> trigger_callback_dag
-            # ======================================================================
-            self.get_task("wait_for_data_delay") >> coverage_check
-            coverage_check >> skip_granule
-            coverage_check >> download_granule
-            # implied by upstream_operators=[download_granule] :
-            # download_granule >> load_downloaded_file
+def add_load_cleanup_trigger(
+    dag, DOWNLOADED_FILEPATH, METADATA_FILE_FILEPATH,
+    region,
+    product_id,
+    area_id,
+    ingest_callback_dag_id=None
+):
+    """
+    adds tasks to:
+        1. load DOWNLOADED_FILEPATH into imars-etl data warehouse
+        2. clean up tmp files left behind
+        3. (optional) trigger a "callback" DAG
 
-            add_cleanup(
-                self,
-                to_cleanup=[DOWNLOADED_FILEPATH, METADATA_FILE_FILEPATH],
-                upstream_operators=[download_granule, coverage_check]
+    Parameters:
+    ----------
+    dag : airflow.DAG
+        dag to add tasks to
+    region : imars_dags.regions.*
+        region module (TODO: replace this)
+    product_id : int
+        product_id number from imars_product_metadata db
+    area_id : int
+        area_id number from imars_product_metadata db
+    ingest_callback_dag_id : str
+        id of DAG to trigger once ingest is complete.
+        Example usages:
+            1. trigger granuleProcDAG once granule ingested into data lake
+            2. trigger downloadFileDAG once ingested into metadatadb
+            3. trigger FileTriggerDAG immediately upon ingest
+    """
+    with dag as dag:
+        download_granule = dag.get_task("download_granule")
+        wait_for_data_delay = dag.get_task("wait_for_data_delay")
+        coverage_check = dag.get_task("coverage_check")
+        # ======================================================================
+        to_load = [
+            {
+                "filepath": DOWNLOADED_FILEPATH,  # required!
+                "verbose": 3,
+                "product_id": product_id,
+                # "time":"2016-02-12T16:25:18",
+                # "datetime": datetime(2016,2,12,16,25,18),
+                # NOTE: `is_day_pass` b/c of `day_night_flag` in CMR req.
+                "json":
+                    '{{'
+                    'status_id":3,' +
+                    '"is_day_pass":1,' +
+                    '"area_id":{},' +
+                    '"area_short_name":"{}"' +
+                    '}}'.format(
+                        area_id,
+                        region.place_name
+                    )
+            }
+        ]
+        load_tasks = add_load(
+            dag,
+            to_load=to_load,
+            upstream_operators=[download_granule]
+        )
+        assert len(load_tasks) == 1  # right?
+        load_downloaded_file = load_tasks[0]  # no point looping
+        # ======================================================================
+        skip_granule = DummyOperator(
+            task_id=CMRCoverageBranchOperator.ROI_NOT_COVERED_BRANCH_ID,
+            trigger_rule='one_success'
+        )
+        # ======================================================================
+        if ingest_callback_dag_id is not None:
+            trigger_callback_dag_id = 'trigger_' + ingest_callback_dag_id
+            trigger_callback_dag = MMTTriggerDagRunOperator(
+                trigger_dag_id=ingest_callback_dag_id,
+                python_callable=lambda context, dag_run_obj: dag_run_obj,
+                execution_date="{{execution_date}}",
+                task_id=trigger_callback_dag_id,
+                params={
+                    'roi': region
+                },
+                retries=0,
+                retry_delay=timedelta(hours=3),
+                queue=QUEUE.PYCMR
             )
+            load_downloaded_file >> trigger_callback_dag
+        # ======================================================================
+        wait_for_data_delay >> coverage_check
+        coverage_check >> skip_granule
+        coverage_check >> download_granule
+        # implied by upstream_operators=[download_granule] :
+        # download_granule >> load_downloaded_file
+
+        add_cleanup(
+            dag,
+            to_cleanup=[DOWNLOADED_FILEPATH, METADATA_FILE_FILEPATH],
+            upstream_operators=[download_granule, coverage_check]
+        )

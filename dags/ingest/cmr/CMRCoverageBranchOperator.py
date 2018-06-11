@@ -1,9 +1,10 @@
 from datetime import timedelta
 import os
 
-from airflow.operators.python_operator import BranchPythonOperator
 from pyCMR.pyCMR import CMR
 
+from imars_dags.dags.ingest.CoverageBranchOperator \
+    import CoverageBranchOperator
 from imars_dags.dags.ingest.CoverageCheckDAG import \
     ROI_COVERED_BRANCH_ID, ROI_NOT_COVERED_BRANCH_ID
 
@@ -118,7 +119,7 @@ def _coverage_check(ds, **kwargs):
         return kwargs['success_branch_id']  # download granule
 
 
-class CMRCoverageBranchOperator(BranchPythonOperator):
+class CMRCoverageBranchOperator(CoverageBranchOperator):
     """
     # =========================================================================
     # === Checks if this granule covers our RoI using metadata.
@@ -132,12 +133,7 @@ class CMRCoverageBranchOperator(BranchPythonOperator):
         metadata_filepath,
         task_id='coverage_check',
         python_callable=_coverage_check,
-        provide_context=True,
-        retries=0,
-        retry_delay=timedelta(minutes=1),
         op_kwargs={},
-        success_branch_id=ROI_COVERED_BRANCH_ID,
-        fail_branch_id=ROI_NOT_COVERED_BRANCH_ID,
         **kwargs
     ):
         """
@@ -150,25 +146,12 @@ class CMRCoverageBranchOperator(BranchPythonOperator):
         op_kwargs['cmr_search_kwargs'] = op_kwargs.get(
             'cmr_search_kwargs', cmr_search_kwargs
         )
-        op_kwargs['metadata_filepath'] = op_kwargs.get(
-            'metadata_filepath', metadata_filepath
-        )
-        op_kwargs['roi'] = op_kwargs.get(
-            'roi', roi
-        )
-        op_kwargs['fail_branch_id'] = op_kwargs.get(
-            'fail_branch_id',fail_branch_id
-        )
-        op_kwargs['success_branch_id'] = op_kwargs.get(
-            'success_branch_id', success_branch_id
-        )
 
         super(CMRCoverageBranchOperator, self).__init__(
-            task_id=task_id,
+            metadata_filepath=metadata_filepath,
             python_callable=python_callable,
-            provide_context=provide_context,
-            retries=retries,
-            retry_delay=retry_delay,
+            roi=roi,
+            task_id=task_id,
             op_kwargs=op_kwargs,
             **kwargs
         )

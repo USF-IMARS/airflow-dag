@@ -32,6 +32,11 @@ DEF_ARGS.update({
 
 SCHEDULE_INTERVAL = None
 AREA_SHORT_NAME = "na"
+JSON = ('{' +
+    '"status_id":3,' +  # noqa E128
+    '"area_id":5,' +
+    '"area_short_name":"'+AREA_SHORT_NAME+'"' +
+'}')
 
 this_dag = DAG(
     dag_id="proc_wv2_classification_"+AREA_SHORT_NAME,
@@ -165,7 +170,7 @@ to_load = [
             tmp_format_str(),
             Rrs_output.split('/')[-1]
         ),
-        "json":'{"status_id":3,"area_id":5}'
+        "json": JSON
     }
 ]
 
@@ -183,7 +188,7 @@ elif DT in [1, 2]:
                 tmp_format_str(),
                 rrs_output.split('/')[-1]
             ),
-            "json":'{"status_id":3,"area_id":5}'
+            "json": JSON
         }, {
             "filepath": bth_output,
             "verbose": 3,
@@ -192,7 +197,7 @@ elif DT in [1, 2]:
                 tmp_format_str(),
                 bth_output.split('/')[-1]
             ),
-            "json":'{"status_id":3,"area_id":5}'
+            "json": JSON
         }
     ]
 else:
@@ -206,11 +211,7 @@ if DT == 1:
         "verbose": 3,
         "product_id": 40,
         "load_format": os.join(tmp_format_str(), classf_output.split('/')[-1]),
-        "json": '{' +
-            '"status_id":3,' +  # noqa E131
-            '"area_id":5,' +
-            '"area_short_name":"'+AREA_SHORT_NAME+'"' +
-        '}'
+        "json": JSON
     })
 
 load_tasks = add_load(this_dag, to_load, [wv2_proc_matlab])

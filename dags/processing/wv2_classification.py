@@ -208,7 +208,8 @@ if DT == 1:
         "load_format": os.join(tmp_format_str(), classf_output.split('/')[-1]),
         "json": '{' +
             '"status_id":3,' +  # noqa E131
-            '"area_id":5' +
+            '"area_id":5,' +
+            '"area_short_name":"'+AREA_SHORT_NAME+'"' +
         '}'
     })
 

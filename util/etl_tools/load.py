@@ -52,7 +52,7 @@ def add_load(dag, to_load, upstream_operators=[]):
                 # else don't template the arg
 
             print('loading {}'.format(load_args))
-            imars_etl.load(load_args)
+            imars_etl.load(**load_args)
 
         load_ops = []
         for up_op in upstream_operators:

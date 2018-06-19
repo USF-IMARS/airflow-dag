@@ -47,10 +47,10 @@ def add_extract(dag, sql_selector, output_path, downstream_operators=[], test=Fa
             if kwargs['templates_dict']['test'] == "True":
                 return "/tmp/fake/file.name"
             else:
-                fname = imars_etl.extract({
-                    "sql":sql_selection,
-                    "output_path": output_path
-                })
+                fname = imars_etl.extract(
+                    sql=sql_selection,
+                    output_path=output_path
+                )
                 print(       "extracting product matching SQL:\n\t" + sql_selection)
                 logging.info("extracting product matching SQL:\n\t" + sql_selection)
                 # ti.xcom_push(key='fname', value=fname)

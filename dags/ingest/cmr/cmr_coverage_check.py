@@ -4,8 +4,6 @@ import configparser
 
 from pyCMR.pyCMR import CMR
 
-from imars_dags.operators.CoverageBranchOperator import CoverageBranchOperator
-
 # path to cmr.cfg file for accessing common metadata repository
 CMR_CFG_PATH = os.path.join(
     os.path.dirname(os.path.realpath(__file__)),  # imars_dags/dags/ingest/cmr
@@ -65,8 +63,12 @@ def get_downloadable_granule_in_roi(exec_datetime, roi, cmr_search_kwargs):
         )
 
 
-def _coverage_check(ds, **kwargs):
+def cmr_coverage_check(ds, **kwargs):
     """
+    Checks if this granule covers our RoI using metadata.
+    # =========================================================================
+    writes download url to ini file at metadata_filepath.
+
     Performs metadata check using pyCMR to decide which path the DAG should
     take. If the metadata shows the granule is in our ROI then the download
     url is written to a metadata file and the processing branch is followed,
@@ -78,7 +80,10 @@ def _coverage_check(ds, **kwargs):
         *I think* this is the execution_date for the operator instance
     kwargs['execution_date'] : datetime.datetime
         the execution_date for the operator instance (same as `ds`?)
-
+    kwargs['cmr_search_kwargs'] : dict
+        search_kwargs dict to pass to pyCMR.
+        Example:
+            {'short_name': 'MYD01'}
     Returns
     -----------
     str
@@ -117,41 +122,3 @@ def _coverage_check(ds, **kwargs):
             cfg.write(meta_file)
 
         return kwargs['success_branch_id']  # download granule
-
-
-class CMRCoverageBranchOperator(CoverageBranchOperator):
-    """
-    # =========================================================================
-    # === Checks if this granule covers our RoI using metadata.
-    # =========================================================================
-    writes download url to ini file at metadata_filepath
-    """
-    def __init__(
-        self,
-        cmr_search_kwargs,
-        roi,
-        metadata_filepath,
-        task_id='coverage_check',
-        python_callable=_coverage_check,
-        op_kwargs={},
-        **kwargs
-    ):
-        """
-        cmr_search_kwargs : dict
-            search_kwargs dict to pass to pyCMR.
-            Example:
-                {'short_name': 'MYD01'}
-        """
-        # === set cmr_search_kwargs within op_kwargs
-        op_kwargs['cmr_search_kwargs'] = op_kwargs.get(
-            'cmr_search_kwargs', cmr_search_kwargs
-        )
-
-        super(CMRCoverageBranchOperator, self).__init__(
-            metadata_filepath=metadata_filepath,
-            python_callable=python_callable,
-            roi=roi,
-            task_id=task_id,
-            op_kwargs=op_kwargs,
-            **kwargs
-        )

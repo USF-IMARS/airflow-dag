@@ -2,7 +2,8 @@ from datetime import timedelta
 
 # unused DAG import is required for airflow to find the dag
 from airflow import DAG  # noqa:F401
-from imars_dags.dag_classes.ingest.cmr.CMRCoverageCheckDAG import CMRCoverageCheckDAG
+from imars_dags.dag_classes.ingest.cmr.CMRCoverageCheckDAG \
+    import CMRCoverageCheckDAG
 from imars_dags.regions import gom
 
 this_dag = CMRCoverageCheckDAG(

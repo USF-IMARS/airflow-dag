@@ -108,7 +108,7 @@ def add_load_cleanup_trigger(
                 # "datetime": datetime(2016,2,12,16,25,18),
                 # NOTE: `is_day_pass` b/c of `day_night_flag` in CMR req.
                 "json":
-                    '{{'
+                    '{{' +
                     'status_id":3,' +
                     '"is_day_pass":1,' +
                     '"area_id":{},' +

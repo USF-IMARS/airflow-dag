@@ -7,7 +7,6 @@ aka copernicus open access hub.
 * https://sentineldatahub.github.io/DataHubSystem/
 """
 
-from imars_dags.settings import secrets  # NOTE: this file not in public repo!
 from imars_dags.util.get_dag_id import get_dag_id
 from imars_dags.util.etl_tools.tmp_file import tmp_filepath
 from imars_dags.operators.CoverageBranchOperator \
@@ -60,8 +59,8 @@ class DHUSCoverageCheckDAG(CoverageCheckDAG):
             METADATA_FILE_FILEPATH,
             DOWNLOADED_FILEPATH,
             dag=self,
-            username=secrets.ESDIS_USER,
-            password=secrets.ESDIS_PASS,
+            username='s3guest',
+            password='s3guest',
             task_id=ROI_COVERED_BRANCH_ID
         )
 

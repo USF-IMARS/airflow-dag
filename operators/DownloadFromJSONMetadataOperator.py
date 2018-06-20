@@ -23,10 +23,9 @@ class DownloadFromJSONMetadataOperator(BashOperator):
             bash_command="""
                 METADATA_FILE="""+metadata_file_filepath+""" &&
                 OUT_PATH="""+downloaded_filepath+""" &&
-                FILE_URL=$(\
-                    grep "^upstream_download_link" $METADATA_FILE | \
-                    cut -d'=' -f2-\
-                ) &&
+                UUID=`python3 -c "import json; f=open('$METADATA_FILE'); """
+            """print(json.load(f)[0]['uuid']); f.close()"` &&
+                FILE_URL='https://scihub.copernicus.eu/s3/odata/v1/Products('\\'"$UUID"\\'')/$value'
                 curl """+auth_string+""" -f $FILE_URL -o $OUT_PATH &&
                 [[ -s $OUT_PATH ]]
             """,

@@ -8,7 +8,7 @@ from imars_dags.settings import secrets  # NOTE: this file not in public repo!
 from imars_dags.util.etl_tools.tmp_file import tmp_filepath
 from imars_dags.dag_classes.ingest.CoverageCheckDAG \
     import CoverageCheckDAG, add_load_cleanup_trigger, ROI_COVERED_BRANCH_ID
-from imars_dags.dags.ingest.cmr.cmr_coverage_check \
+from imars_dags.dag_classes.ingest.cmr.cmr_coverage_check \
     import cmr_coverage_check
 from imars_dags.operators.DownloadFromMetadataFileOperator \
     import DownloadFromMetadataFileOperator

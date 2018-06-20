@@ -10,7 +10,7 @@ from imars_dags.util.get_dag_id import get_dag_id
 from imars_dags.util.etl_tools.tmp_file import tmp_filepath
 from imars_dags.dags.ingest.dhus.DHUSCoverageBranchOperator \
     import DHUSCoverageBranchOperator
-from imars_dags.dags.ingest.DownloadFromJSONMetadataOperator \
+from imars_dags.operators.DownloadFromJSONMetadataOperator \
     import DownloadFromJSONMetadataOperator
 from imars_dags.dags.ingest.CoverageCheckDAG \
     import CoverageCheckDAG, add_load_cleanup_trigger, ROI_COVERED_BRANCH_ID

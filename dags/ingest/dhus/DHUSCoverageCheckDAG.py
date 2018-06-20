@@ -8,12 +8,14 @@ aka copernicus open access hub.
 from imars_dags.settings import secrets  # NOTE: this file not in public repo!
 from imars_dags.util.get_dag_id import get_dag_id
 from imars_dags.util.etl_tools.tmp_file import tmp_filepath
-from imars_dags.dags.ingest.dhus.DHUSCoverageBranchOperator \
-    import DHUSCoverageBranchOperator
+from imars_dags.operators.CoverageBranchOperator \
+    import CoverageBranchOperator
 from imars_dags.operators.DownloadFromJSONMetadataOperator \
     import DownloadFromJSONMetadataOperator
-from imars_dags.dags.ingest.CoverageCheckDAG \
-    import CoverageCheckDAG, add_load_cleanup_trigger, ROI_COVERED_BRANCH_ID
+from imars_dags.dags.ingest.CoverageCheckDAG import CoverageCheckDAG
+from imars_dags.dags.ingest.CoverageCheckDAG import add_load_cleanup_trigger
+from imars_dags.dags.ingest.CoverageCheckDAG import ROI_COVERED_BRANCH_ID
+from imars_dags.dags.ingest.dhus.dhus_coverage_check import dhus_coverage_check
 
 
 class DHUSCoverageCheckDAG(CoverageCheckDAG):
@@ -39,11 +41,15 @@ class DHUSCoverageCheckDAG(CoverageCheckDAG):
         METADATA_FILE_FILEPATH = tmp_filepath(self.dag_id, "searchresult.json")
         DOWNLOADED_FILEPATH = tmp_filepath(self.dag_id, "dhus_download")
 
-        coverage_check = DHUSCoverageBranchOperator(
+        coverage_check = CoverageBranchOperator(
             dag=self,
-            dhus_search_kwargs=dhus_search_kwargs,
+            op_kwargs={
+                'dhus_search_kwargs': dhus_search_kwargs,
+            },
             roi=region,
             metadata_filepath=METADATA_FILE_FILEPATH,
+            python_callable=dhus_coverage_check,
+            task_id='coverage_check',
         )
         download_granule = DownloadFromJSONMetadataOperator(
             METADATA_FILE_FILEPATH,

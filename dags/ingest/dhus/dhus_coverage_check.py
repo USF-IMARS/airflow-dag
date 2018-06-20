@@ -8,12 +8,20 @@ recent granule(s).
 """
 import requests
 
-from imars_dags.operators.CoverageBranchOperator import CoverageBranchOperator
-
 
 def dhus_coverage_check(ds, **kwargs):
     """
-    === examples:
+    Parameters:
+    -----------
+    kwargs['dhus_search_kwargs'] : dict
+        params dict to pass through to dhus request
+        Example:
+            {
+                'echo_collection_id': 'C1370679936-OB_DAAC',
+                'productType': 'OL_1_EFR___',
+            },
+
+    === example built queries:
     https://scihub.copernicus.eu/dhus/search?q=
       polarisationmode:VV%20AND%20
       footprint:%22Intersects(POLYGON((-4.53%2029.85,%2026.75%2029.85
@@ -92,39 +100,3 @@ def dhus_coverage_check(ds, **kwargs):
             meta_file.write(result.text)
 
         return kwargs['success_branch_id']  # download granule
-
-
-class DHUSCoverageBranchOperator(CoverageBranchOperator):
-    def __init__(
-        self,
-        roi=None,
-        metadata_filepath=None,
-        dhus_search_kwargs={},
-        task_id='coverage_check',
-        python_callable=dhus_coverage_check,
-        op_kwargs={},
-        **kwargs
-    ):
-        """
-        dhus_search_kwargs : dict
-            params dict to pass through to dhus request
-            Example:
-                {
-                    'echo_collection_id': 'C1370679936-OB_DAAC',
-                    'productType': 'OL_1_EFR___',
-                },
-
-        """
-        # === set dhus_search_kwargs within op_kwargs
-        op_kwargs['dhus_search_kwargs'] = op_kwargs.get(
-            'dhus_search_kwargs', dhus_search_kwargs
-        )
-
-        super(DHUSCoverageBranchOperator, self).__init__(
-            metadata_filepath=metadata_filepath,
-            python_callable=python_callable,
-            roi=roi,
-            task_id=task_id,
-            op_kwargs=op_kwargs,
-            **kwargs
-        )

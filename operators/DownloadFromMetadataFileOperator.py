@@ -1,6 +1,6 @@
 """
 Reads the download url from a metadata .ini file created previously
-(by CMRCoverageBranchOperator) and downloads the file.
+(by cmr_coverage_check) and downloads the file.
 """
 
 from airflow.operators.bash_operator import BashOperator

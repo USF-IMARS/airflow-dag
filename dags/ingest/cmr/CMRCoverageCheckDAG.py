@@ -8,10 +8,11 @@ from imars_dags.settings import secrets  # NOTE: this file not in public repo!
 from imars_dags.util.etl_tools.tmp_file import tmp_filepath
 from imars_dags.dags.ingest.CoverageCheckDAG \
     import CoverageCheckDAG, add_load_cleanup_trigger, ROI_COVERED_BRANCH_ID
-from imars_dags.dags.ingest.cmr.CMRCoverageBranchOperator \
-    import CMRCoverageBranchOperator
+from imars_dags.dags.ingest.cmr.cmr_coverage_check \
+    import cmr_coverage_check
 from imars_dags.operators.DownloadFromMetadataFileOperator \
     import DownloadFromMetadataFileOperator
+from imars_dags.operators.CoverageBranchOperator import CoverageBranchOperator
 
 
 class CMRCoverageCheckDAG(CoverageCheckDAG):
@@ -50,11 +51,15 @@ class CMRCoverageCheckDAG(CoverageCheckDAG):
 
         METADATA_FILE_FILEPATH = tmp_filepath(self.dag_id, "metadata.ini")
         DOWNLOADED_FILEPATH = tmp_filepath(self.dag_id, "cmr_download")
-        coverage_check = CMRCoverageBranchOperator(
+        coverage_check = CoverageBranchOperator(
             dag=self,
-            cmr_search_kwargs=cmr_search_kwargs,
+            op_kwargs={
+                'cmr_search_kwargs': cmr_search_kwargs
+            },
             roi=region,
             metadata_filepath=METADATA_FILE_FILEPATH,
+            python_callable=cmr_coverage_check,
+            task_id='coverage_check',
         )
         download_granule = DownloadFromMetadataFileOperator(
             METADATA_FILE_FILEPATH,

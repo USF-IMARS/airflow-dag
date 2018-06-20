@@ -17,6 +17,7 @@ this_dag = DHUSCoverageCheckDAG(
     dhus_search_kwargs={
         # https://scihub.copernicus.eu/s3/api/stub/products?filter=OLCI%20AND%20(%20footprint:%22Intersects(POLYGON((-68.41794442091795%2018.587370193332475,-65.7408430169118%2018.587370193332475,-65.7408430169118%2021.005279979061285,-68.41794442091795%2021.005279979061285,-68.41794442091795%2018.587370193332475)))%22%20)&offset=0&limit=25&sortedby=ingestiondate&order=desc
         'echo_collection_id': 'C1370679936-OB_DAAC',
+        'productType': 'OL_1_EFR___',
     },
     granule_len=timedelta(minutes=3),
     check_delay=timedelta(hours=3)

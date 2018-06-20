@@ -49,10 +49,6 @@ def dhus_coverage_check(ds, **kwargs):
 
     if dhus_search_kwargs.get('filter') is None:
         check_region = kwargs['roi']
-        west = check_region.lonmin,  # low l long
-        south = check_region.latmin,  # low l lat
-        east = check_region.lonmax,  # up r long
-        north = check_region.latmax   # up r lat
         # raw:
         # 'filter': 'OLCI%20AND%20(%20footprint:%22Intersects(POLYGON((
         #   -20.48240612499999%2046.1852044749771,
@@ -63,13 +59,19 @@ def dhus_coverage_check(ds, **kwargs):
         # decoded:
         dhus_search_kwargs['filter'] = (
             'OLCI AND ( footprint:"Intersects(POLYGON(('
-            '{} {},'.format(west, south) +  # w s | b l
-            '{} {},'.format(east, south) +  # e s | b r
-            '{} {},'.format(east, north) +  # e n | t r
-            '{} {},'.format(west, north) +  # w n | t l
-            '{} {}'.format(west, south) +  # w s | b l
-            ')))" )'
+            '{west} {south},'  # w s | b l
+            '{east} {south},'  # e s | b r
+            '{east} {north},'  # e n | t r
+            '{west} {north},'  # w n | t l
+            '{west} {south}'  # w s | b l
+            ')))" )'.format(
+                west=check_region.lonmin,  # low l long
+                south=check_region.latmin,  # low l lat
+                east=check_region.lonmax,  # up r long
+                north=check_region.latmax   # up r lat
+            )
         )
+        print("filter:\n\t" + dhus_search_kwargs['filter'])
 
     else:  # dhus_search_kwargs['filter'] was set manually
         print(
@@ -77,13 +79,31 @@ def dhus_coverage_check(ds, **kwargs):
             "ROI will not be automatically included"
         )
 
+    BASE_URL = 'https://scihub.copernicus.eu/s3/api/stub/products'
     result = requests.get(
-        'https://scihub.copernicus.eu/s3/api/stub/products',
+        BASE_URL,
         params=dhus_search_kwargs,
         auth=('s3guest', 's3guest')
     )
 
-    if len(result) < 1:
+    print('request sent to {}:\n\t{}'.format(
+        BASE_URL,
+        result.url
+    ))
+
+    print(result.status_code)
+    if (result.status_code != 200):
+        raise ValueError(
+            "ERR: non-success response from server: {}".format(
+                result.status_code
+            )
+        )
+
+    print("response:\n\n--------------------\n{}\n--------------------".format(
+        result.text
+    ))
+
+    if len(result.json()) < 1:
         return kwargs['fail_branch_id']  # skip granule
     else:
         # TODO: this should write to imars_product_metadata instead?!?

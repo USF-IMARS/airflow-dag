@@ -6,10 +6,11 @@ roi.
 This coverage check should always succeed, because it just returns the most
 recent granule(s).
 """
+from datetime import timedelta
 import requests
 
 
-def dhus_coverage_check(ds, **kwargs):
+def dhus_coverage_check(ds, granule_len=timedelta(minutes=3), **kwargs):
     """
     Parameters:
     -----------
@@ -41,6 +42,7 @@ def dhus_coverage_check(ds, **kwargs):
     """
     check_region = kwargs['roi']
     dhus_search_kwargs = kwargs['dhus_search_kwargs']
+    execution_date = kwargs['execution_date']
 
     dhus_search_kwargs.setdefault('offset', 0)
     dhus_search_kwargs.setdefault('limit', 1)
@@ -57,6 +59,7 @@ def dhus_coverage_check(ds, **kwargs):
         #   -20.48240612499999%2049.88547903687541,
         #   -20.48240612499999%2046.1852044749771)))%22%20)',
         # decoded:
+        TIME_FMT = "%Y-%m-%dT%H:%M:%S.%f"  # iso 8601
         dhus_search_kwargs['filter'] = (
             'OLCI AND ( footprint:"Intersects(POLYGON(('
             '{west} {south},'  # w s | b l
@@ -64,11 +67,14 @@ def dhus_coverage_check(ds, **kwargs):
             '{east} {north},'  # e n | t r
             '{west} {north},'  # w n | t l
             '{west} {south}'  # w s | b l
-            ')))" )'.format(
+            ')))" ) AND IngestionDate gt datetime"{earliest}"'
+            ' AND IngestionDate lt datetime"{latest}"'.format(
                 west=check_region.lonmin,  # low l long
                 south=check_region.latmin,  # low l lat
                 east=check_region.lonmax,  # up r long
-                north=check_region.latmax   # up r lat
+                north=check_region.latmax,   # up r lat
+                earliest=execution_date.strftime(TIME_FMT),
+                latest=(execution_date + granule_len).strftime(TIME_FMT),
             )
         )
         print("filter:\n\t" + dhus_search_kwargs['filter'])

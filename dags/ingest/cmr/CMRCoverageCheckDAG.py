@@ -10,7 +10,7 @@ from imars_dags.dags.ingest.CoverageCheckDAG \
     import CoverageCheckDAG, add_load_cleanup_trigger, ROI_COVERED_BRANCH_ID
 from imars_dags.dags.ingest.cmr.CMRCoverageBranchOperator \
     import CMRCoverageBranchOperator
-from imars_dags.dags.ingest.DownloadFromMetadataFileOperator \
+from imars_dags.operators.DownloadFromMetadataFileOperator \
     import DownloadFromMetadataFileOperator
 
 

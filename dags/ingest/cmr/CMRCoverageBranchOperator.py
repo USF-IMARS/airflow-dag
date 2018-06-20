@@ -4,8 +4,7 @@ import configparser
 
 from pyCMR.pyCMR import CMR
 
-from imars_dags.dags.ingest.CoverageBranchOperator \
-    import CoverageBranchOperator
+from imars_dags.operators.CoverageBranchOperator import CoverageBranchOperator
 
 # path to cmr.cfg file for accessing common metadata repository
 CMR_CFG_PATH = os.path.join(

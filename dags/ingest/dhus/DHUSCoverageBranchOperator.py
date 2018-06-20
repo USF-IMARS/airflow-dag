@@ -8,8 +8,7 @@ recent granule(s).
 """
 import requests
 
-from imars_dags.dags.ingest.CoverageBranchOperator \
-    import CoverageBranchOperator
+from imars_dags.operators.CoverageBranchOperator import CoverageBranchOperator
 
 
 def dhus_coverage_check(ds, **kwargs):

@@ -1,6 +1,10 @@
 """
-checks for product which matches dhus_search_kwargs and is in the requested
+A "latest-only" coverage check using ESA DHUS.
+
+Checks for product which matches dhus_search_kwargs and is in the requested
 roi.
+This coverage check should always succeed, because it just returns the most
+recent granule(s).
 """
 import requests
 
@@ -30,13 +34,6 @@ def dhus_coverage_check(ds, **kwargs):
     """
     check_region = kwargs['roi']
     dhus_search_kwargs = kwargs['dhus_search_kwargs']
-
-
-
-    exec_date = kwargs['execution_date']
-    # TODO: filter with execution date?!?
-
-
 
     dhus_search_kwargs.setdefault('offset', 0)
     dhus_search_kwargs.setdefault('limit', 1)

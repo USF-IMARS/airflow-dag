@@ -1,4 +1,6 @@
 """
+A "latest-only" coverage check using ESA DHUS.
+
 Checks the coverage of each granule using ESA's DHUS (Data HUb Software)
 aka copernicus open access hub.
 * https://scihub.copernicus.eu/dhus/#/home
@@ -17,7 +19,8 @@ from imars_dags.dag_classes.ingest.CoverageCheckDAG \
     import add_load_cleanup_trigger
 from imars_dags.dag_classes.ingest.CoverageCheckDAG \
     import ROI_COVERED_BRANCH_ID
-from imars_dags.dag_classes.ingest.dhus.dhus_coverage_check import dhus_coverage_check
+from imars_dags.dag_classes.ingest.dhus.dhus_coverage_check \
+    import dhus_coverage_check
 
 
 class DHUSCoverageCheckDAG(CoverageCheckDAG):

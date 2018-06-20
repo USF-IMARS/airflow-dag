@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from airflow.operators.python_operator import BranchPythonOperator
 
-from imars_dags.dags.ingest.CoverageCheckDAG import \
+from imars_dags.dag_classes.ingest.CoverageCheckDAG import \
     ROI_COVERED_BRANCH_ID, ROI_NOT_COVERED_BRANCH_ID
 
 

@@ -1,6 +1,6 @@
 import airflow  # you need this here or else airflow will not find your dag
 
-from imars_dags.dags.file_triggers.FileTriggerDAG import FileTriggerDAG
+from imars_dags.dag_classes.file_triggers.FileTriggerDAG import FileTriggerDAG
 from imars_dags.dags.processing import wv2_classification
 
 # NOTE: proc_wv2_classification also requires the following product:

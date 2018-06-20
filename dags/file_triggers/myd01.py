@@ -1,6 +1,6 @@
 import airflow  # you need this here or else airflow will not find your dag
 
-from imars_dags.dags.file_triggers.FileTriggerDAG import FileTriggerDAG
+from imars_dags.dag_classes.file_triggers.FileTriggerDAG import FileTriggerDAG
 
 this_dag = FileTriggerDAG(
     product_ids=[5],

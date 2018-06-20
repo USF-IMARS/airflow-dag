@@ -12,9 +12,9 @@ from imars_dags.operators.CoverageBranchOperator \
     import CoverageBranchOperator
 from imars_dags.operators.DownloadFromJSONMetadataOperator \
     import DownloadFromJSONMetadataOperator
-from imars_dags.dags.ingest.CoverageCheckDAG import CoverageCheckDAG
-from imars_dags.dags.ingest.CoverageCheckDAG import add_load_cleanup_trigger
-from imars_dags.dags.ingest.CoverageCheckDAG import ROI_COVERED_BRANCH_ID
+from imars_dags.dag_classes.ingest.CoverageCheckDAG import CoverageCheckDAG
+from imars_dags.dag_classes.ingest.CoverageCheckDAG import add_load_cleanup_trigger
+from imars_dags.dag_classes.ingest.CoverageCheckDAG import ROI_COVERED_BRANCH_ID
 from imars_dags.dags.ingest.dhus.dhus_coverage_check import dhus_coverage_check
 
 

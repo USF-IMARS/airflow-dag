@@ -4,7 +4,7 @@
 # =========================================================================
 import airflow  # you need this here or else airflow will not find your dag
 
-from imars_dags.dags.file_triggers.FileTriggerDAG import FileTriggerDAG
+from imars_dags.dag_classes.file_triggers.FileTriggerDAG import FileTriggerDAG
 
 """
 MariaDB [imars_product_metadata]> select id,short_name from product ORDER BY id;

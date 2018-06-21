@@ -11,8 +11,6 @@ from imars_dags.util.get_dag_id import get_dag_id
 from imars_dags.util.etl_tools.tmp_file import tmp_filepath
 from imars_dags.operators.CoverageBranchOperator \
     import CoverageBranchOperator
-from imars_dags.operators.DownloadFromJSONMetadataOperator \
-    import DownloadFromJSONMetadataOperator
 from imars_dags.dag_classes.ingest.CoverageCheckDAG import CoverageCheckDAG
 from imars_dags.dag_classes.ingest.CoverageCheckDAG \
     import add_load_cleanup_trigger
@@ -20,6 +18,9 @@ from imars_dags.dag_classes.ingest.CoverageCheckDAG \
     import ROI_COVERED_BRANCH_ID
 from imars_dags.dag_classes.ingest.dhus.dhus_coverage_check \
     import dhus_coverage_check
+# from imars_dags.operators.DownloadFromJSONMetadataOperator \
+#     import DownloadFromJSONMetadataOperator
+from imars_dags.operators.DownloadFileOperator import DownloadFileOperator
 
 
 class DHUSCoverageCheckDAG(CoverageCheckDAG):
@@ -55,7 +56,7 @@ class DHUSCoverageCheckDAG(CoverageCheckDAG):
             python_callable=dhus_coverage_check,
             task_id='coverage_check',
         )
-        download_granule = DownloadFromJSONMetadataOperator(
+        download_granule = DownloadFileOperator(
             METADATA_FILE_FILEPATH,
             DOWNLOADED_FILEPATH,
             dag=self,

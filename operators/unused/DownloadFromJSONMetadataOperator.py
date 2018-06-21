@@ -1,5 +1,7 @@
 """
 very simple download using curl from a DHUS metadata json response file.
+
+DEPRECATED : usage of this Operator was superceded by DownloadFileOperator
 """
 from airflow.operators.bash_operator import BashOperator
 

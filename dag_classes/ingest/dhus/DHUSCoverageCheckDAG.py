@@ -18,9 +18,8 @@ from imars_dags.dag_classes.ingest.CoverageCheckDAG \
     import ROI_COVERED_BRANCH_ID
 from imars_dags.dag_classes.ingest.dhus.dhus_coverage_check \
     import dhus_coverage_check
-# from imars_dags.operators.DownloadFromJSONMetadataOperator \
-#     import DownloadFromJSONMetadataOperator
-from imars_dags.operators.DownloadFileOperator import DownloadFileOperator
+from imars_dags.operators.DownloadFileOperator.DownloadFileOperator \
+    import DownloadFileOperator
 
 
 class DHUSCoverageCheckDAG(CoverageCheckDAG):

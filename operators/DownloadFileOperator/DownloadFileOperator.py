@@ -16,7 +16,7 @@ def file_not_yet_ingested(uuid):
     # check imars-etl db?
     try:
         result = imars_etl.get_metadata(
-            sql="'uuid'='{}'".format(uuid),
+            sql="uuid='{}'".format(uuid),
             verbose=3,
         )
         assert len(result) > 0
@@ -55,8 +55,8 @@ def download_file(
         with open(downloaded_filepath, "wb") as dl_file:
             dl_file.write(response.content)
     else:
-        # TODO: set task state to skipped or raise error?
-        print("skipping; file uuid already in system")
+        # set task state to skipped instead of raise error (like `soft_fail`)
+        raise RuntimeError("skipping; file uuid already in system")
 
 
 class DownloadFileOperator(PythonOperator):

@@ -20,6 +20,7 @@ this_dag = DHUSCoverageCheckDAG(
         'echo_collection_id': 'C1370679936-OB_DAAC',
         'productType': 'OL_1_EFR___',
     },
-    granule_len=timedelta(minutes=3),
+    granule_len=timedelta(hours=1),  # should be 3m if granule-datematched?
+    # NOTE: check_delay doesn't matter since DHUS is not granule-datematched?
     check_delay=timedelta(hours=3)
 )

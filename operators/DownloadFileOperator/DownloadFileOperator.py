@@ -3,8 +3,6 @@ Generalized download operator based on PythonOperator.
 """
 
 from datetime import timedelta
-import json
-import configparser
 
 import requests
 import imars_etl
@@ -12,36 +10,7 @@ from imars_etl.exceptions.NoMetadataMatchException \
     import NoMetadataMatchException
 from airflow.operators.python_operator import PythonOperator
 
-
-def get_uuid_from_dhus_json_file(json_metadata_filepath):
-    with open(json_metadata_filepath) as m_file:
-        return json.load(m_file)[0]['uuid']
-
-
-def get_url_from_dhus_json_file(
-    json_metadata_filepath,
-    url_base='https://scihub.copernicus.eu/s3/odata/v1/Products'
-):
-    """Returns url read from DHUS json metadata file"""
-    url_fmt_str = url_base + "('{uuid}')/$value"
-
-    return url_fmt_str.format(
-        uuid=get_uuid_from_dhus_json_file(json_metadata_filepath)
-    )
-
-
-def get_url_from_ini_file(ini_filepath):
-    """Returns url read from custom ini file"""
-    cfg = configparser.ConfigParser()
-    cfg.read(ini_filepath)
-    try:
-        return cfg['myd01']['upstream_download_link']
-    except KeyError:
-        raise ValueError(
-            "could not read upstream_download_link from ini file '{}'".format(
-                ini_filepath
-            )
-        )
+from imars_dags.operators.DownloadFileOperator import dhus_json_driver
 
 
 def file_not_yet_ingested(uuid):
@@ -63,7 +32,7 @@ def download_file(
     ds,
     username=None, password=None,
     url_getter=None,
-    uuid_getter=get_uuid_from_dhus_json_file,
+    uuid_getter=dhus_json_driver.get_uuid,
     templates_dict={},
     **kwargs
 ):
@@ -101,7 +70,7 @@ class DownloadFileOperator(PythonOperator):
         metadata_file_filepath, downloaded_filepath,
         # optional args:
         username='s3guest', password='s3guest',
-        url_getter=get_url_from_dhus_json_file,
+        url_getter=dhus_json_driver.get_url,
 
         # default args that passthrough to parent:
         task_id='download_file',

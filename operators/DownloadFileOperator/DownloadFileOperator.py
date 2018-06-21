@@ -10,8 +10,6 @@ from imars_etl.exceptions.NoMetadataMatchException \
     import NoMetadataMatchException
 from airflow.operators.python_operator import PythonOperator
 
-from imars_dags.operators.DownloadFileOperator import dhus_json_driver
-
 
 def file_not_yet_ingested(uuid):
     """returns true if file w/ given uuid is not in our system"""
@@ -32,7 +30,7 @@ def download_file(
     ds,
     username=None, password=None,
     url_getter=None,
-    uuid_getter=dhus_json_driver.get_uuid,
+    uuid_getter=None,
     templates_dict={},
     **kwargs
 ):
@@ -68,9 +66,9 @@ class DownloadFileOperator(PythonOperator):
         self,
         # required args:
         metadata_file_filepath, downloaded_filepath,
+        url_getter, uuid_getter,
         # optional args:
         username='s3guest', password='s3guest',
-        url_getter=dhus_json_driver.get_url,
 
         # default args that passthrough to parent:
         task_id='download_file',
@@ -87,6 +85,7 @@ class DownloadFileOperator(PythonOperator):
                 'username': username,
                 'password': password,
                 'url_getter': url_getter,
+                'uuid_getter': uuid_getter,
             },
             templates_dict={
                 'metadata_file_filepath': metadata_file_filepath,

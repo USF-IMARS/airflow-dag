@@ -63,6 +63,7 @@ def add_load_cleanup_trigger(
     area_id,
     download_granule_op,
     coverage_check_op,
+    uuid_getter=lambda *args, **kwargs: 'NULL',
     wait_for_data_delay_op=WaitForDataPublishSensor.DEFAULT_TASK_ID,
     ingest_callback_dag_id=None
 ):
@@ -107,16 +108,18 @@ def add_load_cleanup_trigger(
                 # "time":"2016-02-12T16:25:18",
                 # "datetime": datetime(2016,2,12,16,25,18),
                 # NOTE: `is_day_pass` b/c of `day_night_flag` in CMR req.
-                "json":
+                "metadata_file": METADATA_FILE_FILEPATH,
+                "json": (
                     '{{' +
                     '"status_id":3,' +
                     '"is_day_pass":1,' +
                     '"area_id":{},' +
                     '"area_short_name":"{}"' +
-                    '}}'.format(
-                        area_id,
-                        region.place_name
-                    )
+                    '}}'
+                ).format(
+                    area_id,
+                    region.place_name,
+                )
             }
         ]
         load_tasks = add_load(

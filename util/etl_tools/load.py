@@ -8,7 +8,12 @@ from airflow.operators.python_operator import PythonOperator
 
 import imars_etl
 
-from imars_dags.util.etl_tools.tmp_file import tmp_format_str, get_tmp_file_suffix
+from imars_dags.util.etl_tools.tmp_file \
+    import tmp_format_str, get_tmp_file_suffix
+
+# which fields in `to_load` are template-enabled:
+ARGS_TEMPLATE_FIELDS = ['filepath', 'directory', 'metadata_file']
+
 
 def add_load(dag, to_load, upstream_operators=[]):
     """
@@ -40,7 +45,6 @@ def add_load(dag, to_load, upstream_operators=[]):
             )
 
             # apply macros on all (template-enabled) args:
-            ARGS_TEMPLATE_FIELDS = ['filepath', 'directory']
             task = kwargs['task']
             for key in load_args:
                 if key in ARGS_TEMPLATE_FIELDS:

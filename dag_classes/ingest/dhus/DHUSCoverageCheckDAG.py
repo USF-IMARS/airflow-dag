@@ -20,6 +20,7 @@ from imars_dags.dag_classes.ingest.dhus.dhus_coverage_check \
     import dhus_coverage_check
 from imars_dags.operators.DownloadFileOperator.DownloadFileOperator \
     import DownloadFileOperator
+from imars_dags.operators.DownloadFileOperator import dhus_json_driver
 
 
 class DHUSCoverageCheckDAG(CoverageCheckDAG):
@@ -58,10 +59,12 @@ class DHUSCoverageCheckDAG(CoverageCheckDAG):
         download_granule = DownloadFileOperator(
             METADATA_FILE_FILEPATH,
             DOWNLOADED_FILEPATH,
+            uuid_getter=dhus_json_driver.get_uuid,
+            url_getter=dhus_json_driver.get_url,
             dag=self,
             username='s3guest',
             password='s3guest',
-            task_id=ROI_COVERED_BRANCH_ID
+            task_id=ROI_COVERED_BRANCH_ID,
         )
 
         add_load_cleanup_trigger(
@@ -72,5 +75,6 @@ class DHUSCoverageCheckDAG(CoverageCheckDAG):
             product_id=product_id,
             area_id=region_id,
             download_granule_op=download_granule,
-            coverage_check_op=coverage_check
+            coverage_check_op=coverage_check,
+            uuid_getter=dhus_json_driver.get_uuid,
         )

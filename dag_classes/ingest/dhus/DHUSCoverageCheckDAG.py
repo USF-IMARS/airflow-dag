@@ -7,6 +7,7 @@ aka copernicus open access hub.
 * https://sentineldatahub.github.io/DataHubSystem/
 """
 
+from imars_dags.util.etl_tools.load import add_load
 from imars_dags.util.get_dag_id import get_dag_id
 from imars_dags.util.etl_tools.tmp_file import tmp_filepath
 from imars_dags.operators.CoverageBranchOperator \
@@ -67,6 +68,24 @@ class DHUSCoverageCheckDAG(CoverageCheckDAG):
             task_id=ROI_COVERED_BRANCH_ID,
         )
 
+        load_downloaded_file = add_load(
+            self,
+            to_load=[
+                {
+                    "filepath": DOWNLOADED_FILEPATH,
+                    "metadata_file": METADATA_FILE_FILEPATH,
+                    "product_id": product_id,
+                    "load_format": (
+                        "ingest_{product_type_name}_dhus_coverage"
+                        "_check_{area_short_name}_"
+                        "{ingest_date:8d}T{ingest_time:6d}_dhus_download",
+                    ),
+                    "json": '{{"area_id":{},"status_id":3}}'.format(region_id)
+                }
+            ],
+            upstream_operators=[download_granule],
+        )
+
         add_load_cleanup_trigger(
             self,
             DOWNLOADED_FILEPATH,
@@ -77,4 +96,5 @@ class DHUSCoverageCheckDAG(CoverageCheckDAG):
             download_granule_op=download_granule,
             coverage_check_op=coverage_check,
             uuid_getter=dhus_json_driver.get_uuid,
+            load_ops=load_downloaded_file
         )

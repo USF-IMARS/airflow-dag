@@ -63,6 +63,7 @@ def add_load_cleanup_trigger(
     area_id,
     download_granule_op,
     coverage_check_op,
+    load_ops=None,
     uuid_getter=lambda *args, **kwargs: 'NULL',
     wait_for_data_delay_op=WaitForDataPublishSensor.DEFAULT_TASK_ID,
     ingest_callback_dag_id=None
@@ -100,33 +101,34 @@ def add_load_cleanup_trigger(
     coverage_check = validate_op_obj(dag, coverage_check_op)
     with dag as dag:
         # ======================================================================
-        to_load = [
-            {
-                "filepath": DOWNLOADED_FILEPATH,  # required!
-                "verbose": 3,
-                "product_id": product_id,
-                # "time":"2016-02-12T16:25:18",
-                # "datetime": datetime(2016,2,12,16,25,18),
-                # NOTE: `is_day_pass` b/c of `day_night_flag` in CMR req.
-                "metadata_file": METADATA_FILE_FILEPATH,
-                "json": (
-                    '{{' +
-                    '"status_id":3,' +
-                    '"is_day_pass":1,' +
-                    '"area_id":{},' +
-                    '"area_short_name":"{}"' +
-                    '}}'
-                ).format(
-                    area_id,
-                    region.place_name,
-                )
-            }
-        ]
-        load_tasks = add_load(
-            dag,
-            to_load=to_load,
-            upstream_operators=[download_granule]
-        )
+        if load_ops is None:
+            to_load = [
+                {
+                    "filepath": DOWNLOADED_FILEPATH,  # required!
+                    "verbose": 3,
+                    "product_id": product_id,
+                    # NOTE: `is_day_pass` b/c of `day_night_flag` in CMR req.
+                    # "metadata_file": METADATA_FILE_FILEPATH,
+                    "json": (
+                        '{{' +
+                        '"status_id":3,' +
+                        '"is_day_pass":1,' +
+                        '"area_id":{},' +
+                        '"area_short_name":"{}"' +
+                        '}}'
+                    ).format(
+                        area_id,
+                        region.place_name,
+                    )
+                }
+            ]
+            load_tasks = add_load(
+                dag,
+                to_load=to_load,
+                upstream_operators=[download_granule]
+            )
+        else:
+            load_tasks = load_ops
         assert len(load_tasks) == 1  # right?
         load_downloaded_file = load_tasks[0]  # no point looping
         # ======================================================================

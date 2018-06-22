@@ -1,7 +1,7 @@
 """
 A "latest-only" coverage check using ESA DHUS.
 
-Checks the coverage of each granule using ESA's DHUS (Data HUb Software)
+Checks the coverage of each granule using ESA's DHUS (Data Hub Software)
 aka copernicus open access hub.
 * https://scihub.copernicus.eu/dhus/#/home
 * https://sentineldatahub.github.io/DataHubSystem/
@@ -24,7 +24,7 @@ from imars_dags.operators.DownloadFileOperator.DownloadFileOperator \
 from imars_dags.operators.DownloadFileOperator import dhus_json_driver
 
 
-class DHUSCoverageCheckDAG(CoverageCheckDAG):
+class DHUSIngestDAG(CoverageCheckDAG):
     def __init__(
         self,
         region, region_short_name, region_id,
@@ -33,7 +33,7 @@ class DHUSCoverageCheckDAG(CoverageCheckDAG):
         granule_len,
         **kwargs
     ):
-        super(DHUSCoverageCheckDAG, self).__init__(
+        super(DHUSIngestDAG, self).__init__(
             dag_id=get_dag_id(
                 __file__,
                 region=region_short_name,

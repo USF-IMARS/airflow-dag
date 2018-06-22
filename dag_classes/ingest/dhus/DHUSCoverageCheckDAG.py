@@ -78,7 +78,7 @@ class DHUSCoverageCheckDAG(CoverageCheckDAG):
                     "load_format": (
                         "ingest_{product_type_name}_dhus_coverage"
                         "_check_{area_short_name}_"
-                        "{ingest_date:8d}T{ingest_time:6d}_dhus_download",
+                        "{ingest_date:8d}T{ingest_time:6d}_dhus_download"
                     ),
                     "json": '{{"area_id":{},"status_id":3}}'.format(region_id)
                 }

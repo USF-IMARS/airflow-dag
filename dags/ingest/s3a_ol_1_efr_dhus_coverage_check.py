@@ -3,11 +3,11 @@ from datetime import timedelta
 # unused DAG import is required for airflow to find the dag
 from airflow import DAG  # noqa:F401
 
-from imars_dags.dag_classes.ingest.dhus.DHUSCoverageCheckDAG \
-    import DHUSCoverageCheckDAG
+from imars_dags.dag_classes.ingest.dhus.DHUSIngestDAG \
+    import DHUSIngestDAG
 from imars_dags.regions import gom
 
-this_dag = DHUSCoverageCheckDAG(
+this_dag = DHUSIngestDAG(
     region=gom,
     region_short_name='gom',
     region_id=1,

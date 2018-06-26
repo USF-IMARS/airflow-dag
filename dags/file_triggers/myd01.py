@@ -1,4 +1,5 @@
-import airflow  # you need this here or else airflow will not find your dag
+# unused DAG import so airflow can find your dag
+import airflow  # noqa F401
 
 from imars_dags.dag_classes.file_triggers.FileTriggerDAG import FileTriggerDAG
 

@@ -1,73 +1,27 @@
-from datetime import timedelta
+"""
+!!! DO NOT USE !!!
 
-from airflow.operators.sensors import TimeDeltaSensor, SqlSensor
-from airflow.operators.bash_operator import BashOperator
+OLD, deprecated code. Most of it has been ported into the l2_to_l3 DAG, but
+some remnants remain here.
 
-from imars_dags.util.globals import QUEUE, SLEEP_ARGS
-from imars_dags.util import satfilename
+TODO: mv useful things somewhere else & rm this file.
 
-# TODO: replace usage of satfilename
+Usage:
+    add_l3gen(
+        this_dag,
+        region_name=AREA_SHORT_NAME,
+        gpt_xml=os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "L3G_MODA_GOM_v2.xml"
+        )
+    )
+"""
+from airflow.operators.sensors import SqlSensor
 
 
 def add_l3gen(dag, region_name, gpt_xml):
     with dag as dag:
-        # =========================================================================
-        # === delay to wait for day to end, so all passes that day are done.
-        # =========================================================================
-        wait_for_day_end = TimeDeltaSensor(
-            delta=timedelta(hours=18),  # 12 hrs to midnight + 6 hrs just b/c
-            task_id='wait_for_day_end',
-            **SLEEP_ARGS
-        )
-        # =========================================================================
-        # =========================================================================
-        # === L3 Generation using GPT graph
-        # =========================================================================
-        # assumes the l2 files for the whole day have already been generated
-        #
-        # example cmd:
-        #     /opt/snap/bin/gpt L3G_MODA_GOM_vIMARS.xml
-        #     -t /home1/scratch/epa/satellite/modis/GOM/L3G_OC/A2017313_map.nc
-        #     -f NetCDF-BEAM
-        #     /srv/imars-objects/modis_aqua_gom/l2/A2017313174500.L2
-        #     /srv/imars-objects/modis_aqua_gom/l2/A2017313192000.L2
-        #     /srv/imars-objects/modis_aqua_gom/l2/A2017313192500.L2
-        #
-        #     -t is the target (output) file, -f is the format
-
-        def get_list_todays_l2s_cmd(exec_date, roi):
-            """
-            returns an ls command that lists all l2 files using the path & file
-            fmt, but replaces hour/minute with wildcard *
-            """
-            satfilename.l2(exec_date, roi)
-            fmt_str = satfilename.l2.filename_fmt.replace(
-                "%M", "*"
-            ).replace(
-                "%H", "*"
-            )
-            return (
-                "ls " +
-                satfilename.l2.basepath(roi) +
-                exec_date.strftime(fmt_str)
-            )
-
-        l3gen = BashOperator(
-            task_id="l3gen",
-            bash_command="""
-                /opt/snap/bin/gpt {{params.gpt_xml_file}} \
-                -t {{ params.satfilename.l3(execution_date, params.roi_place_name) }} \
-                -f NetCDF-BEAM \
-                `{{ params.get_list_todays_l2s_cmd(execution_date, params.roi_place_name) }}`
-            """,
-            params={
-                'satfilename': satfilename,
-                'get_list_todays_l2s_cmd': get_list_todays_l2s_cmd,
-                'roi_place_name': region_name,
-                'gpt_xml_file': gpt_xml
-            },
-            queue=QUEUE.SNAP
-        )
+        # NOTE: l3 stuff was here...
         # =========================================================================
         # =========================================================================
         # === wait for pass-level processing
@@ -89,7 +43,7 @@ def add_l3gen(dag, region_name, gpt_xml):
                     AND state='success';
             """
         )
-        wait_for_day_end >> wait_for_all_day_granules_checked
+        # wait_for_day_end >> wait_for_all_day_granules_checked
 
         # === wait for granules that were covered to finish processing.
         # Here we use an SqlSensor to check the metadata db instead of trying
@@ -110,5 +64,5 @@ def add_l3gen(dag, region_name, gpt_xml):
                 """
         )
         wait_for_all_day_granules_checked >> wait_for_pass_processing_success
-        wait_for_pass_processing_success >> l3gen
+        # wait_for_pass_processing_success >> l3gen
         # =========================================================================

@@ -1,8 +1,18 @@
+"""
+TODO: update this or rm it.
+
+Example usage:
+add_png_exports(
+    this_dag,
+    region_name=AREA_SHORT_NAME,
+    variable_names=['chlor_a', 'nflh']
+)
+"""
 from airflow.operators.bash_operator import BashOperator
 
 # === ./imars_dags/modis_aqua_processing.py :
 from imars_dags.util.globals import QUEUE
-from imars_dags.util import satfilename
+from imars_dags.util import satfilename  # WARN: !!! satfilename is deprecated
 from imars_dags.settings.png_export_transforms import png_export_transforms
 
 # TODO: replace usage of satfilename

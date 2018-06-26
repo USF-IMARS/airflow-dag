@@ -2,6 +2,7 @@ import os
 
 from imars_dags.util.DAGType import DAGType, dag_type_from_filepath
 
+
 def get_dag_id(filepath=None, region=None, dag_type=None, dag_name=None):
     """
     returns dag id created according to rules discussed in issue #49
@@ -10,8 +11,8 @@ def get_dag_id(filepath=None, region=None, dag_type=None, dag_name=None):
     region is optional
     """
     assert (
-        filepath is not None
-        or (dag_type is not None and dag_name is not None)
+        filepath is not None or
+        (dag_type is not None and dag_name is not None)
     )
 
     if dag_type is None:
@@ -29,5 +30,6 @@ def get_dag_id(filepath=None, region=None, dag_type=None, dag_name=None):
 
     return dag_id
 
+
 def dag_name_from_filepath(dag_filepath):
-    return os.path.basename(dag_filepath).replace('.py','')
+    return os.path.basename(dag_filepath).replace('.py', '')

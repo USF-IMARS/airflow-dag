@@ -16,11 +16,9 @@
 """
 # std libs
 from datetime import datetime
-from datetime import timedelta
 import os
 
 # deps
-from airflow.operators.sensors import TimeDeltaSensor
 from airflow.operators.bash_operator import BashOperator
 from airflow import DAG
 
@@ -32,7 +30,6 @@ from imars_dags.util.etl_tools.load import add_load
 from imars_dags.util.etl_tools.cleanup import add_cleanup
 from imars_dags.util.globals import QUEUE
 from imars_dags.util.globals import DEFAULT_ARGS
-from imars_dags.util.globals import SLEEP_ARGS
 
 
 AREA_SHORT_NAME = "gom"

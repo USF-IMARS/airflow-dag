@@ -121,10 +121,8 @@ class FileTriggerDAG(DAG):
                 ti = kwargs['ti']
                 # print("sql:\n\t{}".format(sql_selection))
                 file_metadata = get_metadata(
-                    {
-                        "sql": sql_selection,
-                        "first": True
-                    }
+                        sql=sql_selection,
+                        first=True,
                 )
                 # print("\n\tmeta:\n\t{}\n".format(file_metadata))
                 # logging.info("\n\n\tmeta:\n\t{}".format(file_metadata))
@@ -228,4 +226,4 @@ class FileTriggerDAG(DAG):
                         ROI_processing_DAG >> set_product_status_to_err
                 else:  # no dags_to_trigger means just set it std and do nothing
                     ROI_dummy >> set_product_status_to_std
-                    ROI_dummy >> set_product_status_to_err 
+                    ROI_dummy >> set_product_status_to_err

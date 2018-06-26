@@ -36,8 +36,8 @@ from imars_dags.util.globals import SLEEP_ARGS
 
 
 AREA_SHORT_NAME = "gom"
-L2_PRODUCT_ID = 6
-L3_PRODUCT_ID = -2
+L2_PRODUCT_ID = 35
+L3_PRODUCT_ID = 42
 
 THIS_FILE_DIR = os.path.dirname(os.path.realpath(__file__))
 xml_file = os.path.join(
@@ -47,25 +47,15 @@ xml_file = os.path.join(
 
 DEF_ARGS = DEFAULT_ARGS.copy()
 DEF_ARGS.update({
-    'start_date': datetime(2018, 6, 1, 0, 0),
+    'start_date': datetime.utcnow(),
 })
 
 this_dag = DAG(
     dag_id=get_dag_id(__file__, region=AREA_SHORT_NAME),
     default_args=DEF_ARGS,
-    schedule_interval=timedelta(days=1),
+    schedule_interval=None,
 )
 
-# =========================================================================
-# === delay until day ends so (we can assume) all passes that day are done.
-# =========================================================================
-wait_for_day_end = TimeDeltaSensor(
-    delta=timedelta(hours=18),  # 12 hrs to midnight + 6 hrs just b/c
-    task_id='wait_for_day_end',
-    dag=this_dag,
-    **SLEEP_ARGS
-)
-# =========================================================================
 # ===========================================================================
 # === EXTRACT INPUT FILE(S) ===
 # ===========================================================================
@@ -122,7 +112,6 @@ cleanup_task = add_cleanup(
 # =========================================================================
 # === connect it all up
 # =========================================================================
-wait_for_day_end >> extract_l2_input
 extract_l2_input >> l3gen
 # `l3gen >> load_l3_list` done by `upstream_operators=[l2gen]`
 # `load_l3_list >> cleanup_task` via `upstream_operators=[load_l2_list]`

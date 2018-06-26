@@ -8,13 +8,14 @@ from imars_dags.util import satfilename
 
 # TODO: replace usage of satfilename
 
+
 def add_l3gen(dag, region_name, gpt_xml):
     with dag as dag:
         # =========================================================================
         # === delay to wait for day to end, so all passes that day are done.
         # =========================================================================
         wait_for_day_end = TimeDeltaSensor(
-            delta=timedelta(hours=18),  # 12 hrs to midnight + 6 hrs just in case
+            delta=timedelta(hours=18),  # 12 hrs to midnight + 6 hrs just b/c
             task_id='wait_for_day_end',
             **SLEEP_ARGS
         )
@@ -22,7 +23,7 @@ def add_l3gen(dag, region_name, gpt_xml):
         # =========================================================================
         # === L3 Generation using GPT graph
         # =========================================================================
-        # this assumes the l2 files for the whole day have already been generated
+        # assumes the l2 files for the whole day have already been generated
         #
         # example cmd:
         #     /opt/snap/bin/gpt L3G_MODA_GOM_vIMARS.xml
@@ -36,12 +37,20 @@ def add_l3gen(dag, region_name, gpt_xml):
 
         def get_list_todays_l2s_cmd(exec_date, roi):
             """
-            returns an ls command that lists all l2 files using the path & file fmt,
-            but replaces hour/minute with wildcard *
+            returns an ls command that lists all l2 files using the path & file
+            fmt, but replaces hour/minute with wildcard *
             """
             satfilename.l2(exec_date, roi)
-            fmt_str = satfilename.l2.filename_fmt.replace("%M", "*").replace("%H", "*")
-            return "ls " + satfilename.l2.basepath(roi) + exec_date.strftime(fmt_str)
+            fmt_str = satfilename.l2.filename_fmt.replace(
+                "%M", "*"
+            ).replace(
+                "%H", "*"
+            )
+            return (
+                "ls " +
+                satfilename.l2.basepath(roi) +
+                exec_date.strftime(fmt_str)
+            )
 
         l3gen = BashOperator(
             task_id="l3gen",
@@ -53,7 +62,7 @@ def add_l3gen(dag, region_name, gpt_xml):
             """,
             params={
                 'satfilename': satfilename,
-                'get_list_todays_l2s_cmd':get_list_todays_l2s_cmd,
+                'get_list_todays_l2s_cmd': get_list_todays_l2s_cmd,
                 'roi_place_name': region_name,
                 'gpt_xml_file': gpt_xml
             },
@@ -73,7 +82,9 @@ def add_l3gen(dag, region_name, gpt_xml):
             SELECT GREATEST(COUNT(state)-287, 0)
                 FROM dag_run WHERE
                     (execution_date BETWEEN
-                        '{{execution_date.replace(hour=0,minute=0)}}' AND '{{execution_date.replace(hour=23,minute=59)}}')
+                        '{{execution_date.replace(hour=0,minute=0)}}' AND
+                        '{{execution_date.replace(hour=23,minute=59)}}'
+                    )
                     AND dag_id='"""+region_name+"""_modis_aqua_coverage_check'
                     AND state='success';
             """
@@ -90,11 +101,14 @@ def add_l3gen(dag, region_name, gpt_xml):
                 SELECT 1 - LEAST(COUNT(state),1)
                     FROM dag_run WHERE
                         (execution_date BETWEEN
-                            '{{execution_date.replace(hour=0,minute=0)}}' AND '{{execution_date.replace(hour=23,minute=59)}}')
+                            '{{execution_date.replace(hour=0,minute=0)}}' AND
+                            '{{execution_date.replace(hour=23,minute=59)}}'
+                        )
                         AND dag_id='"""+region_name+"""_modis_aqua_granule'
                         AND state!='success'
                 ;
                 """
         )
-        wait_for_all_day_granules_checked >> wait_for_pass_processing_success >> l3gen
+        wait_for_all_day_granules_checked >> wait_for_pass_processing_success
+        wait_for_pass_processing_success >> l3gen
         # =========================================================================

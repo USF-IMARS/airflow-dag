@@ -7,6 +7,7 @@ from imars_dags.settings.png_export_transforms import png_export_transforms
 
 # TODO: replace usage of satfilename
 
+
 def add_png_exports(dag, region_name, variable_names):
     # =========================================================================
     # === export png(s) from l3 netCDF4 file
@@ -14,7 +15,7 @@ def add_png_exports(dag, region_name, variable_names):
     for variable_name in variable_names:
         try:
             var_transform = png_export_transforms[variable_name]
-        except KeyError as k_err:
+        except KeyError:
             # no transform found, passing data through w/o scaling
             # NOTE: not recommended. data is expected to be range [0,255]
             var_transform = "data"

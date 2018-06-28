@@ -6,21 +6,19 @@ from datetime import datetime,timedelta
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 
-from imars_dags.util.globals import DEFAULT_ARGS
+from imars_dags.util.get_default_args import get_default_args
 from imars_dags.util.etl_tools.tmp_file import tmp_filepath
 from imars_dags.util.etl_tools.extract import add_extract
 from imars_dags.util.etl_tools.load import add_load
 from imars_dags.util.etl_tools.cleanup import add_cleanup
 
-default_args = DEFAULT_ARGS.copy()
-default_args.update({
-    'start_date': datetime(1980, 1, 1),
-    'retry_delay': timedelta(minutes=3),
-})
 
 this_dag = DAG(
     dag_id="proc_wv2_unzip_na",
-    default_args=default_args,
+    default_args=get_default_args(
+        start_date=datetime(1980, 1, 1),
+        retry_delay=timedelta(minutes=3)
+    ),
     schedule_interval=None,
 )
 

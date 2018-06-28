@@ -22,13 +22,8 @@ from imars_dags.util.etl_tools.extract import add_extract
 from imars_dags.util.etl_tools.load import add_load
 from imars_dags.util.etl_tools.tmp_file import tmp_filedir
 from imars_dags.util.etl_tools.tmp_file import tmp_format_str
-from imars_dags.util.globals import DEFAULT_ARGS
+from imars_dags.util.get_default_args import get_default_args
 from imars_dags.util.globals import QUEUE
-
-DEF_ARGS = DEFAULT_ARGS.copy()
-DEF_ARGS.update({
-    'start_date': datetime.utcnow(),
-})
 
 SCHEDULE_INTERVAL = None
 AREA_SHORT_NAME = "na"
@@ -40,7 +35,9 @@ JSON = ('{' +
 
 this_dag = DAG(
     dag_id="proc_wv2_classification_"+AREA_SHORT_NAME,
-    default_args=DEF_ARGS,
+    default_args=get_default_args(
+        start_date=datetime.utcnow()
+    ),
     schedule_interval=SCHEDULE_INTERVAL
 )
 

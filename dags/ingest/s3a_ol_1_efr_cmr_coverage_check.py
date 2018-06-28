@@ -4,15 +4,11 @@
 #
 # from imars_dags.dags.ingest.cmr import coverage_check
 # from imars_dags.regions import gom
-# from imars_dags.util.globals import DEFAULT_ARGS
 # from imars_dags.util.get_dag_id import get_dag_id
 #
 # CHECK_DELAY = timedelta(days=30)
-# default_args = DEFAULT_ARGS.copy()
 # delay_ago = datetime.utcnow()-CHECK_DELAY
-# default_args.update({  # round to
-#     'start_date': delay_ago.replace(minute=0,second=0,microsecond=0),
-# })
+
 #
 # this_dag = DAG(
 #     dag_id=get_dag_id(
@@ -20,7 +16,9 @@
 #         region='gom',
 #         dag_name="s3a_ol_1_efr_cmr_coverage_check"
 #     ),
-#     default_args=default_args,
+#     default_args=get_default_args(
+#         start_date=delay_ago.replace(minute=0,second=0,microsecond=0)
+#     ),
 #     schedule_interval=coverage_check.schedule_interval,
 #     catchup=True,
 #     max_active_runs=1

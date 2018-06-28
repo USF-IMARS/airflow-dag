@@ -9,18 +9,16 @@ from datetime import datetime,timedelta
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 
-from imars_dags.util.globals import DEFAULT_ARGS
+from imars_dags.util.get_default_args import get_default_args
 
-default_args = DEFAULT_ARGS.copy()
-default_args.update({
-    'start_date': datetime(2018, 3, 1, 20, 0),
-    'retries': 0,
-    'retry_delay': timedelta(minutes=3),
-})
 
 this_dag = DAG(
     dag_id="ingest_ftp",
-    default_args=default_args,
+    default_args=get_default_args(
+        start_date=datetime(2018, 3, 1, 20, 0),
+        retries=0,
+        retry_delay=timedelta(minutes=3),
+    ),
     schedule_interval=timedelta(hours=1),
     catchup=False,  # NOTE: this & max_active_runs prevents duplicate ingests
     max_active_runs=1

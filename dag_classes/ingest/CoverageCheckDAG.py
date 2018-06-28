@@ -7,7 +7,7 @@ from airflow import DAG
 
 # this package
 from imars_dags.util.globals import QUEUE
-from imars_dags.util.globals import DEFAULT_ARGS
+from imars_dags.util.get_default_args import get_default_args
 from imars_dags.util.etl_tools.load import add_load
 from imars_dags.util.etl_tools.cleanup import add_cleanup
 from imars_dags.operators.MMTTriggerDagRunOperator \
@@ -32,13 +32,13 @@ class CoverageCheckDAG(DAG):
         check_delay=timedelta(seconds=0),
         **kwargs
     ):
-        default_args = DEFAULT_ARGS.copy()
         delay_ago = datetime.utcnow()-check_delay
-        default_args.update({  # round to
-            'start_date': delay_ago.replace(minute=0, second=0, microsecond=0),
-        })
         super(CoverageCheckDAG, self).__init__(
-            default_args=default_args,
+            default_args=get_default_args(
+                start_date=delay_ago.replace(  # round to
+                    minute=0, second=0, microsecond=0
+                ),
+            ),
             **kwargs
         )
         WaitForDataPublishSensor(

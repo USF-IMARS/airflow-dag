@@ -4,6 +4,7 @@ these are constants that can be referenced from multiple DAGs.
 
 from datetime import timedelta
 
+
 class QUEUE:
     """
     Basically an enum, the string values *must* match those used in
@@ -23,6 +24,7 @@ class QUEUE:
     MATLAB = 'matlab'
     WV2_PROC = 'wv2_proc'  # https://github.com/USF-IMARS/wv2-processing
     # WV2_PROC requires MATLAB... so WV2_PROC should imply MATLAB as well?!?
+
 
 class POOL:
     """
@@ -44,6 +46,7 @@ class POOL:
     # SLEEP   = "sleep" # pool for tasks that are just waiting / sleeping / delay
     # ^ this is used to reduce # of concurrency slots wasted just waiting.
 
+
 class PRIORITY:
     """
     priority_weight is used to prevent deadlock states like when daily
@@ -57,37 +60,13 @@ class PRIORITY:
 
 
 """
-default arguments as a starting point for airflow dags. Extend this by doing
-something like:
-```
-default_args = DEFAULT_ARGS.copy()
-default_args.update({
-    'start_date': datetime(2017, 11, 6, 20, 25),
-})
-```
-"""
-DEFAULT_ARGS = {
-    'owner': 'airflow',
-    'depends_on_past': False,
-    'email': ['imarsroot@marine.usf.edu'],
-    'email_on_failure': False,
-    'email_on_retry': False,
-    'retries': 0,
-    'retry_delay': timedelta(hours=24, minutes=1),  # +1m offset to stagger scheduling
-    'queue': QUEUE.DEFAULT,
-    'pool': POOL.DEFAULT,
-    'priority_weight': PRIORITY.DEFAULT,
-}
+This argument dict can be used like a macro to pass in settings for tasks
+that are just sleeping/waiting/delaying.
 
-
-"""
-This argument dict can be used like a macro to pass in settings for tasks that
-are just sleeping/waiting/delaying.
-
-These args are set to prevent the pipeline from clogging up with a lot of "wait"
-tasks. In theory "pool"s are all that is needed for this, but I have not been
-able to make that work. After waiting for a time the wait task will fail and
-be set for retry until pass or timeout.
+These args are set to prevent deadlocks from having a lot of "wait"
+tasks. In theory "pool"s are all that is needed for this, but I have not
+been able to make that work. After waiting for a time the wait task will
+fail and be set for retry until pass or timeout.
 
 Note that if you want to override one of these you must do something like:
 ```

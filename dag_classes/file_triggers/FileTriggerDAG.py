@@ -20,7 +20,7 @@ from airflow.operators.mysql_operator import MySqlOperator
 
 from imars_etl.get_metadata import get_metadata
 from imars_etl.id_lookup import id_lookup
-from imars_dags.util.globals import DEFAULT_ARGS
+from imars_dags.util.get_default_args import get_default_args
 from imars_dags.util.list_to_sql_or import list_to_sql_or
 
 from imars_dags.operators.MMTTriggerDagRunOperator import MMTTriggerDagRunOperator
@@ -66,11 +66,10 @@ class FileTriggerDAG(DAG):
         # === set arguments if ommitted
         # TODO: I think these can be done in the function declaration with
         #       standard default argument notation (default_args=def_def_args)
-        def_def_args = DEFAULT_ARGS.copy()
-        def_def_args.update({
-            'start_date': self.DAWN_OF_TIME,
-            'retries': 0,
-        })
+        def_def_args = get_default_args(
+            start_date=self.DAWN_OF_TIME,
+            retries=0,
+        )
         kwargs['default_args'] = getattr(
             kwargs,
             'default_args',

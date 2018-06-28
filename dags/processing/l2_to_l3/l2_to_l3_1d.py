@@ -31,7 +31,7 @@ from imars_dags.util.etl_tools.extract import add_extract
 from imars_dags.util.etl_tools.load import add_load
 from imars_dags.util.etl_tools.cleanup import add_cleanup
 from imars_dags.util.globals import QUEUE
-from imars_dags.util.globals import DEFAULT_ARGS
+from imars_dags.util.get_default_args import get_default_args
 from imars_dags.util.globals import SLEEP_ARGS
 
 
@@ -45,14 +45,11 @@ xml_file = os.path.join(
     "L3G_MODA_GOM_v2.xml"
 )
 
-DEF_ARGS = DEFAULT_ARGS.copy()
-DEF_ARGS.update({
-    'start_date': datetime(2018, 6, 1, 0, 0),
-})
-
 this_dag = DAG(
     dag_id=get_dag_id(__file__, region=AREA_SHORT_NAME),
-    default_args=DEF_ARGS,
+    default_args=get_default_args(
+        start_date=datetime(2018, 6, 1, 0, 0),
+    ),
     schedule_interval=timedelta(days=1),
 )
 

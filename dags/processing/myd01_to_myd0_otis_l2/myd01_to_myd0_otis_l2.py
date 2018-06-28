@@ -15,12 +15,8 @@ from imars_dags.util.etl_tools.tmp_file import tmp_filepath
 from imars_dags.util.etl_tools.extract import add_extract
 from imars_dags.util.etl_tools.load import add_load
 from imars_dags.util.etl_tools.cleanup import add_cleanup
-from imars_dags.util.globals import QUEUE, DEFAULT_ARGS
-
-DEF_ARGS = DEFAULT_ARGS.copy()
-DEF_ARGS.update({
-    'start_date': datetime.utcnow(),
-})
+from imars_dags.util.globals import QUEUE
+from imars_dags.util.get_default_args import get_default_args
 
 SCHEDULE_INTERVAL = None
 AREA_SHORT_NAME = "gom"
@@ -36,7 +32,9 @@ XCALFILE = "$OCVARROOT/modisa/xcal/OPER/xcal_modisa_axc_oc_v1.12d"
 
 this_dag = DAG(
     dag_id="proc_myd01_to_myd0_otis_l2_"+AREA_SHORT_NAME,
-    default_args=DEF_ARGS,
+    default_args=get_default_args(
+        start_date=datetime.utcnow()
+    ),
     schedule_interval=SCHEDULE_INTERVAL
 )
 

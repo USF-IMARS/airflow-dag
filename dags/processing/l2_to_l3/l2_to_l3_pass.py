@@ -47,8 +47,7 @@ this_dag = DAG(
     dag_id=get_dag_id(__file__, region=AREA_SHORT_NAME),
     default_args=get_default_args(
         start_date=datetime.utcnow(),
-    ),
-    schedule_interval=None,
+    )
 )
 
 # ===========================================================================

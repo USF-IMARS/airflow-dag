@@ -18,8 +18,7 @@ this_dag = DAG(
     default_args=get_default_args(
         start_date=datetime(1980, 1, 1),
         retry_delay=timedelta(minutes=3)
-    ),
-    schedule_interval=None,
+    )
 )
 
 # === EXTRACT INPUT FILES ===

@@ -18,7 +18,6 @@ from imars_dags.util.etl_tools.cleanup import add_cleanup
 from imars_dags.util.globals import QUEUE
 from imars_dags.util.get_default_args import get_default_args
 
-SCHEDULE_INTERVAL = None
 AREA_SHORT_NAME = "gom"
 PARFILE = os.path.join(
     os.path.dirname(os.path.realpath(__file__)),  # imars_dags/dags/gom/
@@ -34,8 +33,7 @@ this_dag = DAG(
     dag_id="proc_myd01_to_myd0_otis_l2_"+AREA_SHORT_NAME,
     default_args=get_default_args(
         start_date=datetime.utcnow()
-    ),
-    schedule_interval=SCHEDULE_INTERVAL
+    )
 )
 
 with this_dag as dag:

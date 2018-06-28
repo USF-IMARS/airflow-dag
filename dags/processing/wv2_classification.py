@@ -25,7 +25,6 @@ from imars_dags.util.etl_tools.tmp_file import tmp_format_str
 from imars_dags.util.get_default_args import get_default_args
 from imars_dags.util.globals import QUEUE
 
-SCHEDULE_INTERVAL = None
 AREA_SHORT_NAME = "na"
 JSON = ('{' +
     '"status_id":3,' +  # noqa E128
@@ -37,8 +36,7 @@ this_dag = DAG(
     dag_id="proc_wv2_classification_"+AREA_SHORT_NAME,
     default_args=get_default_args(
         start_date=datetime.utcnow()
-    ),
-    schedule_interval=SCHEDULE_INTERVAL
+    )
 )
 
 # === EXTRACT INPUT FILES ===

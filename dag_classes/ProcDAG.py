@@ -23,6 +23,7 @@ ProcDAG(
 from airflow import DAG
 
 from imars_dags.util.etl_tools.tmp_file import tmp_filepath
+from imars_dags.util.etl_tools.tmp_file import tmp_filedir
 from imars_dags.util._render import _render
 
 
@@ -35,6 +36,7 @@ class ProcDAG(DAG):
 
         inputs=[],
         outputs=[],
+        tmpdirs=[],
         first_ops=[],
         last_ops=[],
 
@@ -42,12 +44,34 @@ class ProcDAG(DAG):
         user_defined_filters={},
         **kwargs
     ):
+        """
+        parameters:
+        -----------
+        inputs : str[]
+            list of input filenames
+        outputs : str[]
+            list of outputs filenames
+        tmpdirs : str[]
+            list of temp directories to create
+        first_ops : airflow.Operator[]
+            list of operators which are first in processing chain.
+            extraction of input files is wired before these.
+        last_ops : airflow.Operator[]
+            list of operators which are last in processing chain.
+            loading & cleanup of output files is wired after these.
+        """
         # get temp filepaths
+        self.inputs = {}
+        self.outputs = {}
+        self.tmpdirs = {}
+        self.mkdir_ops = []
         for inpf in inputs:
             self.inputs[inpf] = tmp_filepath(dag_id, inpf)
         for opf in outputs:
             self.outputs[opf] = tmp_filepath(dag_id, opf)
-
+        for tdir in tmpdirs:
+            self.tmpdirs[tdir], mkdir_op = tmp_filedir(self, tdir)
+            self.mkdir_ops.append(mkdir_op)
         # add temp filepath macros so we can template w/ them
         user_defined_macros.update(self.inputs)
         user_defined_macros.update(self.outputs)
@@ -56,10 +80,13 @@ class ProcDAG(DAG):
         user_defined_filters['render'] = _render
 
         super(ProcDAG, self).__init__(
+            dag_id,
             *args,
             user_defined_macros=user_defined_macros,
+            user_defined_filters=user_defined_filters,
             **kwargs
         )
+        # TODO: add self.mkdir_ops
         # TODO: add extract ops for inputs
         # TODO: add load ops for outputs
         # TODO: add cleanup ops

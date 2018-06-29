@@ -17,6 +17,7 @@ from imars_dags.util.etl_tools.load import add_load
 from imars_dags.util.etl_tools.cleanup import add_cleanup
 from imars_dags.util.globals import QUEUE
 from imars_dags.util.get_default_args import get_default_args
+from imars_dags.util._render import _render
 
 AREA_SHORT_NAME = "gom"
 PARFILE = os.path.join(
@@ -29,36 +30,47 @@ PARFILE = os.path.join(
 # TODO: (I think) this can be removed now that all nodes are v7.5+
 XCALFILE = "$OCVARROOT/modisa/xcal/OPER/xcal_modisa_axc_oc_v1.12d"
 
+DAG_ID = "proc_myd01_to_myd0_otis_l2_" + AREA_SHORT_NAME
+
+
 this_dag = DAG(
-    dag_id="proc_myd01_to_myd0_otis_l2_"+AREA_SHORT_NAME,
+    dag_id=DAG_ID,
     default_args=get_default_args(
         start_date=datetime.utcnow()
+    ),
+    user_defined_macros=dict(
+        MYD01FILE=tmp_filepath(DAG_ID, 'myd01.hdf'),
+        GEOFILE=tmp_filepath(DAG_ID, 'geofile'),
+        OKMFILE=tmp_filepath(DAG_ID, 'okm'),  # aka L1b
+        HKMFILE=tmp_filepath(DAG_ID, 'hkm'),
+        QKMFILE=tmp_filepath(DAG_ID, 'qkm'),
+        L2FILE=tmp_filepath(DAG_ID, 'l2'),
+    ),
+    user_defined_filters=dict(
+        render=_render
     )
 )
 
 with this_dag as dag:
+    MYD01FILE = dag.user_defined_macros['MYD01FILE']
+    GEOFILE = dag.user_defined_macros['GEOFILE']
+    OKMFILE = dag.user_defined_macros['OKMFILE']
+    HKMFILE = dag.user_defined_macros['HKMFILE']
+    QKMFILE = dag.user_defined_macros['QKMFILE']
+    L2FILE = dag.user_defined_macros['L2FILE']
+
     # === EXTRACT INPUT FILES ===
     # ===========================================================================
-    MYD01FILE = tmp_filepath(this_dag.dag_id, 'myd01.hdf')
     extract_myd01 = add_extract(this_dag, "product_id=5", MYD01FILE)
 
     # =========================================================================
     # === modis GEO
     # =========================================================================
-    GEOFILE = tmp_filepath(dag.dag_id, 'geofile')
     l1a_2_geo = BashOperator(
         task_id='l1a_2_geo',
-        bash_command="""
-            export OCSSWROOT=/opt/ocssw      && \n\
-            source /opt/ocssw/OCSSW_bash.env && \n\
-            OUT_PATH="""+GEOFILE+"""         && \n\
-            $OCSSWROOT/scripts/modis_GEO.py \\\n\
-                --output=$OUT_PATH \\\n\
-                """ + MYD01FILE + """ && \n\
-            [[ -s $OUT_PATH ]]
-        """,
+        bash_command="l1a_2_geo.sh",
         queue=QUEUE.SAT_SCRIPTS,
-        trigger_rule=TriggerRule.ONE_SUCCESS  # run if any upstream passes
+        trigger_rule=TriggerRule.ONE_SUCCESS,  # run if any upstream passes
     )
     # =========================================================================
 
@@ -68,9 +80,6 @@ with this_dag as dag:
     # =========================================================================
     # === modis l1a + geo -> l1b
     # =========================================================================
-    OKMFILE = tmp_filepath(dag.dag_id, 'okm')  # aka L1b
-    HKMFILE = tmp_filepath(dag.dag_id, 'hkm')
-    QKMFILE = tmp_filepath(dag.dag_id, 'qkm')
 
     # NOTE: we need write access to the input file
     #       [ref](https://oceancolor.gsfc.nasa.gov/forum/oceancolor/topic_show.pl?tid=5333)
@@ -78,27 +87,13 @@ with this_dag as dag:
     #       geographic coverage and orbital parameters"
     make_l1b = BashOperator(
         task_id='make_l1b',
-        bash_command="""
-            export OCSSWROOT=/opt/ocssw && \n\
-            source /opt/ocssw/OCSSW_bash.env && \n\
-            OKM_PATH="""+OKMFILE+""" && \n\
-            HKM_PATH="""+HKMFILE+""" && \n\
-            QKM_PATH="""+QKMFILE+""" && \n\
-            $OCSSWROOT/scripts/modis_L1B.py \\\n\
-                --okm $OKM_PATH \\\n\
-                --hkm $HKM_PATH \\\n\
-                --qkm $QKM_PATH \\\n\
-                """+MYD01FILE+""" \\\n\
-                """+GEOFILE+""" && \n\
-            [[ -s $OKM_PATH ]]
-        """,  # NOTE: might want to add `&& -s $HKM_PATH && -s $QKM_PATH` too
+        bash_command="make_l1b.sh",
         queue=QUEUE.SAT_SCRIPTS
     )
     # =========================================================================
     # =========================================================================
     # === l2gen l1b -> l2
     # =========================================================================
-    L2FILE = tmp_filepath(dag.dag_id, 'l2')
     # l2gen usage usage docs:
     # https://seadas.gsfc.nasa.gov/help/seadas-processing/ProcessL2gen.html#COMMAND_LINE_HELP
     # NOTE: filenames must be inserted inline here because they contain the
@@ -106,17 +101,7 @@ with this_dag as dag:
     #       not get rendered resulting in a literal `{{ts_nodash}}` in the str.
     l2gen = BashOperator(
         task_id="l2gen",
-        bash_command="""
-            export OCSSWROOT=/opt/ocssw && \n\
-            source /opt/ocssw/OCSSW_bash.env && \n\
-            $OCSSWROOT/bin/l2gen \\\n\
-                ifile="""+OKMFILE+""" \\\n\
-                ofile="""+L2FILE+""" \\\n\
-                geofile="""+GEOFILE+""" \\\n\
-                xcalfile={{params.xcalfile}}\\\n\
-                par={{params.parfile}} && \n\
-            [[ -s """+L2FILE+""" ]]
-        """,
+        bash_command="l2gen.sh",
         params={
             'parfile': PARFILE,
             'xcalfile': XCALFILE

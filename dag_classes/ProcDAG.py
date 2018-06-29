@@ -12,29 +12,60 @@ with ProcDAG('my_dag') as dag:
 ```
 This is b/c we need to wire up load/extract operators *after* user has
 defined the transform operators.
+
+Example usage:
+--------------
+ProcDAG(
+    inputs=['myd01','geofile']
+    outputs=['myd02']
+)
 """
 from airflow import DAG
+
+from imars_dags.util.etl_tools.tmp_file import tmp_filepath
+from imars_dags.util._render import _render
 
 
 class ProcDAG(DAG):
     def __init__(
         self,
+
+        dag_id,
         *args,
+
         inputs=[],
         outputs=[],
         first_ops=[],
         last_ops=[],
+
+        user_defined_macros={},
+        user_defined_filters={},
         **kwargs
     ):
+        # get temp filepaths
+        for inpf in inputs:
+            self.inputs[inpf] = tmp_filepath(dag_id, inpf)
+        for opf in outputs:
+            self.outputs[opf] = tmp_filepath(dag_id, opf)
+
+        # add temp filepath macros so we can template w/ them
+        user_defined_macros.update(self.inputs)
+        user_defined_macros.update(self.outputs)
+
+        # add the double-render filter
+        user_defined_filters['render'] = _render
+
         super(ProcDAG, self).__init__(
-            *args, **kwargs
+            *args,
+            user_defined_macros=user_defined_macros,
+            **kwargs
         )
-        # TODO: add load stuff
-        # TODO: add extract stuff
-        # TODO: add cleanup stuff
+        # TODO: add extract ops for inputs
+        # TODO: add load ops for outputs
+        # TODO: add cleanup ops
 
     def __enter__(self):
-        # TODO: create extract operators (inputs)
+        # nothing to do here?
         super(ProcDAG, self).__enter__(self)
 
     def __exit__(self):

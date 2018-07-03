@@ -49,8 +49,12 @@ class ProcDAG(DAG):
         -----------
         inputs : str[]
             list of input filenames
+            # TODO: could use dag.roots() ???
         outputs : str[]
             list of outputs filenames
+            # TODO: could use dag.topological_sort() to find these & inputs???
+            # input iff task.upstream_list empty
+            # output iff dag.get_downstream(task) is... None?
         tmpdirs : str[]
             list of temp directories to create
         first_ops : airflow.Operator[]

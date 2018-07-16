@@ -226,9 +226,9 @@ def get_dag(area_short_name, area_id):
 
     create_ortho_tmp_dir >> pgc_ortho
     extract_ntf >> pgc_ortho
+    extract_met >> pgc_ortho
 
     create_ouput_tmp_dir >> wv2_proc_matlab
-    extract_met >> wv2_proc_matlab
     pgc_ortho >> wv2_proc_matlab
 
     # implied by `upstream_operators=[wv2_proc_matlab]`:

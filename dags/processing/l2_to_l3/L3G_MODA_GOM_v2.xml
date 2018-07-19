@@ -52,10 +52,6 @@
 <expression>aph_443_giop</expression>
 </variable>
 <variable>
-<name>npp_cbpm2</name>
-<expression>npp_cbpm2</expression>
-</variable>
-<variable>
 <name>bbp_s_giop</name>
 <expression>bbp_s_giop</expression>
 </variable>
@@ -324,15 +320,6 @@ AXIS["Northing", NORTH]]
                    <validExpression>(bbp_s_giop > -3 and bbp_s_giop &lt; 3 and bbp_s_giop != 0)</validExpression>
                    <noDataValue>NaN</noDataValue>
                    <unit>m^-1 nm^-1</unit>                  
-                </targetBand> 
-                <targetBand>
-                   <name>npp_cbpm2</name>
-                   <expression>npp_cbpm2</expression>
-                   <description>Ocean Primary Productivity, CBPM2 Algorithm</description>
-                   <type>float32</type>
-                   <validExpression>(npp_cbpm2 > 0 and npp_cbpm2 &lt; 1000)</validExpression>
-                   <noDataValue>NaN</noDataValue>
-                   <unit>mg C m^-2 day^-1</unit>                  
                 </targetBand> 
            </targetBands>
        </parameters>

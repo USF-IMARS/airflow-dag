@@ -16,6 +16,7 @@ ARGS_TEMPLATE_FIELDS = ['filepath', 'directory', 'metadata_file']
 
 
 def get_default_load_args(load_format=None):
+    """default args we add to all load ops"""
     def_args = dict(
         verbose=3,
     )
@@ -25,7 +26,6 @@ def get_default_load_args(load_format=None):
 
 
 def load_task(load_args, task, **kwargs):
-    # default args we add to all load ops:
     load_args.update(get_default_load_args(load_args))
 
     # apply macros on all (template-enabled) args:

@@ -15,6 +15,27 @@ from imars_dags.util.etl_tools.tmp_file \
 ARGS_TEMPLATE_FIELDS = ['filepath', 'directory', 'metadata_file']
 
 
+def load_task(load_args, task, **kwargs):
+    # default args we add to all load ops:
+    load_args['verbose'] = 3
+    load_args['load_format'] = load_args.get(
+        'load_format', tmp_format_str()
+    )
+
+    # apply macros on all (template-enabled) args:
+    for key in load_args:
+        if key in ARGS_TEMPLATE_FIELDS:
+            load_args[key] = task.render_template(
+                '',
+                load_args[key],
+                kwargs
+            )
+        # else don't template the arg
+
+    print('loading {}'.format(load_args))
+    imars_etl.load(**load_args)
+
+
 def add_load(dag, to_load, upstream_operators=[]):
     """
         upstream_operators : airflow.operators.*[]
@@ -36,28 +57,6 @@ def add_load(dag, to_load, upstream_operators=[]):
 
     """
     with dag as dag:
-        def load_task(**kwargs):
-            load_args = kwargs['load_args']
-            # default args we add to all load ops:
-            load_args['verbose'] = 3
-            load_args['load_format'] = load_args.get(
-                'load_format', tmp_format_str()
-            )
-
-            # apply macros on all (template-enabled) args:
-            task = kwargs['task']
-            for key in load_args:
-                if key in ARGS_TEMPLATE_FIELDS:
-                    load_args[key] = task.render_template(
-                        '',
-                        load_args[key],
-                        kwargs
-                    )
-                # else don't template the arg
-
-            print('loading {}'.format(load_args))
-            imars_etl.load(**load_args)
-
         load_ops = []
         for up_op in upstream_operators:
             for load_args in to_load:

@@ -21,7 +21,7 @@ def tmp_cleanup_task(to_cleanup, task, **kwargs):
             len(cleanup_path.strip()) > len(TMP_PREFIX)
         ):
             print('rm -rf {}'.format(cleanup_path))
-            # TODO: shutil.rmtree(cleanup_path)
+            shutil.rmtree(cleanup_path)
         else:
             raise ValueError(
                 "\ncleanup paths must be in tmp dir '{}'".format(TMP_PREFIX) +

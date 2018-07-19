@@ -47,12 +47,12 @@ class IMaRSETLPythonOperator(PythonOperator):
             self.tmp_paths[tdir] = tmpdir_path
             # mkdir_op unused
 
-        ## add tmp filepath macros so we can template w/ them
+        # add tmp filepath macros so we can template w/ them
         # user_defined_macros.update(self.tmp_paths)
         op_kwargs.update(self.tmp_paths)
 
         # TODO:
-        ## add the double-render filter
+        # add the double-render filter
         # user_defined_filters['render'] = _render
 
         super(IMaRSETLPythonOperator, self).__init__(

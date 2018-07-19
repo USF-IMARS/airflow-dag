@@ -15,12 +15,18 @@ from imars_dags.util.etl_tools.tmp_file \
 ARGS_TEMPLATE_FIELDS = ['filepath', 'directory', 'metadata_file']
 
 
+def get_default_load_args(load_format=None):
+    def_args = dict(
+        verbose=3,
+    )
+    if load_format is None:
+        def_args['load_format'] = tmp_format_str()
+    return def_args
+
+
 def load_task(load_args, task, **kwargs):
     # default args we add to all load ops:
-    load_args['verbose'] = 3
-    load_args['load_format'] = load_args.get(
-        'load_format', tmp_format_str()
-    )
+    load_args.update(get_default_load_args(load_args))
 
     # apply macros on all (template-enabled) args:
     for key in load_args:

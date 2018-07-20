@@ -17,7 +17,7 @@ class IMaRSETLMixin(object):
         * find & "Extract" input files by metadata
         * "Load" & cleanup output files & autofill (some) metadata
     """
-
+    # =================== subclass helper methods ============================
     def pre_init(self, inputs, outputs, tmpdirs, dag):
         """
         Does generic handling of args.
@@ -38,7 +38,27 @@ class IMaRSETLMixin(object):
             # NOTE: using tmp_filepath here instead of tmp_fildir because we do
             #   not want the auto-added mkdir operator.
 
+        # TODO: how?!?
+        # add the double-render filter
+        # user_defined_filters['render'] = _render
+    # =======================================================================
+    # =================== BaseOperator Overrides ============================
+    def render_template(self, attr, content, context):
+        # include tmp_paths in context so we can template with them
+        for key, val in self.tmp_paths.items():
+            # context.update(self.tmp_paths) but raise err on overwrite
+            if context.get(key):
+                raise ValueError(
+                    "tmp filepath uses reserved key {}. "
+                    "Please use a different key."
+                )
+            else:
+                context[key] = val
+        super(IMaRSETLMixin, self).render_template(attr, content, context)
+
     def execute(self, context):
+        # TODO: use pre_execute, post_execute and prepare_template ?
+        # https://airflow.apache.org/code.html#airflow.models.BaseOperator.post_execute
         try:
             self.render_all_paths(context)
             self.create_tmpdirs()
@@ -48,6 +68,8 @@ class IMaRSETLMixin(object):
         finally:
             self.cleanup()
 
+    # =======================================================================
+    # ====================== "private" methods ==============================
     def render_all_paths(self, context):
         for pathkey in self.tmp_paths:
             self.tmp_paths[pathkey] = self.render_template(
@@ -92,3 +114,4 @@ class IMaRSETLMixin(object):
         for fkey, tmpf in self.tmp_paths.items():
             print("cleanup {} ({})".format(fkey, tmpf))
             tmp_cleanup_task([tmpf], self)
+    # =======================================================================

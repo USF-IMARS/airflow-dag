@@ -1,9 +1,9 @@
-from airflow.operators.python_operator import PythonOperator
+from airflow.operators.bash_operator import BashOperator
 
 from imars_dags.operators.IMaRSETLMixin import IMaRSETLMixin
 
 
-class IMaRSETLPythonOperator(IMaRSETLMixin, PythonOperator):
+class IMaRSETLPythonOperator(IMaRSETLMixin, BashOperator):
 
     def __init__(
         self,
@@ -14,19 +14,12 @@ class IMaRSETLPythonOperator(IMaRSETLMixin, PythonOperator):
         outputs={},  # aka loads
         tmpdirs=[],
 
-        op_kwargs={},
         **kwargs
     ):
         self.pre_init(inputs, outputs, tmpdirs, dag)
 
-        # add tmp filepath macros so we can template w/ them
-        # user_defined_macros.update(self.tmp_paths)
-        op_kwargs.update(self.tmp_paths)
-
         super(IMaRSETLPythonOperator, self).__init__(
             *args,
             dag=dag,
-            op_kwargs=op_kwargs,
-            provide_context=True,
             **kwargs
         )

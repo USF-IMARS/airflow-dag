@@ -2,12 +2,13 @@
 # this sets up a FileTriggerDAG that catches a whole bunch of products
 # which do not launch DAGs and changes their status from `to_load` to `std`
 # =========================================================================
-import airflow  # you need this here or else airflow will not find your dag
+# unused DAG import so airflow can find your dag
+import airflow  # noqa F401
 
 from imars_dags.dag_classes.file_triggers.FileTriggerDAG import FileTriggerDAG
 
 """
-MariaDB [imars_product_metadata]> select id,short_name from product ORDER BY id;
+[imars_product_metadata]> select id,short_name from product ORDER BY id;
 +----+------------------------+
 | id | short_name             |
 +----+------------------------+

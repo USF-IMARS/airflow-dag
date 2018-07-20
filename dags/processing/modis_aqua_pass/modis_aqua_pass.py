@@ -14,8 +14,6 @@ from imars_dags.util.get_default_args import get_default_args
 from imars_dags.operators.IMaRSETLBashOperator import IMaRSETLBashOperator
 from imars_dags.util.globals import QUEUE
 
-AREA_SHORT_NAME = "gom"
-AREA_ID = 1
 L1_PRODUCT_ID = 5
 L2_PRODUCT_ID = 35
 L3_PRODUCT_ID = 42
@@ -104,4 +102,5 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
 
     l1_to_l2 >> l3gen
 
+    # must add the dag to globals with unique name so airflow can find it
     globals()[DAG_ID] = this_dag

@@ -2,6 +2,7 @@ from os import makedirs
 
 import imars_etl
 from airflow.exceptions import AirflowSkipException
+from airflow.exceptions import AirflowException
 
 from imars_dags.util.etl_tools.tmp_file import tmp_filepath
 from imars_dags.util.etl_tools.load import load_task
@@ -60,6 +61,8 @@ class IMaRSETLMixin(object):
             self.tmp_paths[tdir] = tmp_filepath(dag.dag_id, tdir)
             # NOTE: using tmp_filepath here instead of tmp_fildir because we do
             #   not want the auto-added mkdir operator.
+
+        # TODO: assert(len(outputs) > 0) ???
 
     # =======================================================================
     # =================== BaseOperator Overrides ============================
@@ -129,7 +132,6 @@ class IMaRSETLMixin(object):
                 'All output products already exist in the metadata db.'
             )
 
-
     def render_all_paths(self, context):
         # basically double-renders the path_val (so we can use use macros like
         #   {{ts_nodash}} in the tmp_paths.
@@ -168,7 +170,16 @@ class IMaRSETLMixin(object):
     def _render_output_metadata(self, metadata, context):
         attr = ""
         for key, val in metadata.items():
-            metadata[key] = self.render_template(attr, val, context)
+            try:
+                metadata[key] = self.render_template(attr, val, context)
+            except AirflowException as af_ex:
+                # Type ... used for parameter not supported for templating
+                print(
+                    "skipping over exception on output metadata render: "
+                    "\n\t{}".format(af_ex)
+                )
+                pass
+
         return metadata
 
     def load_outputs(self, context):

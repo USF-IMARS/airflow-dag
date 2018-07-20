@@ -6,7 +6,6 @@ from datetime import datetime
 import os
 
 # deps
-from airflow.utils.trigger_rule import TriggerRule
 from airflow import DAG
 
 # this package
@@ -17,6 +16,10 @@ from imars_dags.util._render import _render
 from imars_dags.util.get_dag_id import get_dag_id
 
 AREA_SHORT_NAME = "gom"
+AREA_ID = 1
+L1_PRODUCT_ID = 5
+L2_PRODUCT_ID = 35
+L3_PRODUCT_ID = 42
 
 this_dag = DAG(
     dag_id=get_dag_id(
@@ -36,17 +39,18 @@ l1_to_l2 = IMaRSETLBashOperator(
     task_id='l1_to_l2',
     bash_command="l1_to_l2.sh",
     inputs={
-        "myd01_file": "product_id=5 AND date_time='{{ts}}'"
+        "myd01_file":
+            "product_id="+str(L1_PRODUCT_ID)+" AND date_time='{{ts}}'"
     },
     outputs={
         'l2_file': {
             "verbose": 3,
-            "product_id": 35,
+            "product_id": L2_PRODUCT_ID,
             # "time": "{{ ts }}",  # .replace(" ", "T") ?
             # "datetime": {{ execution_date }},
             "json": '{'
                 '"status_id":3,'  # noqa E131
-                '"area_id":1,'
+                '"area_id":'+str(AREA_ID)+','
                 '"area_short_name":"' + AREA_SHORT_NAME + '"'
             '}'
         },
@@ -59,6 +63,44 @@ l1_to_l2 = IMaRSETLBashOperator(
         ),
     },
     queue=QUEUE.SAT_SCRIPTS,
-    trigger_rule=TriggerRule.ONE_SUCCESS,  # run if any upstream passes
     dag=this_dag,
 )
+
+
+l3gen = IMaRSETLBashOperator(
+    task_id="l3gen",
+    bash_command="""
+        /opt/snap/bin/gpt {{ params.xml_file }} \
+        -t {{ params.l3_output }} \
+        -f NetCDF-BEAM \
+        {{ params.l2_input }}
+    """,
+    params={
+        "xml_file": os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "L3G_MODA_GOM_v2.xml"
+        )
+    },
+    inputs={
+        "l2_input":
+            "product_id="+str(L2_PRODUCT_ID)+" AND date_time='{{ts}}'"
+    },
+    outputs={
+        'l3_output': {
+            "verbose": 3,
+            "product_id": L3_PRODUCT_ID,
+            # "time": "{{ ts }}",  # .replace(" ", "T") ?
+            # "datetime": {{ execution_date }},
+            "json": '{'
+                '"status_id":3,'  # noqa E131
+                '"area_id":'+str(AREA_ID)+','
+                '"area_short_name":"' + AREA_SHORT_NAME + '"'
+            '}'
+        },
+    },
+    queue=QUEUE.SNAP,
+    dag=this_dag,
+)
+
+
+l1_to_l2 >> l3gen

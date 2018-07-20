@@ -4,8 +4,7 @@ import imars_etl
 
 from imars_dags.util.etl_tools.tmp_file import tmp_filepath
 from imars_dags.util.etl_tools.load import load_task
-from imars_dags.util.etl_tools.cleanup import tmp_cleanup_task
-from imars_dags.util._render import _render
+from imars_dags.util.etl_tools.cleanup import _cleanup_tmp_file
 
 
 class IMaRSETLMixin(object):
@@ -16,6 +15,29 @@ class IMaRSETLMixin(object):
     Leverages IMaRS ETL tools (https://github.com/usf-imars/imars-etl) to:
         * find & "Extract" input files by metadata
         * "Load" & cleanup output files & autofill (some) metadata
+
+    inputs, outputs, and tmpdirs get injected into context['params'] so you
+    can template with them as if they were passed into params.
+
+    __init__ parameters:
+    -------------------
+    inputs : dict of strings
+        Mapping of input keys (use like tmp filenames) to metadata SQL queries.
+        Files are automatically extracted from the database & injected into
+        context['params'] so you can template with them. Downloaded files
+        are automatically cleaned up.
+    outputs : dict of dicts
+        Mapping of output keys (use like tmp filenames) to output metdata to
+        be loaded into the data warehouse. Output files are automatically
+        loaded into the warehouse and the following metadata is automatically
+        added to the output product:
+            {
+                # TODO
+            }
+        Output files are cleaned up automatically after load finishes.
+    tmpdirs : str[]
+        List of tmp directories to be created before run. The tmp dirs are
+        automatically created and cleaned up after the job is done.
     """
     # =================== subclass helper methods ============================
     def pre_init(self, inputs, outputs, tmpdirs, dag):
@@ -38,35 +60,32 @@ class IMaRSETLMixin(object):
             # NOTE: using tmp_filepath here instead of tmp_fildir because we do
             #   not want the auto-added mkdir operator.
 
-        # TODO: how?!?
-        # add the double-render filter
-        # user_defined_filters['render'] = _render
     # =======================================================================
     # =================== BaseOperator Overrides ============================
     def render_template(self, attr, content, context):
         print("adding paths to context:\n\t{}".format(self.tmp_paths))
-        enhanced_ctx = context.copy()
-        # include tmp_paths in context so we can template with them
-        for key, val in self.tmp_paths.items():
-            # enhanced_ctx.update(self.tmp_paths) but raise err on overwrites
-            if context.get(key) is not None:
-                raise ValueError(
-                    "tmp filepath uses reserved key {}. ".format(key) +
-                    "Please use a different key. " +
-                    "In-context value is '{}'".format(context.get(key))
+        # inject tmp_paths into context params so we can template with them
+        print("\n-----\nctx:\n\t{}\n----\n".format(context))
+        for path_key, path_val in self.tmp_paths.items():
+            context['params'].setdefault(
+                path_key,
+                # double-render the path_val (so we can use use macros like
+                #   {{ts_nodash}} in the tmp_paths.
+                super(IMaRSETLMixin, self).render_template(
+                    attr, path_val, context
                 )
-            else:
-                enhanced_ctx[key] = val
+            )
         return super(IMaRSETLMixin, self).render_template(
-            attr, content, enhanced_ctx
+            attr, content, context
         )
 
     def pre_execute(self, context):
+        # TODO: check metadta for output already exists?
         self.render_all_paths(context)
         super(IMaRSETLMixin, self).pre_execute(context)
 
     def execute(self, context):
-        # TODO: use pre_execute, post_execute and prepare_template ?
+        # TODO: use pre_execute and post_execute instead ?
         # https://airflow.apache.org/code.html#airflow.models.BaseOperator.post_execute
         try:
             self.create_tmpdirs()
@@ -79,12 +98,15 @@ class IMaRSETLMixin(object):
     # =======================================================================
     # ====================== "private" methods ==============================
     def render_all_paths(self, context):
-        for pathkey in self.tmp_paths:
-            self.tmp_paths[pathkey] = self.render_template(
+        # basically double-renders the path_val (so we can use use macros like
+        #   {{ts_nodash}} in the tmp_paths.
+        for pathkey, pathval in self.tmp_paths.items():
+            rendered_pathval = self.render_template(
                 '',
-                self.tmp_paths[pathkey],
+                pathval,
                 context
             )
+            self.tmp_paths[pathkey] = rendered_pathval
 
     def create_tmpdirs(self):
         print("creating tmpdirs...")
@@ -132,5 +154,5 @@ class IMaRSETLMixin(object):
         print("cleaning up temporary files...")
         for fkey, tmpf in self.tmp_paths.items():
             print("cleanup {} ({})".format(fkey, tmpf))
-            tmp_cleanup_task([tmpf], self)
+            _cleanup_tmp_file(tmpf)
     # =======================================================================

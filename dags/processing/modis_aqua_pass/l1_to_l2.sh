@@ -3,9 +3,9 @@
 # Creates then cleans up temporary geo & hkm files.
 # Based on `process_image.sh` from IMaRS's `scratch/epa/satellite/modis/GOM`.
 # Contacts: Tylar Murray, Dan Otis
-TMP_DIR={{tmp_dir|render}}  # TODO: is |render required here?
-L1_PATH={{myd01_file|render}}
-L2_PATH={{l2_file|render}}
+TMP_DIR={{ params.tmp_dir }}
+L1_PATH={{ params.myd01_file }}
+L2_PATH={{ params.l2_file }}
 XCALFILE_PATH={{ params.xcalfile }}
 PARFILE_PATH={{ params.par }}
 GEO_PATH=$TMP_DIR/geo
@@ -54,9 +54,10 @@ $OCSSWROOT/bin/l2gen \
     par=$PARFILE_PATH &&
 [[ -s $L2_PATH ]]
 
-echo cleaning up tmp files...
-rm $GEOPATH
-rm $OKM_PATH
-rm $HKM_PATH
-rm $QKM_PATH
-rm $TMP_DIR
+# NOTE: IMaRSETLBashOperator takes care of this
+# echo cleaning up tmp files...
+# rm $GEOPATH
+# rm $OKM_PATH
+# rm $HKM_PATH
+# rm $QKM_PATH
+# rm $TMP_DIR

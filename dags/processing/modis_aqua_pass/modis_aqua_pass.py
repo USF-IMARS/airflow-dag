@@ -57,7 +57,6 @@ l1_to_l2 = IMaRSETLBashOperator(
             os.path.dirname(os.path.realpath(__file__)),  # here
             "moda_l2gen.par"
         ),
-        "xcalfile": "$OCVARROOT/modisa/xcal/OPER/xcal_modisa_axc_oc_v1.12d",
     },
     queue=QUEUE.SAT_SCRIPTS,
     trigger_rule=TriggerRule.ONE_SUCCESS,  # run if any upstream passes

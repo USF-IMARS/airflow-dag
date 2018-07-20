@@ -10,6 +10,29 @@ from airflow.operators.python_operator import PythonOperator
 from imars_dags.util.etl_tools.tmp_file import TMP_PREFIX
 
 
+def _cleanup_tmp_file(cleanup_path):
+    """
+    Delete a file, but be kinda careful about it.
+    cleanup_path must be inside the dir specified by TMP_PREFIX.
+    """
+    if (
+        cleanup_path.startswith(TMP_PREFIX) and
+        len(cleanup_path.strip()) > len(TMP_PREFIX)
+    ):
+        print('rm -rf {}'.format(cleanup_path))
+        try:
+            os.remove(cleanup_path)
+        except OSError:
+            shutil.rmtree(cleanup_path)
+        except FileNotFoundError:
+            print("File Not Found. ¯\_(ツ)_/¯")
+    else:
+        raise ValueError(
+            "\ncleanup paths must be in tmp dir '{}'".format(TMP_PREFIX) +
+            "\n\t you attempted to 'rm -rf {}'".format(cleanup_path)
+        )
+
+
 def tmp_cleanup_task(to_cleanup, task, **kwargs):
     for cleanup_path in to_cleanup:
         cleanup_path = task.render_template(
@@ -17,20 +40,7 @@ def tmp_cleanup_task(to_cleanup, task, **kwargs):
             cleanup_path,
             kwargs
         )
-        if (
-            cleanup_path.startswith(TMP_PREFIX) and
-            len(cleanup_path.strip()) > len(TMP_PREFIX)
-        ):
-            print('rm -rf {}'.format(cleanup_path))
-            try:
-                os.remove(cleanup_path)
-            except OSError:
-                shutil.rmtree(cleanup_path)
-        else:
-            raise ValueError(
-                "\ncleanup paths must be in tmp dir '{}'".format(TMP_PREFIX) +
-                "\n\t you attempted to 'rm -rf {}'".format(cleanup_path)
-            )
+        _cleanup_tmp_file(cleanup_path)
 
 
 def add_cleanup(dag, to_cleanup, upstream_operators):

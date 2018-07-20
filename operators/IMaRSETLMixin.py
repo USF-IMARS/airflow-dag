@@ -31,8 +31,8 @@ class IMaRSETLMixin(object):
         self.tmp_dirs = []
         for inpf in self.inputs:
             self.tmp_paths[inpf] = tmp_filepath(dag.dag_id, inpf)
-        for opf in self.outputs:
-            self.tmp_paths[opf] = tmp_filepath(dag.dag_id, opf)
+        for outkey in self.outputs:
+            self.tmp_paths[outkey] = tmp_filepath(dag.dag_id, outkey)
         for tdir in self.tmpdirs:
             self.tmp_paths[tdir] = tmp_filepath(dag.dag_id, tdir)
             # NOTE: using tmp_filepath here instead of tmp_fildir because we do
@@ -61,15 +61,18 @@ class IMaRSETLMixin(object):
             attr, content, enhanced_ctx
         )
 
+    def pre_execute(self, context):
+        self.render_all_paths(context)
+        super(IMaRSETLMixin, self).pre_execute(context)
+
     def execute(self, context):
         # TODO: use pre_execute, post_execute and prepare_template ?
         # https://airflow.apache.org/code.html#airflow.models.BaseOperator.post_execute
         try:
-            self.render_all_paths(context)
             self.create_tmpdirs()
-            self.extract_inputs()
+            self.extract_inputs(context)
             super(IMaRSETLMixin, self).execute(context)
-            self.load_outputs()
+            self.load_outputs(context)
         finally:
             self.cleanup()
 
@@ -90,10 +93,14 @@ class IMaRSETLMixin(object):
             print("{}=>{}".format(tdir, tmp_dir_path))
             makedirs(tmp_dir_path)
 
-    def extract_inputs(self):
+    def _render_input_metadata(self, metadata, context):
+        attr = ""
+        return self.render_template(attr, metadata, context)
+
+    def extract_inputs(self, context):
         print("extracting input files from IMaRS data warehouse...")
         for inpf in self.inputs:
-            metadata = self.inputs[inpf]
+            metadata = self._render_input_metadata(self.inputs[inpf], context)
             out_path = self.tmp_paths[inpf]
             print("{}\n\t->\t{}\n\t->\t{}\n\t->\t".format(
                 inpf, metadata, out_path
@@ -103,12 +110,19 @@ class IMaRSETLMixin(object):
                 output_path=out_path
             )
 
-    def load_outputs(self):
+    def _render_output_metadata(self, metadata, context):
+        attr = ""
+        for key, val in metadata.items():
+            metadata[key] = self.render_template(attr, val, context)
+        return metadata
+
+    def load_outputs(self, context):
         print("loading output files into IMaRS data warehouse...")
         for outf in self.outputs:
             load_args = self.outputs[outf]
             output_path = self.tmp_paths[outf]
             load_args['filepath'] = output_path
+            load_args = self._render_output_metadata(load_args, context)
             print("{}\n\t->\t{}\n\t->\t{}\n\t->\t".format(
                 outf, output_path, load_args
             ))

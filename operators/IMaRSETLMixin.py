@@ -29,12 +29,12 @@ class IMaRSETLMixin(object):
     outputs : dict of dicts
         Mapping of output keys (use like tmp filenames) to output metdata to
         be loaded into the data warehouse. Output files are automatically
-        loaded into the warehouse and the following metadata is automatically
-        added to the output product:
+        loaded into the warehouse and cleaned up after load finishes.
+        The following metadata is automatically added to the output product:
             {
-                # TODO
+                "filepath": "{{ the_given_output_key }}",
+                # TODO: more?
             }
-        Output files are cleaned up automatically after load finishes.
     tmpdirs : str[]
         List of tmp directories to be created before run. The tmp dirs are
         automatically created and cleaned up after the job is done.
@@ -65,7 +65,7 @@ class IMaRSETLMixin(object):
     def render_template(self, attr, content, context):
         print("adding paths to context:\n\t{}".format(self.tmp_paths))
         # inject tmp_paths into context params so we can template with them
-        print("\n-----\nctx:\n\t{}\n----\n".format(context))
+        # print("\n-----\nctx:\n\t{}\n----\n".format(context))
         for path_key, path_val in self.tmp_paths.items():
             context['params'].setdefault(
                 path_key,

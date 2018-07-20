@@ -1,4 +1,9 @@
 """
+!!! NOTE !!!: this implementation is incomplete and ProcDAG has been
+superceeded by IMaRSETL*Operator(s) before it even got off the ground.
+I am leaving ProcDAG here for now though b/c I still kinda like the idea and
+may want to revisit.
+
 "Processing" DAG - a DAG which performs ETL operations.
 
 This class leverages imars-etl to hide complexity of the "extract" and "load"

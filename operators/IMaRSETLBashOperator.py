@@ -3,7 +3,7 @@ from airflow.operators.bash_operator import BashOperator
 from imars_dags.operators.IMaRSETLMixin import IMaRSETLMixin
 
 
-class IMaRSETLPythonOperator(IMaRSETLMixin, BashOperator):
+class IMaRSETLBashOperator(IMaRSETLMixin, BashOperator):
 
     def __init__(
         self,
@@ -18,7 +18,7 @@ class IMaRSETLPythonOperator(IMaRSETLMixin, BashOperator):
     ):
         self.pre_init(inputs, outputs, tmpdirs, dag)
 
-        super(IMaRSETLPythonOperator, self).__init__(
+        super(IMaRSETLBashOperator, self).__init__(
             *args,
             dag=dag,
             **kwargs

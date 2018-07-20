@@ -1,6 +1,7 @@
 from os import makedirs
 
 import imars_etl
+from airflow.exceptions import AirflowSkipException
 
 from imars_dags.util.etl_tools.tmp_file import tmp_filepath
 from imars_dags.util.etl_tools.load import load_task
@@ -81,6 +82,7 @@ class IMaRSETLMixin(object):
 
     def pre_execute(self, context):
         # TODO: check metadta for output already exists?
+        self._skip_if_output_exists(context)
         self.render_all_paths(context)
         super(IMaRSETLMixin, self).pre_execute(context)
 
@@ -97,6 +99,37 @@ class IMaRSETLMixin(object):
 
     # =======================================================================
     # ====================== "private" methods ==============================
+    def _skip_if_output_exists(self, context):
+        """
+        sets the task state to "skipped" if all the outputs already exist.
+        """
+        print("checking for all outputs already exist...")
+        for out_key, out_meta in self.outputs.items():
+            pid = out_meta['product_id']
+            dt = '2018-07-20T19:00:00'  # TODO
+            aid = 1  # TODO
+            sql = "product_id={} AND date_time='{}' AND area_id='{}'".format(
+                pid, dt, aid
+            )
+            print('"{}" exists?'.format(sql))
+            result = imars_etl.get_metadata(sql, first=True)
+            print("result: {}".format(result))
+            if result is not None:
+                print('\tyep')
+            else:
+                print('\tnope')
+                return
+        else:  # we went through all products and didn't find any "nope"s
+            self.skip(
+                context['dag_run'],
+                context['ti'].execution_date,
+                [self]
+            )
+            raise AirflowSkipException(
+                'All output products already exist in the metadata db.'
+            )
+
+
     def render_all_paths(self, context):
         # basically double-renders the path_val (so we can use use macros like
         #   {{ts_nodash}} in the tmp_paths.

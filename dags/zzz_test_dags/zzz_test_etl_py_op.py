@@ -40,16 +40,16 @@ test_op2 = IMaRSETLPythonOperator(
     #     }
     # },
     tmpdirs=[
-        'tmpdir'
+        'mytempdir'
     ],
 )
 
 
-def myfunc2(*, infilename, tmpdirname, **kwargs):
+def myfunc2(*, infilename, mytmpdirname, **kwargs):
     print(
         "callable with context using op_kwargs to get:" +
         "\n\tinfilename:  {}" +
-        "\n\tmpdirname: {}".format(infilename, tmpdirname)
+        "\n\tmpdirname: {}".format(infilename, mytmpdirname)
     )
 
 test_op3 = IMaRSETLPythonOperator(
@@ -65,7 +65,7 @@ test_op3 = IMaRSETLPythonOperator(
         # }
     },
     tmpdirs=[
-        'tmpdirname'
+        'mytmpdirname'
     ],
 )
 

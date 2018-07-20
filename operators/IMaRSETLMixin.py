@@ -44,17 +44,22 @@ class IMaRSETLMixin(object):
     # =======================================================================
     # =================== BaseOperator Overrides ============================
     def render_template(self, attr, content, context):
+        print("adding paths to context:\n\t{}".format(self.tmp_paths))
+        enhanced_ctx = context.copy()
         # include tmp_paths in context so we can template with them
         for key, val in self.tmp_paths.items():
-            # context.update(self.tmp_paths) but raise err on overwrite
-            if context.get(key):
+            # enhanced_ctx.update(self.tmp_paths) but raise err on overwrites
+            if context.get(key) is not None:
                 raise ValueError(
-                    "tmp filepath uses reserved key {}. "
-                    "Please use a different key."
+                    "tmp filepath uses reserved key {}. ".format(key) +
+                    "Please use a different key. " +
+                    "In-context value is '{}'".format(context.get(key))
                 )
             else:
-                context[key] = val
-        super(IMaRSETLMixin, self).render_template(attr, content, context)
+                enhanced_ctx[key] = val
+        return super(IMaRSETLMixin, self).render_template(
+            attr, content, enhanced_ctx
+        )
 
     def execute(self, context):
         # TODO: use pre_execute, post_execute and prepare_template ?

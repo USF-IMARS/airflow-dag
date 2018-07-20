@@ -1,9 +1,10 @@
 from airflow.operators.bash_operator import BashOperator
+from airflow.models import SkipMixin
 
 from imars_dags.operators.IMaRSETLMixin import IMaRSETLMixin
 
 
-class IMaRSETLBashOperator(IMaRSETLMixin, BashOperator):
+class IMaRSETLBashOperator(IMaRSETLMixin, SkipMixin, BashOperator):
 
     def __init__(
         self,

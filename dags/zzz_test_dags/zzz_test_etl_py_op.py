@@ -10,7 +10,7 @@ from imars_dags.operators.IMaRSETLPythonOperator import IMaRSETLPythonOperator
 
 
 this_dag = DAG(
-    dag_id='zzz_test_etl_op',
+    dag_id='zzz_test_etl_py_op',
     default_args=dict(
         start_date=datetime.utcnow()
     )

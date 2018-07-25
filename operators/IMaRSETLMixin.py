@@ -127,7 +127,10 @@ class IMaRSETLMixin(object):
         """
         print("checking for all outputs already exist...")
         for out_key, out_meta in self.outputs.items():
+            # we must render sql before checking
+            out_meta = self._render_output_metadata(out_meta, context)
             sql = out_meta['sql']
+            # TODO: enhance sql with get_default_load_args
             print('"{}" exists?'.format(sql))
             result = imars_etl.select(sql, first=True)
             print("result: {}".format(result))

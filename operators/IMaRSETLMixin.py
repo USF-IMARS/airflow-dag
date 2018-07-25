@@ -108,12 +108,7 @@ class IMaRSETLMixin(object):
         """
         print("checking for all outputs already exist...")
         for out_key, out_meta in self.outputs.items():
-            pid = out_meta['product_id']
-            dt = '2018-07-20T19:00:00'  # TODO
-            aid = 1  # TODO
-            sql = "product_id={} AND date_time='{}' AND area_id='{}'".format(
-                pid, dt, aid
-            )
+            sql = out_meta['sql']
             print('"{}" exists?'.format(sql))
             result = imars_etl.select(sql, first=True)
             print("result: {}".format(result))

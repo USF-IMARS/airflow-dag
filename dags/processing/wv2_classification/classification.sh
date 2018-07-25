@@ -14,7 +14,7 @@ python /opt/imagery_utils/pgc_ortho.py \
     [[ -s $ORTH_FILE ]]
 
 # === matlab
-MET={{params.input_dir/wv02_19890607101112_fake0catalog0id0.xml}}  &&
+MET={{params.input_dir}}/wv02_19890607101112_fake0catalog0id0.xml  &&
 /opt/matlab/R2018a/bin/matlab -nodisplay -nodesktop -r "\
     cd('/opt/wv2_processing');\
     wv2_processing(\

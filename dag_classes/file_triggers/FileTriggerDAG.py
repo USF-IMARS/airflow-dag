@@ -125,10 +125,10 @@ class FileTriggerDAG(DAG):
                 # print("\n\tmeta:\n\t{}\n".format(file_metadata))
                 # logging.info("\n\n\tmeta:\n\t{}".format(file_metadata))
                 # convert area_id to area_name
-                file_metadata['area_name'] = id_lookup({
-                    'table': 'area',
-                    'value': file_metadata['area_id']
-                })
+                file_metadata['area_name'] = id_lookup(
+                    table='area',
+                    value=file_metadata['area_id']
+                )
 
                 ti.xcom_push(key='file_metadata', value=file_metadata)
                 # NOTE: can we just use the dict above?

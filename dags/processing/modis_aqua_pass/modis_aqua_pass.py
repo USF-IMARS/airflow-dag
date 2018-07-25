@@ -37,7 +37,7 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
     l1_to_l2 = IMaRSETLBashOperator(
         task_id='l1_to_l2',
         bash_command="l1_to_l2.sh",
-        should_overwrite=False,
+        should_overwrite=True,
         inputs={
             "myd01_file":
                 "product_id="+str(L1_PRODUCT_ID)+" AND date_time='{{ts}}'"
@@ -55,7 +55,8 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
                 ),
                 "json": '{'  # noqa E131
                     '"area_short_name":"' + AREA_SHORT_NAME + '"'
-                '}'
+                '}',
+                'duplicates_ok': True,
                 # TODO: rm json &
                 # "area_short_name": AREA_SHORT_NAME
             },

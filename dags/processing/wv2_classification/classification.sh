@@ -10,7 +10,8 @@ python /opt/imagery_utils/pgc_ortho.py \
     -t UInt16 \
     -f GTiff \
     --no-pyramids \
-    {{ params.input_dir }} {{ params.ortho_dir }} &&
+    {{ params.input_dir }} \
+    {{ params.ortho_dir }} &&
     [[ -s $ORTH_FILE ]]
 
 # === matlab
@@ -18,9 +19,9 @@ MET={{params.input_dir}}/wv02_19890607101112_fake0catalog0id0.xml  &&
 /opt/matlab/R2018a/bin/matlab -nodisplay -nodesktop -r "\
     cd('/opt/wv2_processing');\
     wv2_processing(\
-        '$ORTH_FILE',\
+        \"$ORTH_FILE\",\
         '{{params.id}}',\
-        '$MET',\
+        \"$MET\",\
         '{{params.crd_sys}}',\
         '{{params.dt}}',\
         '{{params.sgw}}',\

@@ -124,8 +124,8 @@ def get_dag(area_short_name, area_id):
     classification = IMaRSETLBashOperator(  # noqa F841
         dag=this_dag,
         task_id='classification',
-        should_overwrite=True,  # TODO: switch this to False once reproc done
-        should_cleanup=False,  # TODO: switch this to True once debug done
+        should_overwrite=True,  # TODO: switch to False once reproc done
+        should_cleanup=True,  # switch to False if debugging
         bash_command='classification.sh',
         tmpdirs=[
             'input_dir',

@@ -1,8 +1,10 @@
 # wv2 habitat classification adapted from
 # https://github.com/USF-IMARS/wv2-processing/blob/master/submit_py.sh
 
+MET={{params.input_dir}}/wv02_19890607101112_fake0catalog0id0.xml  &&
 ORTH_FILE={{ params.ortho_dir }}/wv02_19890607101112_fake0catalog0id0_u16ns4326.tif &&
-
+RRS_OUT={{ params.output_dir }}
+CLASS_OUT={{ params.output_dir }}
 # === pgc ortho
 python /opt/imagery_utils/pgc_ortho.py \
     -p 4326 \
@@ -15,7 +17,6 @@ python /opt/imagery_utils/pgc_ortho.py \
     [[ -s $ORTH_FILE ]]
 
 # === matlab
-MET={{params.input_dir}}/wv02_19890607101112_fake0catalog0id0.xml  &&
 /opt/matlab/R2018a/bin/matlab -nodisplay -nodesktop -r "\
     cd('/opt/wv2_processing');\
     wv2_processing(\
@@ -29,9 +30,9 @@ MET={{params.input_dir}}/wv02_19890607101112_fake0catalog0id0.xml  &&
         '{{params.stat}}',\
         '{{params.loc}}',\
         '{{params.id_number}}',\
-        '""" + rrs_out + """',\
-        '""" + class_out + """'\
+        \"$RRS_OUT\",\
+        \"$CLASS_OUT\"\
     );\
     exit\
 " &&
-[[ -s {{params.output_dir}}/{{params.id}}_{{params.loc}}_Rrs.tif ]]  # Rrs should always be output
+[[ -s $RRS_OUT/{{params.id}}_{{params.loc}}_Rrs.tif ]]  # Rrs should always be output

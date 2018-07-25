@@ -55,7 +55,7 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
                 "json": '{'  # noqa E131
                     '"area_short_name":"' + AREA_SHORT_NAME + '"'
                 '}'
-                # TODO:
+                # TODO: rm json &
                 # "area_short_name": AREA_SHORT_NAME
             },
         },

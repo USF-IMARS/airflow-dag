@@ -22,7 +22,7 @@ class IMaRSETLMixin(object):
     inputs, outputs, and tmpdirs get injected into context['params'] so you
     can template with them as if they were passed into params.
 
-    __init__ parameters:
+    subclass __init__ parameters:
     -------------------
     inputs : dict of strings
         Mapping of input keys (use like tmp filenames) to metadata SQL queries.
@@ -42,6 +42,24 @@ class IMaRSETLMixin(object):
         List of tmp directories to be created before run. The tmp dirs are
         automatically created and cleaned up after the job is done.
     """
+
+    def __init__(self, *args, should_overwrite=False, **kwargs):
+        """
+            parameters:
+            -----------
+            should_overwrite : bool
+                If True extant files with metadata matching the output will
+                be overwritten. If False, the task skips when matches are
+                found for all outputs.
+                NOTE: Backend methods are NYI. If you use this now you will
+                    probably get a "DuplicateEntry" error when trying to load.
+        """
+        self.should_overwrite = should_overwrite
+        super(IMaRSETLMixin, self).__init__(
+            *args,
+            **kwargs
+        )
+
     # =================== subclass helper methods ============================
     def pre_init(self, inputs, outputs, tmpdirs, dag):
         """
@@ -85,8 +103,8 @@ class IMaRSETLMixin(object):
         )
 
     def pre_execute(self, context):
-        # TODO: check metadta for output already exists?
-        self._skip_if_output_exists(context)
+        if self.should_overwrite is False:
+            self._skip_if_output_exists(context)
         self.render_all_paths(context)
         super(IMaRSETLMixin, self).pre_execute(context)
 

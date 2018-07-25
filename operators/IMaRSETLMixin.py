@@ -5,7 +5,7 @@ from airflow.exceptions import AirflowSkipException
 from airflow.exceptions import AirflowException
 
 from imars_dags.util.etl_tools.tmp_file import tmp_filepath
-from imars_dags.util.etl_tools.load import load_task
+from imars_dags.util.etl_tools.load import get_default_load_args
 from imars_dags.util.etl_tools.cleanup import _cleanup_tmp_file
 
 
@@ -192,7 +192,9 @@ class IMaRSETLMixin(object):
             print("{}\n\t->\t{}\n\t->\t{}\n\t->\t".format(
                 outf, output_path, load_args
             ))
-            load_task(load_args, self)
+            load_args.update(get_default_load_args(**load_args))
+            print('loading {}'.format(load_args))
+            imars_etl.load(**load_args)
 
     def cleanup(self):
         print("cleaning up temporary files...")

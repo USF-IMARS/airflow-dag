@@ -45,8 +45,8 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
             'l2_file': {
                 "verbose": 3,
                 "product_id": L2_PRODUCT_ID,
-                # "time": "{{ ts }}",  # .replace(" ", "T") ?
-                # "datetime": {{ execution_date }},
+                "time": "{{ ts }}",  # .replace(" ", "T") ?
+                "datetime": "{{ execution_date }}",
                 "json": '{'
                     '"status_id":3,'  # noqa E131
                     '"area_id":'+str(AREA_ID)+','

@@ -56,21 +56,18 @@ def get_dag(area_short_name, area_id):
 
     # figure out what filenames should be:
     # ===========================================================================
-    rrs_out = "output_dir"  # TODO rm
-    class_out = rrs_out  # same as above  "/work/m/mjm8/tmp/test/output/"
-
     if FILTER:
-        classf_output = "{}/{}_{}_DT_filt_{}_{}_{}.tif".format(
-            class_out, ID, LOC, ID_NUM, FILTER, STAT
+        classf_output = "output_dir/{}_{}_DT_filt_{}_{}_{}.tif".format(
+            ID, LOC, ID_NUM, FILTER, STAT
         )
     else:
-        classf_output = "{}/{}_{}_DT_nofilt_{}.tif".format(
-            class_out, ID, LOC, ID_NUM
+        classf_output = "output_dir/{}_{}_DT_nofilt_{}.tif".format(
+            ID, LOC, ID_NUM
         )
     # expected output filepaths
-    Rrs_output = "{}/{}_{}_Rrs.tif".format(rrs_out, ID, LOC)
-    rrs_output = "{}/{}_{}_rrs.tif".format(rrs_out, ID, LOC)
-    bth_output = "{}/{}_{}_Bathy.tif".format(rrs_out, ID, LOC)
+    Rrs_output = "output_dir/{}_{}_Rrs.tif".format(ID, LOC)
+    rrs_output = "output_dir/{}_{}_rrs.tif".format(ID, LOC)
+    bth_output = "output_dir/{}_{}_Bathy.tif".format(ID, LOC)
     outputs_to_load = {
         ("output_dir/"+Rrs_output): {  # Rrs always an output
             "load_format": os.path.join(

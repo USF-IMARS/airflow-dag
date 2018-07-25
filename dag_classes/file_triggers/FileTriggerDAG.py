@@ -18,7 +18,7 @@ from airflow.operators.python_operator import PythonOperator, BranchPythonOperat
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.mysql_operator import MySqlOperator
 
-from imars_etl.get_metadata import get_metadata
+from imars_etl.select import select
 from imars_etl.id_lookup import id_lookup
 from imars_dags.util.get_default_args import get_default_args
 from imars_dags.util.list_to_sql_or import list_to_sql_or
@@ -119,7 +119,7 @@ class FileTriggerDAG(DAG):
                 # `ti.push()`es area_id & date_time from SQL
                 ti = kwargs['ti']
                 # print("sql:\n\t{}".format(sql_selection))
-                file_metadata = get_metadata(
+                file_metadata = select(
                         sql=sql_selection,
                         first=True,
                 )

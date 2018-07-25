@@ -15,7 +15,7 @@ def file_not_yet_ingested(uuid):
     """returns true if file w/ given uuid is not in our system"""
     # check imars-etl db?
     try:
-        result = imars_etl.get_metadata(
+        result = imars_etl.select(
             sql="uuid='{}'".format(uuid),
             verbose=3,
         )

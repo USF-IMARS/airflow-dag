@@ -8,8 +8,6 @@ from airflow.operators.bash_operator import BashOperator
 from airflow.operators.mysql_operator import MySqlOperator
 from airflow.operators.dummy_operator import DummyOperator
 
-import imars_etl
-
 from imars_dags.util.etl_tools.extract import add_extract
 from imars_dags.util.etl_tools.tmp_file import tmp_filepath
 from imars_dags.util.etl_tools.cleanup import add_cleanup

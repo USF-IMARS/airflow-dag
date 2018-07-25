@@ -1,10 +1,17 @@
 # wv2 habitat classification adapted from
 # https://github.com/USF-IMARS/wv2-processing/blob/master/submit_py.sh
 
-MET={{params.input_dir}}/wv02_19890607101112_fake0catalog0id0.xml  &&
-ORTH_FILE={{ params.ortho_dir }}/wv02_19890607101112_fake0catalog0id0_u16ns4326.tif &&
+MET_BASENAME=wv02_19890607101112_fake0catalog0id0.xml
+ORTH_BASENAME=wv02_19890607101112_fake0catalog0id0_u16ns4326.tif
+
+INPUT_DIR={{params.input_dir}}
+ORTH_DIR={{ params.ortho_dir }}
 RRS_OUT={{ params.output_dir }}
 CLASS_OUT={{ params.output_dir }}
+
+ORTH_FILE=$ORTH_DIR/$ORTH_BASENAME
+MET=$INPUT_DIR/$MET_BASENAME
+
 # === pgc ortho
 python /opt/imagery_utils/pgc_ortho.py \
     -p 4326 \
@@ -12,17 +19,19 @@ python /opt/imagery_utils/pgc_ortho.py \
     -t UInt16 \
     -f GTiff \
     --no-pyramids \
-    {{ params.input_dir }} \
-    {{ params.ortho_dir }} &&
+    $INPUT_DIR \
+    $ORTH_DIR &&
     [[ -s $ORTH_FILE ]]
 
+# pgc moves the xml file from $MET to $MET2 but doesn't modify it (I think)
+MET2=$ORTH_DIR/$MET_BASENAME
 # === matlab
 /opt/matlab/R2018a/bin/matlab -nodisplay -nodesktop -r "\
     cd('/opt/wv2_processing');\
     wv2_processing(\
         \"$ORTH_FILE\",\
         '{{params.id}}',\
-        \"$MET\",\
+        \"$MET2\",\
         '{{params.crd_sys}}',\
         '{{params.dt}}',\
         '{{params.sgw}}',\

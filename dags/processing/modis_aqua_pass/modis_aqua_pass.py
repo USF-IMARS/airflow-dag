@@ -50,7 +50,7 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
                     "product_id={} AND area_id={} ".format(
                             L2_PRODUCT_ID, AREA_ID
                     ) +
-                    " AND datetime='{{ execution_date }}'"  # TODO: rm?
+                    " AND date_time='{{ execution_date }}'"  # TODO: rm?
                 ),
                 "json": '{'  # noqa E131
                     '"area_short_name":"' + AREA_SHORT_NAME + '"'

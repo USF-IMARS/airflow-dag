@@ -69,7 +69,7 @@ def get_dag(area_short_name, area_id):
     rrs_output = "output_dir/{}_{}_rrs.tif".format(ID, LOC)
     bth_output = "output_dir/{}_{}_Bathy.tif".format(ID, LOC)
     outputs_to_load = {
-        ("output_dir/"+Rrs_output): {  # Rrs always an output
+        Rrs_output: {  # Rrs always an output
             "load_format": os.path.join(
                 tmp_format_str(),
                 Rrs_output.split('/')[-1]

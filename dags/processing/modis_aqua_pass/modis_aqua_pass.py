@@ -43,15 +43,18 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
         },
         outputs={
             'l2_file': {
-                "verbose": 3,
+                "verbose": 3,  # TODO: rm
                 "product_id": L2_PRODUCT_ID,
-                "time": "{{ ts }}",  # .replace(" ", "T") ?
+                "time": "{{ ts }}",  # ts.replace(" ", "T") ?  # TODO: rm
                 "datetime": "{{ execution_date }}",
+                "sql": "product_id={} AND area_id={}".format(
+                    L2_PRODUCT_ID, AREA_ID
+                ),
                 "json": '{'
-                    '"status_id":3,'  # noqa E131
-                    '"area_id":'+str(AREA_ID)+','
-                    '"area_short_name":"' + AREA_SHORT_NAME + '"'
+                    '"area_short_name":"' + AREA_SHORT_NAME + '"'  # noqa E131
                 '}'
+                # TODO:
+                # "area_short_name": AREA_SHORT_NAME
             },
         },
         tmpdirs=["tmp_dir"],

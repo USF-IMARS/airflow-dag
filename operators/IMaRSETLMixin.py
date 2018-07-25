@@ -1,4 +1,5 @@
 from os import makedirs
+import re
 
 import imars_etl
 from airflow.exceptions import AirflowSkipException
@@ -139,9 +140,33 @@ class IMaRSETLMixin(object):
                 context
             )
             self.tmp_paths[pathkey] = rendered_pathval
-        self.inject_tmpdirs_into_paths()
+        self.inject_tmpdirs_into_tmp_paths()
+        # self.sanitize_tmp_paths()  # TODO: should we???
 
-    def inject_tmpdirs_into_paths(self):
+    def sanitize_tmp_paths(self):
+        """
+        NOTE: currently unused.
+
+        Sanitizes keys in tmp_paths so each key becomes a valid python variable
+        name. Based on https://stackoverflow.com/a/3303361/1483986
+        """
+        for pathkey, pathval in self.tmp_paths.items():
+            # Remove invalid characters
+            new_pathkey = re.sub('[^0-9a-zA-Z_]', '_', pathkey)
+
+            # cannot start w/ number
+            if new_pathkey[0].isdigit():
+                new_pathkey = "_" + new_pathkey
+
+            if pathkey != new_pathkey:
+                print(
+                    "WARN: key '{}' has invalid characters. ".format(pathkey) +
+                    " Using key '{}' instead.".format(new_pathkey)
+                )
+                self.tmp_paths.pop(pathkey)
+                self.tmp_paths[new_pathkey] = pathval
+
+    def inject_tmpdirs_into_tmp_paths(self):
         """
         Renders paths with tmpdir keys.
         Example:

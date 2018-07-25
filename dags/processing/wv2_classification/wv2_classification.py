@@ -124,6 +124,7 @@ def get_dag(area_short_name, area_id):
     classification = IMaRSETLBashOperator(  # noqa F841
         dag=this_dag,
         task_id='classification',
+        should_overwrite=True,
         bash_command='classification.sh',
         tmpdirs=[
             'input_dir',

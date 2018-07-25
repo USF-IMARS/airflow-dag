@@ -128,8 +128,10 @@ class IMaRSETLMixin(object):
             )
 
     def render_all_paths(self, context):
-        # basically double-renders the path_val (so we can use use macros like
-        #   {{ts_nodash}} in the tmp_paths.
+        """
+        Basically double-renders the path_val (so we can use use macros like
+        {{ts_nodash}} in the tmp_paths.
+        """
         for pathkey, pathval in self.tmp_paths.items():
             rendered_pathval = self.render_template(
                 '',
@@ -137,6 +139,23 @@ class IMaRSETLMixin(object):
                 context
             )
             self.tmp_paths[pathkey] = rendered_pathval
+        self.inject_tmpdirs_into_paths()
+
+    def inject_tmpdirs_into_paths(self):
+        """
+        Renders paths with tmpdir keys.
+        Example:
+            `mytmpdir/myfile.txt` becomes `/tmp/id1234_mytmpdir/myfile.txt`
+            (assuming mytmpdir's generated path is `/tmp/id1234_mytmpdir`)
+        NOTE:
+            This only handles *very* basic stuff. No dir-within-dirs, duplicate
+            basenames, or other fancy crap.
+        """
+        for pathkey, pathval in self.tmp_paths.items():
+            if '/' in pathkey:
+                dir_key, basename = pathkey.split('/')
+                rendered_pathval = self.tmp_paths[dir_key] + '/' + basename
+                self.tmp_paths[pathkey] = rendered_pathval
 
     def create_tmpdirs(self):
         print("creating tmpdirs...")

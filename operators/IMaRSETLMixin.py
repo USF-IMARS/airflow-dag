@@ -115,7 +115,7 @@ class IMaRSETLMixin(object):
                 pid, dt, aid
             )
             print('"{}" exists?'.format(sql))
-            result = imars_etl.get_metadata(sql, first=True)
+            result = imars_etl.select(sql, first=True)
             print("result: {}".format(result))
             if result is not None:
                 print('\tyep')

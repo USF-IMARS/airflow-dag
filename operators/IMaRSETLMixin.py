@@ -43,7 +43,9 @@ class IMaRSETLMixin(object):
         automatically created and cleaned up after the job is done.
     """
 
-    def __init__(self, *args, should_overwrite=False, **kwargs):
+    def __init__(
+        self, *args, should_overwrite=False, should_cleanup=True, **kwargs
+    ):
         """
             parameters:
             -----------
@@ -53,8 +55,12 @@ class IMaRSETLMixin(object):
                 found for all outputs.
                 NOTE: Backend methods are NYI. If you use this now you will
                     probably get a "DuplicateEntry" error when trying to load.
+            should_cleanup : bool
+                tmp files are automatically cleaned up unless should_cleanup
+                is set to False. This is useful sometimes for debugging.
         """
         self.should_overwrite = should_overwrite
+        self.should_cleanup = should_cleanup
         super(IMaRSETLMixin, self).__init__(
             *args,
             **kwargs
@@ -117,7 +123,8 @@ class IMaRSETLMixin(object):
             super(IMaRSETLMixin, self).execute(context)
             self.load_outputs(context)
         finally:
-            self.cleanup()
+            if self.should_cleanup:
+                self.cleanup()
 
     # =======================================================================
     # ====================== "private" methods ==============================

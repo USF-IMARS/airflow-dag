@@ -6,7 +6,7 @@ from airflow.exceptions import AirflowSkipException
 from airflow.exceptions import AirflowException
 
 from imars_dags.util.etl_tools.tmp_file import tmp_filepath
-from imars_dags.util.etl_tools.load import get_default_load_args
+from imars_dags.operators.get_default_load_args import get_default_load_args
 from imars_dags.util.etl_tools.cleanup import _cleanup_tmp_file
 
 
@@ -249,6 +249,8 @@ class IMaRSETLMixin(object):
             output_path = self.tmp_paths[outf]
             load_args['filepath'] = output_path
             load_args = self._render_output_metadata(load_args, context)
+            if self.should_overwrite:
+                load_args['duplicates_ok'] = True
             print("{}\n\t->\t{}\n\t->\t{}\n\t->\t".format(
                 outf, output_path, load_args
             ))

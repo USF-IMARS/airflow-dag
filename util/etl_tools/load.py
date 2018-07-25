@@ -9,19 +9,12 @@ from airflow.operators.python_operator import PythonOperator
 import imars_etl
 
 from imars_dags.util.etl_tools.tmp_file \
-    import tmp_format_str, get_tmp_file_suffix
+    import get_tmp_file_suffix
+
+from imars_dags.operators.get_default_load_args import get_default_load_args
 
 # which fields in `to_load` are template-enabled:
 ARGS_TEMPLATE_FIELDS = ['filepath', 'directory', 'metadata_file']
-
-
-def get_default_load_args(**kwargs):
-    """default args we add to all load ops"""
-    def_args = dict(
-        verbose=kwargs.get('verbose', 3),
-        load_format=kwargs.get('load_format', tmp_format_str()),
-    )
-    return def_args
 
 
 def load_task(load_args, task, **kwargs):

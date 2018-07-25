@@ -115,12 +115,12 @@ class FileTriggerDAG(DAG):
             retrieves metadata from db & stores it in ti xcom for other
             operators to use.
             """
-            def get_file_metadata(**kwargs):
+            def get_file_metadata(ti=None, **kwargs):
                 # `ti.push()`es area_id & date_time from SQL
-                ti = kwargs['ti']
+                sql_selection = kwargs['sql']
                 # print("sql:\n\t{}".format(sql_selection))
                 file_metadata = select(
-                        sql=sql_selection,
+                        sql_selection,
                         first=True,
                 )
                 # print("\n\tmeta:\n\t{}\n".format(file_metadata))

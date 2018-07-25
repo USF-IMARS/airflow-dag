@@ -1,8 +1,9 @@
 # wv2 habitat classification adapted from
 # https://github.com/USF-IMARS/wv2-processing/blob/master/submit_py.sh
-
-MET_BASENAME=wv02_19890607101112_fake0catalog0id0.xml
-ORTH_BASENAME=wv02_19890607101112_fake0catalog0id0_u16ns4326.tif
+BASENAME=wv02_19890607101112_fake0catalog0id0
+PGC_SUFFIX=_u16ns4326
+MET_BASENAME=$BASENAME.xml
+ORTH_BASENAME=${BASENAME}$PGC_SUFFIX.tif
 
 INPUT_DIR={{params.input_dir}}
 ORTH_DIR={{ params.ortho_dir }}
@@ -23,8 +24,8 @@ python /opt/imagery_utils/pgc_ortho.py \
     $ORTH_DIR &&
     [[ -s $ORTH_FILE ]]
 
-# pgc moves the xml file from $MET to $MET2 but doesn't modify it (I think)
-MET2=$ORTH_DIR/$MET_BASENAME
+# pgc moves the xml file from $MET to $MET2 and modifies it
+MET2=$ORTH_DIR/${BASENAME}$PGC_SUFFIX.xml
 # === matlab
 /opt/matlab/R2018a/bin/matlab -nodisplay -nodesktop -r "\
     cd('/opt/wv2_processing');\

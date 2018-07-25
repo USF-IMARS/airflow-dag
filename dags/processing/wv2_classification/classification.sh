@@ -33,4 +33,4 @@ MET={{params.input_dir}}/wv02_19890607101112_fake0catalog0id0.xml  &&
     );\
     exit\
 " &&
-[[ -s """ + Rrs_output + """ ]]""",  # Rrs should always be output
+[[ -s {{params.output_dir}}/{{params.id}}_{{params.loc}}_Rrs.tif ]]  # Rrs should always be output

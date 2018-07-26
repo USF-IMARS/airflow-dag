@@ -54,6 +54,7 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
                     " AND date_time='{{ execution_date }}'"  # TODO: rm?
                 ),
                 "json": '{'  # noqa E131
+                    '"status_id":3,'
                     '"area_short_name":"' + AREA_SHORT_NAME + '"'
                 '}',
                 'duplicates_ok': True,
@@ -94,13 +95,18 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
             'l3_output': {
                 "verbose": 3,
                 "product_id": L3_PRODUCT_ID,
-                # "time": "{{ ts }}",  # .replace(" ", "T") ?
-                # "datetime": {{ execution_date }},
+                "time": "{{ ts }}",  # ts.replace(" ", "T") ?  # TODO: rm?
                 "json": '{'
                     '"status_id":3,'  # noqa E131
-                    '"area_id":'+str(AREA_ID)+','
                     '"area_short_name":"' + AREA_SHORT_NAME + '"'
-                '}'
+                '}',
+                "sql": (
+                    "product_id={} AND area_id={} ".format(
+                            L3_PRODUCT_ID, AREA_ID
+                    ) +
+                    " AND date_time='{{ execution_date }}'"  # TODO: rm?
+                ),
+
             },
         },
         queue=QUEUE.SNAP,

@@ -37,7 +37,7 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
     l1_to_l2 = IMaRSETLBashOperator(
         task_id='l1_to_l2',
         bash_command="l1_to_l2.sh",
-        should_overwrite=True,
+        should_overwrite=True,  # TODO: rm after reproc done
         inputs={
             "myd01_file":
                 "product_id="+str(L1_PRODUCT_ID)+" AND date_time='{{ts}}'"
@@ -57,7 +57,8 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
                     '"status_id":3,'
                     '"area_short_name":"' + AREA_SHORT_NAME + '"'
                 '}',
-                'duplicates_ok': True,
+                'duplicates_ok': True,  # TODO: rm after reproc done
+                'no_hash': True,  # TODO: rm after reproc done
                 # TODO: rm json &
                 # "area_short_name": AREA_SHORT_NAME
             },
@@ -81,6 +82,7 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
             -f NetCDF-BEAM \
             {{ params.l2_input }}
         """,
+        should_overwrite=True,  # TODO: rm after reproc done
         params={
             "xml_file": os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
@@ -106,7 +108,8 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
                     ) +
                     " AND date_time='{{ execution_date }}'"  # TODO: rm?
                 ),
-
+                'duplicates_ok': True,  # TODO: rm after reproc done
+                'no_hash': True,  # TODO: rm after reproc done
             },
         },
         queue=QUEUE.SNAP,

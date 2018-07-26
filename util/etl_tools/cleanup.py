@@ -20,10 +20,11 @@ def _cleanup_tmp_file(cleanup_path):
         len(cleanup_path.strip()) > len(TMP_PREFIX)
     ):
         print('rm -rf {}'.format(cleanup_path))
-        try:
-            os.remove(cleanup_path)
-        except OSError:
-            shutil.rmtree(cleanup_path)
+        try:  # weird double try is to catch FNF from both os.rm & rmtree
+            try:
+                os.remove(cleanup_path)
+            except OSError:
+                shutil.rmtree(cleanup_path)
         except FileNotFoundError:
             print("File Not Found. ¯\_(ツ)_/¯")
     else:

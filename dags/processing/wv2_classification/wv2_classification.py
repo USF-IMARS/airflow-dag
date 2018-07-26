@@ -39,7 +39,7 @@ def get_dag(area_short_name, area_id):
     JSON = ('{' +
         '"status_id":3,' +  # noqa E128
         '"area_short_name":"' + area_short_name + '",' +
-        '"no_hash":true'  # TODO: rm one reprocess is complete
+        '"nohash": true' +  # TODO: rm one reprocess is complete
     '}')
     # product ids from metadata db
     Rrs_ID = 37
@@ -76,7 +76,8 @@ def get_dag(area_short_name, area_id):
                 Rrs_output.split('/')[-1]
             ),
             "json": JSON,
-            "sql": 'area_id={} AND product_id={}'.format(area_id, Rrs_ID)
+            "sql": 'area_id={} AND product_id={}'.format(area_id, Rrs_ID),
+            "nohash": True,  # TODO: rm one reprocess is complete
         }
     }
 

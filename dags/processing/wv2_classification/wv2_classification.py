@@ -38,7 +38,8 @@ def get_dag(area_short_name, area_id):
 
     JSON = ('{' +
         '"status_id":3,' +  # noqa E128
-        '"area_short_name":"' + area_short_name + '"' +
+        '"area_short_name":"' + area_short_name + '",' +
+        '"no_hash":true'  # TODO: rm one reprocess is complete
     '}')
     # product ids from metadata db
     Rrs_ID = 37

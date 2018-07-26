@@ -7,8 +7,8 @@ ORTH_BASENAME=${BASENAME}$PGC_SUFFIX.tif
 
 INPUT_DIR={{params.input_dir}}
 ORTH_DIR={{ params.ortho_dir }}
-RRS_OUT={{ params.output_dir }}
-CLASS_OUT={{ params.output_dir }}
+RRS_OUT={{ params.output_dir }}/
+CLASS_OUT={{ params.output_dir }}/
 
 ORTH_FILE=$ORTH_DIR/$ORTH_BASENAME
 MET=$INPUT_DIR/$MET_BASENAME
@@ -30,9 +30,9 @@ MET2=$ORTH_DIR/${BASENAME}$PGC_SUFFIX.xml
 /opt/matlab/R2018a/bin/matlab -nodisplay -nodesktop -r "\
     cd('/opt/wv2_processing');\
     wv2_processing(\
-        \"$ORTH_FILE\",\
+        '$ORTH_FILE',\
         '{{params.id}}',\
-        \"$MET2\",\
+        '$MET',\
         '{{params.crd_sys}}',\
         '{{params.dt}}',\
         '{{params.sgw}}',\
@@ -40,8 +40,8 @@ MET2=$ORTH_DIR/${BASENAME}$PGC_SUFFIX.xml
         '{{params.stat}}',\
         '{{params.loc}}',\
         '{{params.id_number}}',\
-        \"$RRS_OUT\",\
-        \"$CLASS_OUT\"\
+        '$RRS_OUT',\
+        '$CLASS_OUT'\
     );\
     exit\
 " &&

@@ -58,7 +58,7 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
                     '"area_short_name":"' + AREA_SHORT_NAME + '"'
                 '}',
                 'duplicates_ok': True,  # TODO: rm after reproc done
-                'no_hash': True,  # TODO: rm after reproc done
+                'nohash': True,  # TODO: rm after reproc done
                 # TODO: rm json &
                 # "area_short_name": AREA_SHORT_NAME
             },
@@ -109,7 +109,7 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
                     " AND date_time='{{ execution_date }}'"  # TODO: rm?
                 ),
                 'duplicates_ok': True,  # TODO: rm after reproc done
-                'no_hash': True,  # TODO: rm after reproc done
+                'nohash': True,  # TODO: rm after reproc done
             },
         },
         queue=QUEUE.SNAP,

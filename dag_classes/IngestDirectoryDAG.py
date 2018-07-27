@@ -54,7 +54,7 @@ class IngestDirectoryDAG(DAG):
     def _do_ingest_task(etl_load_args, **kwargs):
         # default args added to every ingest:
         load_args = dict(
-            verbose=3,
+            verbose=1,
             status_id=3,
             # TODO: should these be automaticaly added?
             # duplicates_ok=True,
@@ -62,6 +62,7 @@ class IngestDirectoryDAG(DAG):
         )
         # explicitly passed args overwrite defaults above
         load_args.update(etl_load_args)
+        print('running job:\nimars_etl.load(\n\t{}\n)'.format(load_args))
         imars_etl.load(
             **load_args
         )

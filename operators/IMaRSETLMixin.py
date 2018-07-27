@@ -1,5 +1,4 @@
 from os import makedirs
-import re
 
 import imars_etl
 from airflow.exceptions import AirflowSkipException
@@ -8,6 +7,7 @@ from airflow.exceptions import AirflowException
 from imars_dags.util.etl_tools.tmp_file import tmp_filepath
 from imars_dags.operators.get_default_load_args import get_default_load_args
 from imars_dags.util.etl_tools.cleanup import _cleanup_tmp_file
+from imars_dags.util.sanitize_to_py_var_name import sanitize_to_py_var_name
 
 
 class IMaRSETLMixin(object):
@@ -180,11 +180,7 @@ class IMaRSETLMixin(object):
         """
         for pathkey, pathval in self.tmp_paths.items():
             # Remove invalid characters
-            new_pathkey = re.sub('[^0-9a-zA-Z_]', '_', pathkey)
-
-            # cannot start w/ number
-            if new_pathkey[0].isdigit():
-                new_pathkey = "_" + new_pathkey
+            new_pathkey = sanitize_to_py_var_name(pathkey)
 
             if pathkey != new_pathkey:
                 print(

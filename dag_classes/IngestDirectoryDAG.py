@@ -52,16 +52,18 @@ class IngestDirectoryDAG(DAG):
 
     @staticmethod
     def _do_ingest_task(etl_load_args, **kwargs):
+        # default args added to every ingest:
+        load_args = dict(
+            verbose=3,
+            status_id=3,
+            # TODO: should these be automaticaly added?
+            # duplicates_ok=True,
+            # nohash=True,
+        )
+        # explicitly passed args overwrite defaults above
+        load_args.update(etl_load_args)
         imars_etl.load(
-            **dict(
-                # default args added to every ingest:
-                verbose=3,
-                status_id=3,
-                # TODO: should these be automaticaly added?
-                # duplicates_ok=True,
-                # nohash=True,
-                # explicitly passed args overwrite defaults above
-            ).update(etl_load_args)
+            **load_args
         )
         # TODO: check output
         #       Mark skipped if none loaded, else mark success.

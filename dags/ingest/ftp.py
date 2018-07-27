@@ -12,6 +12,7 @@ from airflow.operators.bash_operator import BashOperator
 from imars_dags.util.get_default_args import get_default_args
 
 
+# TODO: should use IngestDirectoryDAG here
 this_dag = DAG(
     dag_id="ingest_ftp",
     default_args=get_default_args(
@@ -24,9 +25,6 @@ this_dag = DAG(
     max_active_runs=1
 )
 
-# TODO: better to do this with a FileSensor
-#   [ref] : https://stackoverflow.com/questions/44325938/airflow-file-sensor-for-sensing-files-on-my-local-drive
-#
 # TODO: OR: could make this a PythonOperator that marks skipped unless something
 #           gets uploaded by using imars-etl python API directly.
 wv2_ingest = BashOperator(

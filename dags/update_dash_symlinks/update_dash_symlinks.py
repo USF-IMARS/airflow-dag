@@ -1,0 +1,24 @@
+from datetime import datetime
+
+from airflow import DAG
+from airflow.operators.python_operator import PythonOperator
+
+from imars_dags.util.get_default_args import get_default_args
+from imars_dags.dags.update_dash_symlinks._update_dash_symlinks \
+    import main as update_symlinks_fn
+
+
+this_dag = DAG(
+    dag_id="update_dash_symlinks",
+    default_args=get_default_args(
+        start_date=datetime.utcnow()
+    ),
+    schedule_interval="0 0 * * *",  # @daily TODO: weekly instead?
+    catchup=False,
+    max_active_runs=1,
+)
+
+update_symlinks = PythonOperator(
+    task_id="update_symlinks",
+    python_callable=update_symlinks_fn
+)

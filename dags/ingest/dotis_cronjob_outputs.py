@@ -1,3 +1,7 @@
+"""
+This dag periodically ingests files output from dotis's cronjobs into the
+IMaRS product metadata db.
+"""
 # unused airflow.DAG import is so airflow can find this dag.
 from airflow import DAG  # noqa F401
 
@@ -15,7 +19,7 @@ COMMON_ARGS = {
     'duplicates_ok': True,  # don't freak out over duplicates
     'nohash': True,  # speeds things up a lot
     'storage_driver': DRIVER_MAP_DICT['no_upload'],  # leave files alone
-    'dry_run': True,  # True if we are just testing
+    # 'dry_run': True,  # True if we are just testing
     'area_id': 2,  # from metaDB must match area_short_name
     'area_short_name': 'fgbnms',  # optional?
 }

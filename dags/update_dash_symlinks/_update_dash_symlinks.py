@@ -11,9 +11,35 @@ import imars_etl
 
 N_HISTORICAL_WEEKS = 5
 
+PRODUCTS = [
+    # product_family chlor_a
+    dict(
+        pid=43,
+        short_name='a1km_chlor_a_7d_mean_png'
+    ),
+    dict(
+        pid=44,
+        short_name='a1km_chlor_a_7d_anom_png'
+    ),
+    # product_family sst
+    dict(
+        pid=45,
+        short_name='a1km_sst_7d_mean_png'
+    ),
+    dict(
+        pid=46,
+        short_name='a1km_sst_7d_anom_png'
+    )
+]
+
+# TODO: iterate over multiple areas too
+region_short_name = 'fgbnms'
+
 
 def main():
-    for pid in [43, 44, 45, 46]:  # product IDs
+    for product in PRODUCTS:
+        pid = product['pid']
+        product_short_name = product['short_name']
         for weeks_ago in range(0, N_HISTORICAL_WEEKS):
             src_path = imars_etl.select(
                 columns='filepath',
@@ -23,8 +49,8 @@ def main():
                 )
             )['filepath']
             dest_path = os.path.join(
-                os.path.dirname(src_path),
-                "{}_weeks_ago.png".format(weeks_ago)
+                "/srv", "imars-objects", region_short_name, "dash_links",
+                "{}_{}_weeks_ago.png".format(product_short_name, weeks_ago)
             )
 
             if os.path.exists(dest_path):  # clear existing link if exists

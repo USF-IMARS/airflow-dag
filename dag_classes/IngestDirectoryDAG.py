@@ -44,7 +44,9 @@ class IngestDirectoryDAG(DAG):
             catchup=False,
             max_active_runs=1,
             default_args=get_default_args(
-                start_date=datetime.utcnow(),
+                # start_date is ideally utcnow()-schedule_interval but
+                #   that gets tricky if schedule_interval is string.
+                start_date=datetime(2018, 7, 30),
                 retries=0,
             ),
             **kwargs

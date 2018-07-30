@@ -11,7 +11,7 @@ from imars_dags.dags.update_dash_symlinks._update_dash_symlinks \
 this_dag = DAG(
     dag_id="update_dash_symlinks",
     default_args=get_default_args(
-        start_date=datetime.utcnow()
+        start_date=datetime(2018, 7, 30)
     ),
     schedule_interval="0 0 * * *",  # @daily TODO: weekly instead?
     catchup=False,
@@ -20,5 +20,6 @@ this_dag = DAG(
 
 update_symlinks = PythonOperator(
     task_id="update_symlinks",
-    python_callable=update_symlinks_fn
+    python_callable=update_symlinks_fn,
+    dag=this_dag,
 )

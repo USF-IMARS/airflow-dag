@@ -18,7 +18,7 @@ ARGS_TEMPLATE_FIELDS = ['filepath', 'directory', 'metadata_file']
 
 
 def load_task(load_args, task, **kwargs):
-    load_args.update(get_default_load_args(load_args))
+    load_args.update(get_default_load_args(**load_args))
 
     # apply macros on all (template-enabled) args:
     for key in load_args:

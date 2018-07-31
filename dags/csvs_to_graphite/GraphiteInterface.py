@@ -7,9 +7,11 @@ import struct
 import threading
 import time
 try:
-    from urllib import request
+    from urllib.request import urlopen
+    from urllib.request import Request
 except ImportError:
-    import urllib2 as request
+    from urllib2 import urlopen
+    from urllib2 import Request
 
 
 class GraphiteInterface(object):
@@ -109,6 +111,7 @@ class GraphiteInterface(object):
                     len(data), len(message), host=self.host, port=self.port
                 )
             )
+            # print(data)
             return True
         finally:
             s.close()
@@ -122,11 +125,11 @@ class GraphiteInterface(object):
         if tags:
             postdata += ', "tags": "{0}"'.format(str(tags))
         postdata += '}'
-        req = request.Request(self.url_post_event)
+        req = Request(self.url_post_event)
         req.add_data(postdata)
 
         try:
-            request.urlopen(req)
+            urlopen(req)
         except Exception as ex:
             print('Error when sending event to carbon:\n\t{}'.format(ex))
             pass

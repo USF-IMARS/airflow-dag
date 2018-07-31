@@ -7,7 +7,11 @@ Based on https://gist.github.com/agleyzer/8697616
 import csv
 import sys
 
-import GraphiteInterface
+try:  # w/in airflow
+    from imars_dags.dags.csvs_to_graphite import GraphiteInterface
+except ImportError:  # as script
+    import GraphiteInterface
+
 
 HOSTNAME = "graphitemaster"  # TODO
 PORT = 2004  # TODO
@@ -27,7 +31,7 @@ field_map = {title: num for (num, title) in enumerate(FIELDS)}
 graphite_fields = FIELDS[1:]  # all but the first one (time)
 
 
-def main(csv_path, area):
+def main(csv_path, prefix):
     carbon = GraphiteInterface.GraphiteInterface(HOSTNAME, PORT)
 
     with open(csv_path, 'r') as csvfile:
@@ -45,7 +49,7 @@ def main(csv_path, area):
 
             for field in graphite_fields:
                 carbon.add_data(
-                    "{}.{}".format(area, field),
+                    "{}.{}".format(prefix, field),
                     float(row[field]),
                     int(round(float(ts)))
                 )

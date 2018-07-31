@@ -27,28 +27,28 @@ CSV2GRAPH_ARGS = [
     # === oc fgbnms
     (
         '/srv/imars-objects/modis_aqua_fgbnms/CSVTS/OC/EastFG_OC_ts_FGB.csv',
-        'imars_regions.east_fgb.oc',
+        'imars_regions.east_fgbnms.chlor_a',
     ),
     (
         '/srv/imars-objects/modis_aqua_fgbnms/CSVTS/OC/STET_OC_ts_FGB.csv',
-        'imars_regions.stet_fgb.oc',
+        'imars_regions.stet_fgbnms.chlor_a',
     ),
     (
         '/srv/imars-objects/modis_aqua_fgbnms/CSVTS/OC/WestFG_OC_ts_FGB.csv',
-        'imars_regions.west_fgb.oc',
+        'imars_regions.west_fgbnms.chlor_a',
     ),
     # === sst fgbnms
     (
         '/srv/imars-objects/modis_aqua_fgbnms/CSVTS/SST/EastFG_SST_ts_FGB.csv',
-        'imars_regions.east_fgb.sst',
+        'imars_regions.east_fgbnms.sst',
     ),
     (
         '/srv/imars-objects/modis_aqua_fgbnms/CSVTS/SST/STET_SST_ts_FGB.csv',
-        'imars_regions.stet_fgb.sst',
+        'imars_regions.stet_fgbnms.sst',
     ),
     (
         '/srv/imars-objects/modis_aqua_fgbnms/CSVTS/SST/WestFG_SST_ts_FGB.csv',
-        'imars_regions.west_fgb.sst',
+        'imars_regions.west_fgbnms.sst',
     ),
     # === rivers near fgbnms
     (

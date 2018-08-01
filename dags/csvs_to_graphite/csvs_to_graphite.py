@@ -5,12 +5,9 @@ Reads each csv file and pushes the data into graphite.
 from datetime import datetime
 
 from airflow import DAG
-# from airflow.operators.python_operator import PythonOperator
 from airflow.operators.bash_operator import BashOperator
 
 from imars_dags.util.get_default_args import get_default_args
-
-# from imars_dags.dags.csvs_to_graphite._csv_to_graphite import main as csv2graph
 
 
 this_dag = DAG(
@@ -80,21 +77,24 @@ CSV2GRAPH_ARGS = [
 
 
 # for args in CSV2GRAPH_ARGS:
-    # PythonOperator(
-    #     task_id=(
-    #         "csv2graphite_" +
-    #         args[1].replace('.', '_').replace('imars_regions_', '')
-    #     ),
-    #     python_callable=csv2graph,
-    #     dag=this_dag,
-    #     op_args=args,
-    #     provide_context=True,
-    # )
-    # # same thing, but as bash op:
+#     PythonOperator(
+#         task_id=(
+#             "csv2graphite_" +
+#             args[1].replace('.', '_').replace('imars_regions_', '')
+#         ),
+#         python_callable=csv2graph,
+#         dag=this_dag,
+#         op_args=args,
+#         provide_context=True,
+#     )
+# same thing, but as bash op:
 BashOperator(
     task_id=(
         "all_csvs2graphite"
     ),
-    bash_command="python2 /home/airflow/dags/imars_dags/dags/csvs_to_graphite/_csvs_to_graphite.py",
+    bash_command="""
+        python2
+        /home/airflow/dags/imars_dags/dags/csvs_to_graphite/_csvs_to_graphite.py
+    """,
     dag=this_dag,
 )

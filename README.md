@@ -7,14 +7,9 @@ confused or something isn't working for you.
 This is under heavy development so documentation or code may contain errors.
 
 ## DAG development guidelines
-### Basic DAG Development Workflow
-0. `ssh` into test server (probably `imars-airflow-test.marine.usf.edu`)
-1. Edit DAGs on github (or directly on server)
-2. Download your changes from github to the test server (if applicable)
-    * `git pull` from `/home/airflow/airflow/dags/imars_dags`
-3. Use airflow [test command(s)](https://airflow.apache.org/tutorial.html#testing) to test a DAG run on the server.
-    * `airflow list_dags` should show your DAG and no errors
-    * `airflow test $dag_name $task_name $dt` will create a test DAG Run
+Please see the (private to IMaRS users) [DAG Development Workflows document](https://github.com/USF-IMARS/IMaRS-docs/blob/master/docs/airflow/workflows.md).
+
+Additional documentation in the [`./docs`](https://github.com/USF-IMARS/imars_dags/tree/master/doc) directory.
 
 ### organizational rules
 0. A DAG (Directed Acyclic Graph) defines a processing pipeline.

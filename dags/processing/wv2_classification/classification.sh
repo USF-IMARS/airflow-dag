@@ -13,6 +13,8 @@ CLASS_OUT={{ params.output_dir }}/
 ORTH_FILE=$ORTH_DIR/$ORTH_BASENAME
 MET=$INPUT_DIR/$MET_BASENAME
 
+echo HELLO WORLD!
+
 # === pgc ortho
 python /opt/imagery_utils/pgc_ortho.py \
     -p 4326 \

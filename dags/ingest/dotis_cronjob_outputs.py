@@ -5,7 +5,8 @@ IMaRS product metadata db.
 # unused airflow.DAG import is so airflow can find this dag.
 from airflow import DAG  # noqa F401
 
-from imars_etl.drivers import DRIVER_MAP_DICT
+from imars_etl.drivers.get_storage_driver_from_key \
+    import get_storage_driver_from_key
 
 from imars_dags.dag_classes.IngestDirectoryDAG import IngestDirectoryDAG
 from imars_dags.util.get_dag_id import get_dag_id
@@ -18,7 +19,8 @@ dotis_cronjob_outputs = IngestDirectoryDAG(
 COMMON_ARGS = {
     'duplicates_ok': True,  # don't freak out over duplicates
     'nohash': True,  # speeds things up a lot
-    'storage_driver': DRIVER_MAP_DICT['no_upload'],  # leave files alone
+    # leave files alone
+    'storage_driver': get_storage_driver_from_key('no_upload'),
     # 'dry_run': True,  # True if we are just testing
     'area_id': 2,  # from metaDB must match area_short_name
     'area_short_name': 'fgbnms',  # optional?

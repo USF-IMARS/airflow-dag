@@ -14,7 +14,8 @@ from datetime import timedelta, datetime
 
 from airflow import DAG
 from airflow.operators.sensors import SqlSensor
-from airflow.operators.python_operator import PythonOperator, BranchPythonOperator
+from airflow.operators.python_operator import PythonOperator
+from airflow.operators.python_operator import BranchPythonOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.mysql_operator import MySqlOperator
 
@@ -23,17 +24,19 @@ from imars_etl.id_lookup import id_lookup
 from imars_dags.util.get_default_args import get_default_args
 from imars_dags.util.list_to_sql_or import list_to_sql_or
 
-from imars_dags.operators.MMTTriggerDagRunOperator import MMTTriggerDagRunOperator
+from imars_dags.operators.MMTTriggerDagRunOperator \
+    import MMTTriggerDagRunOperator
 
 
 class STATUS:  # status IDs from imars_product_metadata.status
     # {status.short_name.upper()} = {status.id}
-    STD     = 1
-    EXTERNAL= 2
+    STD = 1
+    EXTERNAL = 2
     TO_LOAD = 3
-    ERROR   = 4
+    ERROR = 4
 
-METADATA_CONN_ID="imars_metadata"
+METADATA_CONN_ID = "imars_metadata"
+
 
 class FileTriggerDAG(DAG):
     DAWN_OF_TIME = datetime(2018, 5, 5, 5, 5)  # any date in past is fine
@@ -42,6 +45,7 @@ class FileTriggerDAG(DAG):
     # Also: NOTE: SCHEDULE_INTERVAL sets the maximum frequency that products
     #   can be ingested at 1 per SCHEDULE_INTERVAL.
     POKE_INTERVAL = 60  # use higher value for less load on prod meta server
+
     def __init__(self, area_names=['na'], *args, **kwargs):
         """
         parameters:
@@ -60,8 +64,8 @@ class FileTriggerDAG(DAG):
         self.dags_to_trigger = kwargs.pop('dags_to_trigger')
         # === overload some arguments TODO: warn or something???
         # NOTE: catchup & max_active_runs prevent duplicate extractions
-        kwargs['catchup']=False
-        kwargs['max_active_runs']=1
+        kwargs['catchup'] = False
+        kwargs['max_active_runs'] = 1
 
         # === set arguments if ommitted
         # TODO: I think these can be done in the function declaration with
@@ -87,22 +91,22 @@ class FileTriggerDAG(DAG):
         self._add_file_trigger_tasks()
 
     def _add_file_trigger_tasks(self):
-        with self as dag:
+        with self as dag:  # noqa F841
             # TODO: SQL watch for pid=={} & status_id==to_load
             # === mysql_sensor
             # =================================================================
-            sql_selection="status_id={} AND {};".format(
+            sql_selection = "status_id={} AND {};".format(
                 STATUS.TO_LOAD,
                 list_to_sql_or('product_id', self.product_ids)
             )
-            sql_str="SELECT id FROM file WHERE " + sql_selection
+            sql_str = "SELECT id FROM file WHERE " + sql_selection
             check_for_to_loads = SqlSensor(
                 task_id='check_for_to_loads',
                 conn_id=METADATA_CONN_ID,
                 sql=sql_str,
                 soft_fail=True,
                 poke_interval=self.POKE_INTERVAL,
-                # timeout matches schedule_interval b/c we always want 1 running
+                # timeout matches schedule_interval b/c always want 1 running
                 timeout=self.schedule_interval.total_seconds()
             )
             # TODO: should set imars_product_metadata.status to "processing"
@@ -174,7 +178,14 @@ class FileTriggerDAG(DAG):
             # TODO: use STATUS.STD here
             set_product_status_to_std = MySqlOperator(
                 task_id="set_product_status_to_std",
-                sql=""" UPDATE file SET status_id=1 WHERE filepath="{{ ti.xcom_pull(task_ids="get_file_metadata")["filepath"] }}" """,
+                sql=(
+                    ' UPDATE file SET status_id=1 WHERE '
+                    'filepath="{{ '
+                        'ti.xcom_pull('
+                            'task_ids="get_file_metadata"'  # noqa E131
+                        ')["filepath"] '
+                    '}}" '
+                ),
                 mysql_conn_id=METADATA_CONN_ID,
                 autocommit=False,  # TODO: True?
                 parameters=None,
@@ -185,7 +196,12 @@ class FileTriggerDAG(DAG):
             # TODO: re-enable this?
             set_product_status_to_err = MySqlOperator(
                 task_id="set_product_status_to_err",
-                sql=""" UPDATE file SET status_id=4 WHERE filepath="{{ ti.xcom_pull(task_ids="get_file_metadata")["filepath"] }}" """,
+                sql=(
+                    ' UPDATE file SET status_id=4 WHERE '
+                    ' filepath="{{ '
+                    ' ti.xcom_pull(task_ids="get_file_metadata")["filepath"] '
+                    '}}" '
+                ),
                 mysql_conn_id=METADATA_CONN_ID,
                 autocommit=False,  # TODO: True?
                 parameters=None,
@@ -208,20 +224,32 @@ class FileTriggerDAG(DAG):
                 branch_to_correct_region >> ROI_dummy
                 if len(self.dags_to_trigger) > 0:
                     for processing_dag_name in self.dags_to_trigger:
-                        # processing_dag_name is root dag, but each region has a dag
-                        dag_to_trigger="{}_{}".format(processing_dag_name, roi_name)
-                        trigger_dag_operator_id = "trigger_{}".format(dag_to_trigger)
+                        # processing_dag_name is root dag,
+                        # but each region has a dag
+                        dag_to_trigger = "{}_{}".format(
+                            processing_dag_name, roi_name
+                        )
+                        trigger_dag_operator_id = "trigger_{}".format(
+                            dag_to_trigger
+                        )
                         ROI_processing_DAG = MMTTriggerDagRunOperator(
                             task_id=trigger_dag_operator_id,
-                            python_callable=lambda context, dag_run_obj: dag_run_obj,
+                            python_callable=(
+                                lambda context, dag_run_obj: dag_run_obj
+                            ),
                             retries=0,
                             retry_delay=timedelta(minutes=2),
                             trigger_dag_id=dag_to_trigger,
-                            execution_date="{{ ti.xcom_pull(task_ids='get_file_metadata', key='date_time').strftime('%Y-%m-%d %H:%M:%S') }}",
+                            execution_date=("{{"  # noqa E128
+                                " ti.xcom_pull("
+                                    "task_ids='get_file_metadata', "
+                                    "key='date_time'"
+                                ").strftime('%Y-%m-%d %H:%M:%S') "
+                            "}}"),
                         )
                         ROI_dummy >> ROI_processing_DAG
                         ROI_processing_DAG >> set_product_status_to_std
                         ROI_processing_DAG >> set_product_status_to_err
-                else:  # no dags_to_trigger means just set it std and do nothing
+                else:  # no dags_to_trigger means set it std and do nothing
                     ROI_dummy >> set_product_status_to_std
                     ROI_dummy >> set_product_status_to_err

@@ -4,7 +4,9 @@ import logging
 from airflow import settings
 from airflow.utils.state import State
 from airflow.models import DagBag
-from airflow.operators.dagrun_operator import TriggerDagRunOperator, DagRunOrder
+from airflow.operators.dagrun_operator import TriggerDagRunOperator
+from airflow.operators.dagrun_operator import DagRunOrder
+
 
 class MMTTriggerDagRunOperator(TriggerDagRunOperator):
     """
@@ -33,17 +35,19 @@ class MMTTriggerDagRunOperator(TriggerDagRunOperator):
     )
     """
     # NOTE: I would like to add 'task_id', but it does not work
-    template_fields = ('execution_date','trigger_dag_id',)
+    template_fields = ('execution_date', 'trigger_dag_id',)
 
     def __init__(
         self, trigger_dag_id, python_callable, execution_date,
         *args, **kwargs
-        ):
+    ):
         self.execution_date = execution_date
         super(MMTTriggerDagRunOperator, self).__init__(
-            trigger_dag_id=trigger_dag_id, python_callable=python_callable,
-           *args, **kwargs
-       )
+            trigger_dag_id=trigger_dag_id,
+            python_callable=python_callable,
+            *args,
+            **kwargs
+        )
 
     def execute(self, context):
         run_id_dt = datetime.strptime(self.execution_date, '%Y-%m-%d %H:%M:%S')

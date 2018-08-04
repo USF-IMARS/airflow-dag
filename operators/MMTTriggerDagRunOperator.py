@@ -39,9 +39,11 @@ class MMTTriggerDagRunOperator(TriggerDagRunOperator):
 
     def __init__(
         self, trigger_dag_id, python_callable, execution_date,
+        exec_date_fmt_str='%Y-%m-%d %H:%M:%S.%f',
         *args, **kwargs
     ):
         self.execution_date = execution_date
+        self.exec_date_fmt_str = exec_date_fmt_str
         super(MMTTriggerDagRunOperator, self).__init__(
             trigger_dag_id=trigger_dag_id,
             python_callable=python_callable,
@@ -50,7 +52,9 @@ class MMTTriggerDagRunOperator(TriggerDagRunOperator):
         )
 
     def execute(self, context):
-        run_id_dt = datetime.strptime(self.execution_date, '%Y-%m-%d %H:%M:%S')
+        run_id_dt = datetime.strptime(
+            self.execution_date, self.exec_date_fmt_str
+        )
         dro = DagRunOrder(run_id='trig__' + run_id_dt.isoformat())
         dro = self.python_callable(context, dro)
         if dro:

@@ -244,7 +244,7 @@ class FileTriggerDAG(DAG):
                                 " ti.xcom_pull("
                                     "task_ids='get_file_metadata', "
                                     "key='date_time'"
-                                ").strftime('%Y-%m-%d %H:%M:%S') "
+                                ").strftime('%Y-%m-%d %H:%M:%S.%f') "
                             "}}"),
                         )
                         ROI_dummy >> ROI_processing_DAG

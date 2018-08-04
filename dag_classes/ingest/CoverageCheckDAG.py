@@ -142,6 +142,8 @@ def add_load_cleanup_trigger(
             trigger_callback_dag = MMTTriggerDagRunOperator(
                 trigger_dag_id=ingest_callback_dag_id,
                 python_callable=lambda context, dag_run_obj: dag_run_obj,
+                exec_date_fmt_str='%Y-%m-%d %H:%M:%S',
+                # TODO: include real microseconds in execution_date?
                 execution_date="{{execution_date}}",
                 task_id=trigger_callback_dag_id,
                 params={

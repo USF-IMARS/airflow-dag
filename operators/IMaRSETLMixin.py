@@ -92,7 +92,7 @@ class IMaRSETLMixin(object):
     # =======================================================================
     # =================== BaseOperator Overrides ============================
     def render_template(self, attr, content, context):
-        print("adding paths to context:\n\t{}".format(self.tmp_paths))
+        # print("adding paths to context:\n\t{}".format(self.tmp_paths))
         # inject tmp_paths into context params so we can template with them
         # print("\n-----\nctx:\n\t{}\n----\n".format(context))
         for path_key, path_val in self.tmp_paths.items():
@@ -140,7 +140,7 @@ class IMaRSETLMixin(object):
             # TODO: enhance sql with get_default_load_args
             print('"{}" exists?'.format(sql))
             result = imars_etl.select(sql, first=True)
-            print("result: {}".format(result))
+            # print("result: {}".format(result))
             if result is not None:
                 print('\tyep')
             else:
@@ -210,7 +210,7 @@ class IMaRSETLMixin(object):
         print("creating tmpdirs...")
         for tdir in self.tmpdirs:
             tmp_dir_path = self.tmp_paths[tdir]
-            print("{}=>{}".format(tdir, tmp_dir_path))
+            # print("{}=>{}".format(tdir, tmp_dir_path))
             makedirs(tmp_dir_path)
 
     def _render_input_metadata(self, metadata, context):
@@ -222,9 +222,9 @@ class IMaRSETLMixin(object):
         for inpf in self.inputs:
             metadata = self._render_input_metadata(self.inputs[inpf], context)
             out_path = self.tmp_paths[inpf]
-            print("{}\n\t->\t{}\n\t->\t{}\n\t->\t".format(
-                inpf, metadata, out_path
-            ))
+            # print("{}\n\t->\t{}\n\t->\t{}\n\t->\t".format(
+            #     inpf, metadata, out_path
+            # ))
             imars_etl.extract(
                 sql=metadata,
                 output_path=out_path
@@ -258,12 +258,12 @@ class IMaRSETLMixin(object):
                 outf, output_path, load_args
             ))
             load_args.update(get_default_load_args(**load_args))
-            print('loading {}'.format(load_args))
+            # print('loading {}'.format(load_args))
             imars_etl.load(**load_args)
 
     def cleanup(self):
         print("cleaning up temporary files...")
         for fkey, tmpf in self.tmp_paths.items():
-            print("cleanup {} ({})".format(fkey, tmpf))
+            # print("cleanup {} ({})".format(fkey, tmpf))
             _cleanup_tmp_file(tmpf)
     # =======================================================================

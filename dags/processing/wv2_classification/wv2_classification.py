@@ -71,10 +71,8 @@ def get_dag(area_short_name, area_id):
     bth_output = "output_dir/{}_{}_Bathy.tif".format(ID, LOC)
     outputs_to_load = {
         Rrs_output: {  # Rrs always an output
-            "load_format": os.path.join(
-                tmp_format_str(),
-                Rrs_output.split('/')[-1]
-            ),
+            "noparse": True,
+            "time": "{{ ts }}",
             "json": JSON,
             "sql": 'area_id={} AND product_id={}'.format(area_id, Rrs_ID),
             "nohash": True,  # TODO: rm one reprocess is complete
@@ -87,18 +85,14 @@ def get_dag(area_short_name, area_id):
     elif DT in [1, 2]:
         # Rrs, rrs, bathymetry for DT in [1,2]
         outputs_to_load[rrs_output] = {
-            "load_format": os.join(
-                tmp_format_str(),
-                rrs_output.split('/')[-1]
-            ),
+            "noparse": True,
+            "time": "{{ ts }}",
             "json": JSON,
             "sql": 'area_id={} AND product_id={}'.format(area_id, rrs_ID)
         }
         outputs_to_load[bth_output] = {
-            "load_format": os.join(
-                tmp_format_str(),
-                bth_output.split('/')[-1]
-            ),
+            "noparse": True,
+            "time": "{{ ts }}",
             "json": JSON,
             "sql": 'area_id={} AND product_id={}'.format(area_id, bth_ID)
         }
@@ -108,10 +102,8 @@ def get_dag(area_short_name, area_id):
     if DT == 1:
         # Rrs, rrs, bathymetry **and classification**
         outputs_to_load[classf_output] = {
-            "load_format": os.join(
-                tmp_format_str(),
-                classf_output.split('/')[-1]
-            ),
+            "noparse": True,
+            "time": "{{ ts }}",
             "json": JSON,
             "sql": 'area_id={} AND product_id={}'.format(area_id, classf_ID)
         }

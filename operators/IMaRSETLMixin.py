@@ -242,7 +242,6 @@ class IMaRSETLMixin(object):
                     "\n\t{}".format(af_ex)
                 )
                 pass
-
         return metadata
 
     def load_outputs(self, context):

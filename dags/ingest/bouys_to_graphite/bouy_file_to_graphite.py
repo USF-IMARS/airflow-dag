@@ -90,3 +90,4 @@ with open(data_file, 'r') as datafile:
             if r.line_num % 10 == 0:
                 carbon.send_data()
                 print(r.line_num)
+    carbon.send_data()

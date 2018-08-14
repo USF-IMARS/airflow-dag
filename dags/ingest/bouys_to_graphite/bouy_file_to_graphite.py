@@ -57,10 +57,8 @@ with open(data_file, 'r') as datafile:
     )
 
     for row in r:
-        if r.line_num < 6:
+        if r.line_num < 5:
             continue  # skip first 5 lines
-        elif r.line_num > 54:
-            break  # stop before end
         else:
             TIME_FMT_STR = "%m/%d/%Y %H:%M:%S"
             ts = datetime.strptime(

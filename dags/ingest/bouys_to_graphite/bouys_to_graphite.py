@@ -41,7 +41,7 @@ data_url = (
 load_data_to_graphite = BashOperator(
     task_id="load_data_to_graphite",
     bash_command=(
-        "lynx -dump -width=200 '" + data_url + "' >> " + data_path + " && "
+        "lynx -dump -minimal -nolist -nostatus -width=200 '" + data_url + "' >> " + data_path + " && "
         "python /home/airflow/dags/imars_dags/dags/ingest/bouys_to_graphite/"
         "bouy_file_to_graphite.py " + data_path + " && "
         "rm " + data_path

@@ -66,6 +66,10 @@ with open(data_file, 'r') as datafile:
             else:
                 continue  # skip until done w/ header
         else:
+            if row['date'] is None or row['date'] == '':
+                # must be EoF
+                break
+
             TIME_FMT_STR = "%m/%d/%Y %H:%M:%S"
             ts = datetime.strptime(
                 row['date'] + " " + row['time'], TIME_FMT_STR

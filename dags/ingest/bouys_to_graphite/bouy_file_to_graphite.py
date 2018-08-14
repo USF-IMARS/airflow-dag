@@ -56,9 +56,13 @@ with open(data_file, 'r') as datafile:
         skipinitialspace=True
     )
 
+    header_done_flag = False
     for row in r:
-        if r.line_num < 5:
-            continue  # skip first 5 lines
+        if header_done_flag is False:
+            if "=====" in r:
+                header_done_flag = True
+            else:
+                continue  # skip until done w/ header
         else:
             TIME_FMT_STR = "%m/%d/%Y %H:%M:%S"
             ts = datetime.strptime(

@@ -59,8 +59,10 @@ with open(data_file, 'r') as datafile:
     header_done_flag = False
     for row in r:
         if header_done_flag is False:
-            if "=====" in r:
+            print(row)
+            if "=====" in row['date']:
                 header_done_flag = True
+                continue
             else:
                 continue  # skip until done w/ header
         else:

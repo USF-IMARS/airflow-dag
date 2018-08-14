@@ -37,6 +37,7 @@ FIELDS = [
     'tx',
     'ty',
     'tc_temp',
+    'tc_cond',
     'tc_salt',
     'lat',
     'lon'

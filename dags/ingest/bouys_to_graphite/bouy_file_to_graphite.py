@@ -58,15 +58,19 @@ with open(data_file, 'r') as datafile:
 
     header_done_flag = False
     for row in r:
+        print('{} {}...'.format(row['date'], row['time']))
         if header_done_flag is False:
-            print(row)
+            # print('{}...'.format(row['date']))
             if "=====" in row['date']:
                 header_done_flag = True
                 continue
             else:
                 continue  # skip until done w/ header
         else:
-            if row['date'] is None or row['date'] == '':
+            if(
+                row['date'] is None or len(row['date']) < 1 or
+                row['time'] is None or len(row['time']) < 1
+            ):
                 # must be EoF
                 break
 
@@ -76,11 +80,11 @@ with open(data_file, 'r') as datafile:
             ).strftime("%s")
 
             for field in graphite_fields:
-                print("{}.{}\t|\t{}\t|\t{}".format(
-                    PREFIX, field,
-                    float(row[field]),
-                    int(round(float(ts)))
-                ))
+                # print("{}.{}\t|\t{}\t|\t{}".format(
+                #     PREFIX, field,
+                #     float(row[field]),
+                #     int(round(float(ts)))
+                # ))
                 carbon.add_data(
                     "{}.{}".format(PREFIX, field),
                     float(row[field]),

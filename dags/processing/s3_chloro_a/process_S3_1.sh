@@ -13,7 +13,7 @@ export OCSSWROOT=/opt/ocssw
 source $OCSSWROOT/OCSSW_bash.env
 
 DATA_DIR=/home1/sebastian/s3proc
-
+# TODO: change to DATA_DIR=/imars_dags/dags/processing/s3_chloro_a 
 
 echo running mapping graph...
 /opt/snap_6_0/bin/gpt $XMLFILE -t $DATA_DIR/S3_map/$FILENAME.map -f GeoTIFF $DATA_DIR/S3_proc/$FILENAME.L2

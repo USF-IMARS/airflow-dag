@@ -1,0 +1,87 @@
+<graph id="mosaic_USVI_S3_OLCI">
+<version>1.0</version>
+<node id="mosaicNode">
+<operator>Mosaic</operator>
+<sources>
+<sourceProducts>${sourceProducts}</sourceProducts>
+</sources>
+<parameters>
+<variables>
+<variable>
+<name>chlor_a</name>
+<expression>chlor_a</expression>
+</variable>
+<variable>
+<name>l2_flags</name>
+<expression>l2_flags</expression>
+</variable>
+</variables>
+<conditions>
+<condition>
+<name>not_LAND</name>
+<expression>NOT l2_flags.LAND</expression>
+<output>false</output>
+</condition>
+<condition>
+<name>not_CLDICE</name>
+<expression>NOT l2_flags.CLDICE</expression>
+<output>false</output>
+</condition>
+<condition>
+<name>not_HIGLINT</name>
+<expression>NOT l2_flags.HIGLINT</expression>
+<output>false</output>
+</condition>
+</conditions>
+<combine>AND</combine>
+<crs>
+PROJCS["Equidistant_Cylindrical / World Geodetic System 1984", 
+GEOGCS["World Geodetic System 1984", 
+DATUM["World Geodetic System 1984", 
+SPHEROID["WGS 84", 6378137.0, 298.257223563, AUTHORITY["EPSG","7030"]], 
+AUTHORITY["EPSG","6326"]], 
+PRIMEM["Greenwich", 0.0, AUTHORITY["EPSG","8901"]], 
+UNIT["degree", 0.017453292519943295], 
+AXIS["Geodetic longitude", EAST], 
+AXIS["Geodetic latitude", NORTH]], 
+PROJECTION["Equidistant_Cylindrical"], 
+PARAMETER["central_meridian", 0.0], 
+PARAMETER["latitude_of_origin", 0.0], 
+PARAMETER["standard_parallel_1", 0.0], 
+PARAMETER["false_easting", 0.0], 
+PARAMETER["false_northing", 0.0], 
+UNIT["m", 1.0], 
+AXIS["Easting", EAST],
+AXIS["Northing", NORTH]] 
+</crs>
+<orthorectify>false</orthorectify>
+<elevationModelName>GETASSE30</elevationModelName>
+<resampling>Bicubic</resampling>
+<westBound>-83.5</westBound>
+<northBound>29.5</northBound>
+<eastBound>-82.0</eastBound>
+<southBound>27.5</southBound>
+<pixelSizeX>300</pixelSizeX>
+<pixelSizeY>300</pixelSizeY>
+</parameters>
+</node>
+<node id="selectBandsNode">
+    <operator>BandMaths</operator>
+    	<sources>
+           <sourceProducts>mosaicNode</sourceProducts>
+       </sources>
+       <parameters>
+           <targetBands>
+                <targetBand>
+                   <name>chlor_a</name>
+                   <expression>chlor_a</expression>
+                   <description>Chlorophyll-a concentration, OCI Algorithm</description>
+                   <type>float32</type>
+                   <validExpression>(chlor_a > 0.001 and chlor_a &lt; 100)</validExpression>
+                   <noDataValue>NaN</noDataValue>
+                   <unit>mg m^-3</unit>                  
+                </targetBand> 
+           </targetBands>
+       </parameters>
+   </node>
+</graph>

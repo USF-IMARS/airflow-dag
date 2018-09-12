@@ -3,6 +3,8 @@
 # processes given image filename
 # usage:	./process_images.sh [filename]
 # example:	./process_images.sh S3A_OL_1_EFR____2017011.SEN3 map_OKA_S3_OLCI.xml
+#! only needed if adding additional .xml files to an already processed image
+# the new .xml file needs to be within the bound of the processed image
 
 # give parameters useful names
 FILENAME=$1  # eg S3A_OL_1_EFR____20170118.SEN3

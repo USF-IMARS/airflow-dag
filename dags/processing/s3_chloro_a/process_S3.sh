@@ -13,6 +13,7 @@ export OCSSWROOT=/opt/ocssw
 source $OCSSWROOT/OCSSW_bash.env
 
 DATA_DIR=/home1/sebastian/s3proc
+# TODO: change to DATA_DIR=/imars_dags/dags/processing/s3_chloro_a 
 
 echo running l2gen...
 l2gen ifile=$DATA_DIR/S3_raw/$FILENAME/xfdumanifest.xml ofile=$DATA_DIR/S3_proc/$FILENAME.L2 par=$DATA_DIR/IMaRS_S3_l2gen.par

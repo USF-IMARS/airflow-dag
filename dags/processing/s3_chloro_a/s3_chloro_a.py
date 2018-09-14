@@ -24,7 +24,7 @@ REGIONS = [
 
 for AREA_SHORT_NAME, AREA_ID in REGIONS:
     DAG_ID = get_dag_id(
-        __file__, region=AREA_SHORT_NAME, dag_name="modis_aqua_pass"
+        __file__, region=AREA_SHORT_NAME, dag_name="s3_chloro_a"
     )
     this_dag = DAG(
         dag_id=DAG_ID,

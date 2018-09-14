@@ -14,9 +14,10 @@ from imars_dags.util.get_default_args import get_default_args
 from imars_dags.operators.IMaRSETLBashOperator import IMaRSETLBashOperator
 from imars_dags.util.globals import QUEUE
 
-L1_PRODUCT_ID = 5
-L2_PRODUCT_ID = 35
-L3_PRODUCT_ID = 42
+# | 36 | s3a_ol_1_efr             |
+L1_PRODUCT_ID = 36
+L2_PRODUCT_ID = 99  # TODO
+L3_PRODUCT_ID = 99  # TODO
 REGIONS = [
     ("gom", 1),
     ("fgbnms", 2)

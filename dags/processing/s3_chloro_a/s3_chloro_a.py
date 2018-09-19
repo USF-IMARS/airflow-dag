@@ -1,5 +1,5 @@
 """
-processing for one modis pass
+processing for one Sentinel pass
 """
 # std libs
 from datetime import datetime
@@ -37,7 +37,7 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
 
     l1_to_l2 = IMaRSETLBashOperator(
         task_id='l1_to_l2',
-        bash_command="l1_to_l2.sh",
+        bash_command="process_S3.sh",
         should_overwrite=True,  # TODO: rm after reproc done
         inputs={
             "myd01_file":
@@ -68,7 +68,8 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
         params={
             "par": os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),  # here
-                "moda_l2gen.par"
+                "IMaRS_S3_l2gen.par
+"
             ),
         },
         queue=QUEUE.SAT_SCRIPTS,

@@ -152,3 +152,13 @@ def get_dag(area_short_name, area_id):
 
 na_dag = get_dag('na', 5)
 big_bend_dag = get_dag('big_bend', 6)
+big_bend_dag = get_dag('fl_se', 7)
+big_bend_dag = get_dag('fl_ne', 8)
+big_bend_dag = get_dag('monroe', 9)
+big_bend_dag = get_dag('panhandle', 10)
+big_bend_dag = get_dag('wet_fl_pen', 11)
+
+
+
+
+

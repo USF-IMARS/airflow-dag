@@ -16,11 +16,11 @@ from imars_dags.util.get_default_args import get_default_args
 this_dag = DAG(
     dag_id="ingest_ftp",
     default_args=get_default_args(
-        start_date=datetime(2018, 3, 1, 20, 0),
+        start_date=datetime(2018, 9, 30, 2, 22),
         retries=0,
         retry_delay=timedelta(minutes=3),
     ),
-    schedule_interval=timedelta(hours=1),
+    schedule_interval="2 22 * * 0",
     catchup=False,  # NOTE: this & max_active_runs prevents duplicate ingests
     max_active_runs=1
 )

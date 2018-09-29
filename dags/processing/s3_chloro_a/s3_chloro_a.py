@@ -68,8 +68,7 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
         params={
             "par": os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),  # here
-                "IMaRS_S3_l2gen.par
-"
+                "IMaRS_S3_l2gen.par"
             ),
         },
         queue=QUEUE.SAT_SCRIPTS,

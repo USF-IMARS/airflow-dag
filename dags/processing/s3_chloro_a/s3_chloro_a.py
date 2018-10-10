@@ -70,22 +70,6 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
                 os.path.dirname(os.path.realpath(__file__)),  # here
                 "IMaRS_S3_l2gen.par"
             ),
-            "xml_filec": os.path.join(
-                os.path.dirname(os.path.realpath(__file__)),
-                "map_CHAR_S3_OLCI.xml"
-            ),
-             "xml_filep": os.path.join(
-                os.path.dirname(os.path.realpath(__file__)),
-                "map_PIN_S3_OLCI.xml"
-            ),
-            "xml_fileo": os.path.join(
-                os.path.dirname(os.path.realpath(__file__)),
-                "map_OKA_S3_OLCI.xml"
-            ),
-            "xml_filef": os.path.join(
-                os.path.dirname(os.path.realpath(__file__)),
-                "map_FLBY_S3_OLCI.xml"
-            ),
         },
         queue=QUEUE.SAT_SCRIPTS,
         dag=this_dag,

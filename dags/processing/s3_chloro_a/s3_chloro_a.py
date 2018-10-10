@@ -16,8 +16,8 @@ from imars_dags.util.globals import QUEUE
 
 # | 36 | s3a_ol_1_efr             |
 L1_PRODUCT_ID = 36
-L2_PRODUCT_ID = 99  # TODO
-L3_PRODUCT_ID = 99  # TODO
+L2_PRODUCT_ID = 99  # TODO I think this might need to be changed
+L3_PRODUCT_ID = 99  # TODO I think this might need to be changed
 REGIONS = [
     ("gom", 1),
     ("fgbnms", 2)
@@ -37,11 +37,11 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
 
     l1_to_l2 = IMaRSETLBashOperator(
         task_id='l1_to_l2',
-        bash_command="process_S3.sh",
+        bash_command="process_S3_2.sh",
         should_overwrite=True,  # TODO: rm after reproc done
         inputs={
-            "myd01_file":
-                "product_id="+str(L1_PRODUCT_ID)+" AND date_time='{{ts}}'"
+            "s3_file":
+                "product_id="+str(L1_PRODUCT_ID)+" AND date_time='{{ts}}'   
         },
         outputs={
             'l2_file': {
@@ -70,11 +70,27 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
                 os.path.dirname(os.path.realpath(__file__)),  # here
                 "IMaRS_S3_l2gen.par"
             ),
+            "xml_filec": os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "map_CHAR_S3_OLCI.xml"
+            ),
+             "xml_filep": os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "map_PIN_S3_OLCI.xml"
+            ),
+            "xml_fileo": os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "map_OKA_S3_OLCI.xml"
+            ),
+            "xml_filef": os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "map_FLBY_S3_OLCI.xml"
+            ),
         },
         queue=QUEUE.SAT_SCRIPTS,
         dag=this_dag,
     )
-
+''' =============================================================================
     l3gen = IMaRSETLBashOperator(
         task_id="l3gen",
         bash_command="""
@@ -116,7 +132,8 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
         queue=QUEUE.SNAP,
         dag=this_dag,
     )
-
+    =================================================================================
+'''
     l1_to_l2 >> l3gen
 
     # must add the dag to globals with unique name so airflow can find it

@@ -64,7 +64,7 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
                 # "area_short_name": AREA_SHORT_NAME
             },
         },
-        tmpdirs=["tmp_dir"],
+        tmpdirs=["tmp_dir"], #not sure what this does here?
         params={
             "par": os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),  # here
@@ -90,6 +90,59 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
         queue=QUEUE.SAT_SCRIPTS,
         dag=this_dag,
     )
+    
+    l2_to_l3 = IMaRSETLBashOperator(
+        task_id='l2_to_l3',
+        bash_command="process_S3_3.sh",
+        should_overwrite=True,  # TODO: rm after reproc done
+        inputs={
+            "s2_file":
+                "product_id="+str(L2_PRODUCT_ID)+" AND date_time='{{ts}}'   
+        },
+        outputs={
+            'l3_file': {
+                "verbose": 3,  # TODO: rm?
+                "product_id": L3_PRODUCT_ID,  # TODO: rm?
+                "time": "{{ ts }}",  # ts.replace(" ", "T") ?  # TODO: rm?
+                "sql": (
+                    "product_id={} AND area_id={} ".format(
+                            L3_PRODUCT_ID, AREA_ID
+                    ) +
+                    " AND date_time='{{ execution_date }}'"  # TODO: rm?
+                ),
+                "json": '{'  # noqa E131
+                    '"status_id":3,'
+                    '"area_short_name":"' + AREA_SHORT_NAME + '"'
+                '}',
+                'duplicates_ok': True,  # TODO: rm after reproc done
+                'nohash': True,  # TODO: rm after reproc done
+                # TODO: rm json &
+                # "area_short_name": AREA_SHORT_NAME
+            },
+        },
+        tmpdirs=["tmp_dir"], #not sure what this does here?
+        params={
+            "xml_filec": os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "map_CHAR_S3_OLCI.xml"
+            ),
+             "xml_filep": os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "map_PIN_S3_OLCI.xml"
+            ),
+            "xml_fileo": os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "map_OKA_S3_OLCI.xml"
+            ),
+            "xml_filef": os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "map_FLBY_S3_OLCI.xml"
+            ),
+        },
+        queue=QUEUE.SAT_SCRIPTS,
+        dag=this_dag,
+    )
+    
 ''' =============================================================================
     l3gen = IMaRSETLBashOperator(
         task_id="l3gen",
@@ -134,7 +187,7 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
     )
     =================================================================================
 '''
-    l1_to_l2 >> l3gen
+    l1_to_l2 >> l2_to_l3
 
     # must add the dag to globals with unique name so airflow can find it
 globals()[DAG_ID] = this_dag

@@ -18,9 +18,19 @@ from imars_dags.util.globals import QUEUE
 L1_PRODUCT_ID = 36
 L2_PRODUCT_ID = 99  # TODO I think this might need to be changed
 L3_PRODUCT_ID = 99  # TODO I think this might need to be changed
+
+FLY_AREA_ID = 99  # TODO
+FLY_AREA_SHORT_NAME = "fly..."  # TODO
+OKA_AREA_ID = 99  # TODO
+OKA_AREA_SHORT_NAME = "oka..."  # TODO
+PIN_AREA_ID = 99  # TODO
+PIN_AREA_SHORT_NAME = "pin..."  # TODO
+CHAR_AREA_ID = 99  # TODO
+CHAR_AREA_SHORT_NAME = "char..."  # TODO
+
+
 REGIONS = [
-    ("gom", 1),
-    ("fgbnms", 2)
+    ("_florida", 99),  # TODO
 ]
 
 for AREA_SHORT_NAME, AREA_ID in REGIONS:
@@ -64,7 +74,6 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
                 # "area_short_name": AREA_SHORT_NAME
             },
         },
-        tmpdirs=["tmp_dir"], #not sure what this does here?
         params={
             "par": os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),  # here
@@ -84,27 +93,63 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
                 "product_id="+str(L2_PRODUCT_ID)+" AND date_time='{{ts}}'   
         },
         outputs={
-            'l3_file': {
-                "verbose": 3,  # TODO: rm?
-                "product_id": L3_PRODUCT_ID,  # TODO: rm?
-                "time": "{{ ts }}",  # ts.replace(" ", "T") ?  # TODO: rm?
+            'c_map': {
+                "product_id": L3_PRODUCT_ID,
+                "time": "{{ ts }}",
                 "sql": (
                     "product_id={} AND area_id={} ".format(
-                            L3_PRODUCT_ID, AREA_ID
+                            L3_PRODUCT_ID, CHAR_AREA_ID
+                    ) +
+                    " AND date_time='{{ execution_date }}'"
+                ),
+                "json": '{'  # noqa E131
+                    '"status_id":3,'
+                    '"area_short_name":"' + CHAR_AREA_SHORT_NAME + '"'
+                '}',
+            },
+            'p_map': {
+                "product_id": L3_PRODUCT_ID,
+                "time": "{{ ts }}",
+                "sql": (
+                    "product_id={} AND area_id={} ".format(
+                            L3_PRODUCT_ID, PIN_AREA_ID
                     ) +
                     " AND date_time='{{ execution_date }}'"  # TODO: rm?
                 ),
                 "json": '{'  # noqa E131
                     '"status_id":3,'
-                    '"area_short_name":"' + AREA_SHORT_NAME + '"'
+                    '"area_short_name":"' + PIN_AREA_SHORT_NAME + '"'
                 '}',
-                'duplicates_ok': True,  # TODO: rm after reproc done
-                'nohash': True,  # TODO: rm after reproc done
-                # TODO: rm json &
-                # "area_short_name": AREA_SHORT_NAME
+            },
+            'o_map': {
+                "product_id": L3_PRODUCT_ID,
+                "time": "{{ ts }}",
+                "sql": (
+                    "product_id={} AND area_id={} ".format(
+                            L3_PRODUCT_ID, OKA_AREA_ID
+                    ) +
+                    " AND date_time='{{ execution_date }}'"  # TODO: rm?
+                ),
+                "json": '{'  # noqa E131
+                    '"status_id":3,'
+                    '"area_short_name":"' + OKA_AREA_SHORT_NAME + '"'
+                '}',
+            },
+            'f_map': {
+                "product_id": L3_PRODUCT_ID,
+                "time": "{{ ts }}",
+                "sql": (
+                    "product_id={} AND area_id={} ".format(
+                            L3_PRODUCT_ID, FLY_AREA_ID
+                    ) +
+                    " AND date_time='{{ execution_date }}'"  # TODO: rm?
+                ),
+                "json": '{'  # noqa E131
+                    '"status_id":3,'
+                    '"area_short_name":"' + FLY_AREA_SHORT_NAME + '"'
+                '}',
             },
         },
-        tmpdirs=["tmp_dir"], #not sure what this does here?
         params={
             "xml_filec": os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
@@ -174,4 +219,4 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
     l1_to_l2 >> l2_to_l3
 
     # must add the dag to globals with unique name so airflow can find it
-globals()[DAG_ID] = this_dag
+    globals()[DAG_ID] = this_dag

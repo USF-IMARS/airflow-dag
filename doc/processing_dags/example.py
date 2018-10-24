@@ -28,9 +28,8 @@ from imars_dags.util.globals import QUEUE
 # These constants come from the imars_product_metadata database.
 # The product ID number uniquely identifies each data product.
 # 
-# There are plans to make this less opaque, but for now just ask
-# Tylar if you don't know what the product ID # is for a particular
-# data product.
+# You may find (and add) product IDs to the SQL database using this file:
+# https://github.com/USF-IMARS/imars_puppet/blob/test/modules/role/files/sql/product_metadata_rows.sql
 # =====================================================================
 # | 36 | s3a_ol_1_efr             |
 CP_INPUT_PRODUCT_ID = 123
@@ -40,7 +39,9 @@ L3_PRODUCT_ID = 99  # TODO
 # =====================================================================
 # === Area ID constants
 # Like the product IDs, these come from the imars_product_metadata
-# database.
+# database. 
+# The region ID and name must match values in the sql file:
+# https://github.com/USF-IMARS/imars_puppet/blob/test/modules/role/files/sql/product_metadata_rows.sql
 # =====================================================================
 AREA_SHORT_NAME = "gom"
 AREA_ID = 1

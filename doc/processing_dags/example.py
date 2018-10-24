@@ -33,8 +33,8 @@ from imars_dags.util.globals import QUEUE
 # =====================================================================
 # | 36 | s3a_ol_1_efr             |
 CP_INPUT_PRODUCT_ID = 123
-CP_OUTPUT_PRODUCT_ID = 456  # TODO
-L3_PRODUCT_ID = 99  # TODO
+CP_OUTPUT_PRODUCT_ID = 456
+L3_PRODUCT_ID = 99
 # =====================================================================
 # =====================================================================
 # === Area ID constants

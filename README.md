@@ -13,7 +13,7 @@ Additional documentation in the [`./docs`](https://github.com/USF-IMARS/imars_da
 
 ### organizational rules
 0. A DAG (Directed Acyclic Graph) defines a processing pipeline.
-1. Each DAG is in it's own python file.
+1. Each DAG is in its own python file.
 1. The DAG file name matches the name string passed to the DAG constructor.
 2. The main DAG variable in the file is named `this_dag`.
 3. Operator `task_id` string matches the operator variable name.

@@ -24,5 +24,7 @@ def dag_type_from_filepath(dag_filepath):
     for d_type in DAGType.all():
         if os.path.join("", d_type, "") in dag_filepath:
             return d_type
+        elif os.path.basename(dag_filepath) == "example.py":
+            return "zzz_eg"
     else:
         raise ValueError("could not determine dag_type from filepath")

@@ -51,7 +51,7 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
         should_overwrite=True,  # TODO: rm after reproc done
         inputs={
             "s3_file":
-                "product_id="+str(L1_PRODUCT_ID)+" AND date_time='{{ts}}'   
+                "product_id="+str(L1_PRODUCT_ID)+" AND date_time='{{ts}}'"
         },
         outputs={
             'l2_file': {
@@ -83,14 +83,14 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
         queue=QUEUE.SAT_SCRIPTS,
         dag=this_dag,
     )
-    
+
     l2_to_l3 = IMaRSETLBashOperator(
         task_id='l2_to_l3',
         bash_command="process_S3_3.sh",
         should_overwrite=True,  # TODO: rm after reproc done
         inputs={
             "s2_file":
-                "product_id="+str(L2_PRODUCT_ID)+" AND date_time='{{ts}}'   
+                "product_id="+str(L2_PRODUCT_ID)+" AND date_time='{{ts}}'"
         },
         outputs={
             'c_map': {
@@ -171,51 +171,7 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
         queue=QUEUE.SAT_SCRIPTS,
         dag=this_dag,
     )
-    
-''' =============================================================================
-    l3gen = IMaRSETLBashOperator(
-        task_id="l3gen",
-        bash_command="""
-            /opt/snap/bin/gpt {{ params.xml_file }} \
-            -t {{ params.l3_output }} \
-            -f NetCDF-BEAM \
-            {{ params.l2_input }}
-        """,
-        should_overwrite=True,  # TODO: rm after reproc done
-        params={
-            "xml_file": os.path.join(
-                os.path.dirname(os.path.realpath(__file__)),
-                "L3G_MODA_GOM_v2.xml"
-            )
-        },
-        inputs={
-            "l2_input":
-                "product_id="+str(L2_PRODUCT_ID)+" AND date_time='{{ts}}'"
-        },
-        outputs={
-            'l3_output': {
-                "verbose": 3,
-                "product_id": L3_PRODUCT_ID,
-                "time": "{{ ts }}",  # ts.replace(" ", "T") ?  # TODO: rm?
-                "json": '{'
-                    '"status_id":3,'  # noqa E131
-                    '"area_short_name":"' + AREA_SHORT_NAME + '"'
-                '}',
-                "sql": (
-                    "product_id={} AND area_id={} ".format(
-                            L3_PRODUCT_ID, AREA_ID
-                    ) +
-                    " AND date_time='{{ execution_date }}'"  # TODO: rm?
-                ),
-                'duplicates_ok': True,  # TODO: rm after reproc done
-                'nohash': True,  # TODO: rm after reproc done
-            },
-        },
-        queue=QUEUE.SNAP,
-        dag=this_dag,
-    )
-    =================================================================================
-'''
+
     l1_to_l2 >> l2_to_l3
 
     # must add the dag to globals with unique name so airflow can find it

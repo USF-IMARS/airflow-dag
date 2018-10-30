@@ -32,4 +32,5 @@ def get_dag_id(filepath=None, region=None, dag_type=None, dag_name=None):
 
 
 def dag_name_from_filepath(dag_filepath):
-    return os.path.basename(dag_filepath).replace('.py', '')
+    basename = os.path.basename(dag_filepath)
+    return basename.replace('.py', '')

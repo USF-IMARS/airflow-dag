@@ -16,21 +16,21 @@ from imars_dags.util.globals import QUEUE
 
 # | 36 | s3a_ol_1_efr             |
 L1_PRODUCT_ID = 36
-L2_PRODUCT_ID = 99  # TODO I think this might need to be changed
-L3_PRODUCT_ID = 99  # TODO I think this might need to be changed
+L2_PRODUCT_ID = 50  
+L3_PRODUCT_ID = 51  
 
-FLY_AREA_ID = 99  # TODO
-FLY_AREA_SHORT_NAME = "fly..."  # TODO
-OKA_AREA_ID = 99  # TODO
-OKA_AREA_SHORT_NAME = "oka..."  # TODO
-PIN_AREA_ID = 99  # TODO
-PIN_AREA_SHORT_NAME = "pin..."  # TODO
-CHAR_AREA_ID = 99  # TODO
-CHAR_AREA_SHORT_NAME = "char..."  # TODO
+FLY_AREA_ID = 52 
+FLY_AREA_SHORT_NAME = "fl_bay"  
+OKA_AREA_ID = 53  
+OKA_AREA_SHORT_NAME = "okeecho"  
+PIN_AREA_ID = 54  
+PIN_AREA_SHORT_NAME = "pinellas"  
+CHAR_AREA_ID = 55  
+CHAR_AREA_SHORT_NAME = "char_bay"  
 
 
 REGIONS = [
-    ("_florida", 99),  # TODO
+    ("_florida", 49),  # TODO
 ]
 
 for AREA_SHORT_NAME, AREA_ID in REGIONS:

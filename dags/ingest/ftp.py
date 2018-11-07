@@ -58,3 +58,5 @@ wv3_ingest = BashOperator(
         --directory /srv/imars-objects/ftp-ingest
     """
 )
+
+wv2_ingest >> wv3_ingest

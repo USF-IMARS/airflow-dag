@@ -4,7 +4,8 @@ DAG to define the FTP ingest process.
 Files are uploaded to the central IMaRS FTP server then this runs and sorts out
 where things should go.
 """
-from datetime import datetime,timedelta
+from datetime import datetime
+from datetime import timedelta
 
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
@@ -25,13 +26,13 @@ this_dag = DAG(
     max_active_runs=1
 )
 
-# TODO: OR: could make this a PythonOperator that marks skipped unless something
+# TODO: could make this a PythonOperator that marks skipped unless something
 #           gets uploaded by using imars-etl python API directly.
 wv2_ingest = BashOperator(
     task_id="wv2_ingest",
-    dag = this_dag,
+    dag=this_dag,
     # `--date` is read in from the filename
-    # `--product_id` is limited to `zip_wv2_ftp_ingest` b/c of `find` limitations
+    # `--product_id` limited to `zip_wv2_ftp_ingest` b/c of `find` limitations
     #       product_id of `zip_wv2_ftp_ingest` is `6`
     # `--status_id` is `to_load` == 3
     #  `--area`  is `na`   == 5
@@ -45,9 +46,9 @@ wv2_ingest = BashOperator(
 
 wv3_ingest = BashOperator(
     task_id="wv3_ingest",
-    dag = this_dag,
+    dag=this_dag,
     # `--date` is read in from the filename
-    # `--product_id` is limited to `zip_wv2_ftp_ingest` b/c of `find` limitations
+    # `--product_id` limited to `zip_wv3_ftp_ingest` b/c of `find` limitations
     #       product_id of `zip_wv2_ftp_ingest` is `6`
     # `--status_id` is `to_load` == 3
     #  `--area`  is `na`   == 5

@@ -28,36 +28,29 @@ this_dag = DAG(
 
 # TODO: could make this a PythonOperator that marks skipped unless something
 #           gets uploaded by using imars-etl python API directly.
+
+CMD = """
+python3 -m imars_etl find /srv/imars-objects/ftp-ingest \
+    --product_id __PRODUCT_ID__ \
+| xargs -n 1 -i sh -c ' \
+    python3 -m imars_etl -v load \
+        --product_id __PRODUCT_ID__ \
+        {} && \
+    rm {}\
+'
+"""
 wv2_ingest = BashOperator(
     task_id="wv2_ingest",
     dag=this_dag,
-    # `--date` is read in from the filename
-    # `--product_id` limited to `zip_wv2_ftp_ingest` b/c of `find` limitations
-    #       product_id of `zip_wv2_ftp_ingest` is `6`
-    # `--status_id` is `to_load` == 3
-    #  `--area`  is `na`   == 5
-    bash_command="""
-    python3 -m imars_etl -vvv load \
-        --product_id 6 \
-        --json '{"status_id":3, "area_id":5}'\
-        --directory /srv/imars-objects/ftp-ingest
-    """
+    bash_command=CMD.replace("__PRODUCT_ID__", 6)
 )
 
 wv3_ingest = BashOperator(
     task_id="wv3_ingest",
     dag=this_dag,
-    # `--date` is read in from the filename
-    # `--product_id` limited to `zip_wv3_ftp_ingest` b/c of `find` limitations
-    #       product_id of `zip_wv2_ftp_ingest` is `6`
-    # `--status_id` is `to_load` == 3
-    #  `--area`  is `na`   == 5
-    bash_command="""
-    python3 -m imars_etl -vvv load \
-        --product_id 47 \
-        --json '{"status_id":3, "area_id":5}'\
-        --directory /srv/imars-objects/ftp-ingest
-    """
+    bash_command=CMD.replace("__PRODUCT_ID__", 47)
 )
 
+# NOTE: one after the other to reduce stress on ftp-ingest server
+#   these could be parallel if disks & network could handle it.
 wv2_ingest >> wv3_ingest

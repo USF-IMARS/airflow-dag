@@ -26,9 +26,6 @@ this_dag = DAG(
     max_active_runs=1
 )
 
-# TODO: could make this a PythonOperator that marks skipped unless something
-#           gets uploaded by using imars-etl python API directly.
-
 CMD = """
 python3 -m imars_etl find /srv/imars-objects/ftp-ingest \
     --product_id __PRODUCT_ID__ \

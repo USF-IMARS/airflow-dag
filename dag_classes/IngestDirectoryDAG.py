@@ -30,13 +30,18 @@ class IngestDirectoryDAG(DAG):
     def __init__(
         self,
         *args,
+        directory_path,
+        load_kwargs_list=None,
         schedule_interval=timedelta(days=1),
         **kwargs
     ):
         """
         parameters:
         -----------
-
+        directory_path : str path
+            path we are loading
+        load_kwargs_list : list of dict
+            kwargs to pass to the load operation for each load
         """
         super(IngestDirectoryDAG, self).__init__(
             *args,
@@ -51,9 +56,16 @@ class IngestDirectoryDAG(DAG):
             ),
             **kwargs
         )
+        self.directory_path = directory_path
+        assert len(load_kwargs_list) > 0
+        self.load_kwargs_list = load_kwargs_list
 
     @staticmethod
-    def _do_ingest_task(etl_load_args, **kwargs):
+    def _do_load_file(etl_load_args, **kwargs):
+        """
+        !!! DEPRECATED !!!
+        runnable used to define an ingest task
+        """
         # default args added to every ingest:
         load_args = dict(
             verbose=1,
@@ -72,11 +84,53 @@ class IngestDirectoryDAG(DAG):
         #       Mark skipped if none loaded, else mark success.
 
     def add_ingest_task(self, task_id, etl_load_args):
+        """
+        """
         return PythonOperator(
             dag=self,
             task_id=task_id,
             op_args=[
                 etl_load_args
             ],
-            python_callable=self._do_ingest_task,
+            python_callable=self._do_load_directory,
         )
+
+    def add_ingest_file(self, task_id, etl_load_args):
+        """
+        !!! DEPRECATED !!!
+        manually add a file load directly
+        """
+        return PythonOperator(
+            dag=self,
+            task_id=task_id,
+            op_args=[
+                etl_load_args
+            ],
+            python_callable=self._do_load_file,
+        )
+
+    def _do_load_directory(self, context):
+        """
+        a lot like running:
+
+        python3 -m imars_etl find /srv/imars-objects/ftp-ingest \
+            --product_id __PRODUCT_ID__ \
+        | xargs -n 1 -i sh -c ' \
+            python3 -m imars_etl -v load \
+                --product_id __PRODUCT_ID__ \
+                {} && \
+            rm {}\
+        '
+        """
+        print("loading output files into IMaRS data warehouse...")
+        for load_kwargs in self.load_kwargs_list:
+            to_load = imars_etl.find(
+                self.directory_path,
+                **load_kwargs
+            )
+            # TODO: try/except
+            for filepath in to_load:
+                imars_etl.load(filepath=filepath, **load_kwargs)
+
+        # TODO: marks skipped unless something
+        #           gets uploaded by using imars-etl python API directly.

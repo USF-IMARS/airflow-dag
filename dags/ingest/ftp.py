@@ -39,13 +39,13 @@ python3 -m imars_etl find /srv/imars-objects/ftp-ingest \
 wv2_ingest = BashOperator(
     task_id="wv2_ingest",
     dag=this_dag,
-    bash_command=CMD.replace("__PRODUCT_ID__", 6)
+    bash_command=CMD.replace("__PRODUCT_ID__", "6")
 )
 
 wv3_ingest = BashOperator(
     task_id="wv3_ingest",
     dag=this_dag,
-    bash_command=CMD.replace("__PRODUCT_ID__", 47)
+    bash_command=CMD.replace("__PRODUCT_ID__", "47")
 )
 
 # NOTE: one after the other to reduce stress on ftp-ingest server

@@ -31,7 +31,8 @@ class IngestDirectoryDAG(DAG):
         self,
         *args,
         directory_path,
-        load_kwargs_list=None,
+        load_kwargs_list,
+        rm_loaded=False,
         schedule_interval=timedelta(days=1),
         **kwargs
     ):
@@ -42,6 +43,8 @@ class IngestDirectoryDAG(DAG):
             path we are loading
         load_kwargs_list : list of dict
             kwargs to pass to the load operation for each load
+        rm_loaded : bool
+            Loaded files will be removed iff True.
         """
         super(IngestDirectoryDAG, self).__init__(
             *args,
@@ -59,6 +62,35 @@ class IngestDirectoryDAG(DAG):
         self.directory_path = directory_path
         assert len(load_kwargs_list) > 0
         self.load_kwargs_list = load_kwargs_list
+        self.rm_loaded = rm_loaded
+        self.add_ingest_tasks()
+
+    def add_ingest_tasks(self):
+        """
+        adds ingest tasks for each item in self.load_kwargs_list
+
+        NOTE: tasks are one after the other to reduce stress on file servers
+           these could be parallel if disks & network could handle it.
+        """
+        prev_task = None
+        for kwargs in self.load_kwargs_list:
+            task_id = self.get_task_id(kwargs)
+            this_task = self.add_ingest_task(
+                task_id=task_id,
+                etl_load_args=kwargs
+            )
+            if prev_task is not None:
+                # TODO: rm this if servers can handle it
+                prev_task >> this_task
+            prev_task = this_task
+
+    def get_task_id(self, kwargs):
+        """returns task id string for given kwargs list"""
+        return "ingest_id{}_{}_n{}".format(
+            kwargs.get("product_id", ""),
+            kwargs.get("product_type_name", ""),
+            len(self.tasks)
+        )
 
     @staticmethod
     def _do_load_file(etl_load_args, **kwargs):
@@ -123,14 +155,16 @@ class IngestDirectoryDAG(DAG):
         '
         """
         print("loading output files into IMaRS data warehouse...")
-        for load_kwargs in self.load_kwargs_list:
-            to_load = imars_etl.find(
-                self.directory_path,
-                **load_kwargs
-            )
+        load_kwargs = context['etl_load_args']
+        to_load = imars_etl.find(
+            self.directory_path,
+            **load_kwargs
+        )
+        for filepath in to_load:
             # TODO: try/except
-            for filepath in to_load:
-                imars_etl.load(filepath=filepath, **load_kwargs)
-
+            imars_etl.load(filepath=filepath, **load_kwargs)
+            if self.rm_loaded is True:
+                # TODO: rm?
+                print("rm '{}'".format(filepath))
         # TODO: marks skipped unless something
         #           gets uploaded by using imars-etl python API directly.

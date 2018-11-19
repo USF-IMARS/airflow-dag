@@ -24,9 +24,18 @@ from airflow.operators.python_operator import PythonOperator
 import imars_etl
 
 from imars_dags.util.get_default_args import get_default_args
+from imars_dags.util.merge_dicts import merge_dicts
 
 
 class IngestDirectoryDAG(DAG):
+    # these COMMON_ARGS get added to every imars-etl call,
+    # but can be overridden in the load_kwargs_list passed in.
+    COMMON_ARGS = {
+        'duplicates_ok': True,  # don't freak out over duplicates
+        'nohash': True,  # speeds things up a lot
+        # 'dry_run': True,  # True if we are just testing
+    }
+
     def __init__(
         self,
         *args,
@@ -75,6 +84,10 @@ class IngestDirectoryDAG(DAG):
         prev_task = None
         for kwargs in self.load_kwargs_list:
             task_id = self.get_task_id(kwargs)
+            kwargs = merge_dicts(
+                self.COMMON_ARGS,
+                kwargs
+            )
             this_task = self.add_ingest_task(
                 task_id=task_id,
                 etl_load_args=kwargs
@@ -141,7 +154,7 @@ class IngestDirectoryDAG(DAG):
             python_callable=self._do_load_file,
         )
 
-    def _do_load_directory(self, context):
+    def _do_load_directory(self, load_kwargs):
         """
         a lot like running:
 
@@ -155,16 +168,19 @@ class IngestDirectoryDAG(DAG):
         '
         """
         print("loading output files into IMaRS data warehouse...")
-        load_kwargs = context['etl_load_args']
         to_load = imars_etl.find(
             self.directory_path,
             **load_kwargs
         )
+        results = []
         for filepath in to_load:
             # TODO: try/except
-            imars_etl.load(filepath=filepath, **load_kwargs)
+            results.append(
+                imars_etl.load(filepath=filepath, **load_kwargs)
+            )
             if self.rm_loaded is True:
                 # TODO: rm?
                 print("rm '{}'".format(filepath))
         # TODO: marks skipped unless something
         #           gets uploaded by using imars-etl python API directly.
+        return results

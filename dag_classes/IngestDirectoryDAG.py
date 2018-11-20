@@ -18,6 +18,7 @@ IngestDirectoryDAG(
 """
 from datetime import timedelta
 from datetime import datetime
+import shutil
 
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
@@ -174,13 +175,16 @@ class IngestDirectoryDAG(DAG):
         )
         results = []
         for filepath in to_load:
-            # TODO: try/except
+            # TODO: try/except?
             results.append(
                 imars_etl.load(filepath=filepath, **load_kwargs)
             )
             if self.rm_loaded is True:
-                # TODO: rm?
-                print("rm '{}'".format(filepath))
+                print("trashing '{}'".format(filepath))
+                shutil.move(
+                    filepath,
+                    '/srv/imars-objects/trash/' + filepath.replace('/', '.-')
+                )
         # TODO: marks skipped unless something
         #           gets uploaded by using imars-etl python API directly.
         return results

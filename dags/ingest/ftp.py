@@ -22,4 +22,5 @@ this_dag = IngestDirectoryDAG(
         },
     ],
     schedule_interval="2 22 * * 0",
+    rm_loaded=True,
 )

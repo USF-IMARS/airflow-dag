@@ -20,6 +20,7 @@ class QUEUE:
     SAT_SCRIPTS = 'sat_scripts'  # https://github.com/USF-IMARS/sat-scripts/
     PYCMR = 'pycmr'  # https://github.com/7yl4r/pyCMR
     SNAP = 'snap'  # https://github.com/USF-IMARS/snap-puppet
+    RCLONE = 'rclone'  # https://rclone.org/ configured by puppet
 
     MATLAB = 'matlab'
     WV2_PROC = 'wv2_proc'  # https://github.com/USF-IMARS/wv2-processing
@@ -32,8 +33,8 @@ class POOL:
 
     Pools are used to limit # of jobs of a certain type running.
     Example usages:
-       * limit # of jobs working with a certain file system so we don't waste a lot of
-            processing time waiting on file i/o because of too many competing workers.
+       * limit # of jobs working with a certain file system so we don't waste
+            processing time waiting on file i/o because of competing workers.
 
     The list of pools is managed in the webserver UI (Menu -> Admin -> Pools).
     Pools with the names below must be created there before using else your
@@ -43,7 +44,7 @@ class POOL:
         https://issues.apache.org/jira/browse/AIRFLOW-584
     """
     DEFAULT = None    # default pool selected by not providing a value
-    # SLEEP   = "sleep" # pool for tasks that are just waiting / sleeping / delay
+    # SLEEP = "sleep" # pool for tasks that are just waiting / sleeping / delay
     # ^ this is used to reduce # of concurrency slots wasted just waiting.
 
 
@@ -56,7 +57,7 @@ class PRIORITY:
     NOTE: uhhh... task priority seems to be ignored right now?
     """
     DEFAULT = 1
-    SLEEP   = -10  # for delay, wait, etc
+    SLEEP = -10  # for delay, wait, etc
 
 
 """

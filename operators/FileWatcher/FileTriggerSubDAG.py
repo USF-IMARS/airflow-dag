@@ -11,7 +11,6 @@ this_dag = FileTriggerDAG(
 ```
 """
 from airflow import DAG
-from airflow.operators.sensors import SqlSensor
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.python_operator import BranchPythonOperator
 from airflow.operators.dummy_operator import DummyOperator
@@ -19,18 +18,10 @@ from airflow.operators.mysql_operator import MySqlOperator
 
 from imars_etl.select import select
 from imars_etl.id_lookup import id_lookup
-from imars_dags.util.list_to_sql_or import list_to_sql_or
 
 from imars_dags.operators.MMTTriggerDagRunOperator \
     import MMTTriggerDagRunOperator
 
-
-class STATUS:  # status IDs from imars_product_metadata.status
-    # {status.short_name.upper()} = {status.id}
-    STD = 1
-    EXTERNAL = 2
-    TO_LOAD = 3
-    ERROR = 4
 
 METADATA_CONN_ID = "imars_metadata"
 
@@ -91,26 +82,20 @@ class FileTriggerSubDAG(DAG):
 
     def _add_file_trigger_tasks(self):
         with self as dag:  # noqa F841
-            # TODO: SQL watch for pid=={} & status_id==to_load
-            # === mysql_sensor
-            # =================================================================
-            sql_selection = "status_id={} AND {};".format(
-                STATUS.TO_LOAD,
-                list_to_sql_or('product_id', self.product_ids)
+            VALID_STATUS_IDS = [1, 3, 4]
+            sql_selection = "status_id IN ({}) AND product_id IN ({});".format(
+                ",".join(VALID_STATUS_IDS),
+                ",".join(self.product_ids)
             )
-            sql_str = "SELECT id FROM file WHERE " + sql_selection
-            check_for_to_loads = SqlSensor(
-                task_id='check_for_to_loads',
-                conn_id=METADATA_CONN_ID,
-                sql=sql_str,
-                soft_fail=True,
-                poke_interval=self.poke_interval,
-                # timeout == schedule_interval b/c always want 1 running
-                timeout=self.schedule_interval.total_seconds()
+
+
+            # TODO: re-work this using MySqlOperator (NOT imars_etl.select)
+
+            
+            sql_str = (
+                "SELECT id FROM file WHERE " + sql_selection +
+                " ORDER BY last_processed DESC LIMIT 1"
             )
-            # TODO: should set imars_product_metadata.status to
-            #       "processing" to prevent duplicates?
-            #       Not an issue so if catchup=False & max_active_runs=1
 
             """
             === get_file_metadata
@@ -153,7 +138,6 @@ class FileTriggerSubDAG(DAG):
                 provide_context=True,
                 python_callable=get_file_metadata,
             )
-            check_for_to_loads >> get_file_metadata
 
             """
             === branch_to_correct_region

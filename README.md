@@ -4,7 +4,7 @@
 Don't hesitate to
 [open an issue](https://github.com/USF-IMARS/imars_dags/issues/47) if you are
 confused or something isn't working for you.
-This is under heavy development so documentation or code may contain errors.
+This is under heavy development so documentation and code likely contain errors.
 
 ## DAG development guidelines
 Please see the (private to IMaRS users) [DAG Development Workflows document](https://github.com/USF-IMARS/IMaRS-docs/blob/master/docs/airflow/workflows.md).

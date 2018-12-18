@@ -84,14 +84,14 @@ class FileTriggerSubDAG(DAG):
         with self as dag:  # noqa F841
             VALID_STATUS_IDS = [1, 3, 4]
             sql_selection = "status_id IN ({}) AND product_id IN ({});".format(
-                ",".join(VALID_STATUS_IDS),
-                ",".join(self.product_ids)
+                ",".join(map(str, VALID_STATUS_IDS)),
+                ",".join(map(str, self.product_ids))
             )
 
 
             # TODO: re-work this using MySqlOperator (NOT imars_etl.select)
 
-            
+
             sql_str = (
                 "SELECT id FROM file WHERE " + sql_selection +
                 " ORDER BY last_processed DESC LIMIT 1"

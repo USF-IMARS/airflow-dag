@@ -37,7 +37,7 @@ BashOperator(
         "all_csvs2graphite"
     ),
     bash_command="""
-        python2
+        python2 \
         /home/airflow/dags/imars_dags/dags/csvs_to_graphite/_csvs_to_graphite.py
     """,
     dag=this_dag,

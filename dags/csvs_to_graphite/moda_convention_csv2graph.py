@@ -14,9 +14,10 @@ the data.
 
 import _csv_to_graphite as csv2graph
 
-for roi in ['fk']:  # TODO: add more here?
-    for prod in ['chlor_a']:
-        for loc in ['LK']:
+
+for roi in ['fk']:  # TODO: fgbnms (but sub-locs will be different)
+    for prod in ['chlor_a', 'nflh', 'Rrs_667']:  # TODO: + 'sst4' - not OC dir
+        for loc in ['LK', 'MR', 'DTN', 'WS12', 'WS57_3', 'WS68']:
             csv2graph.main(
                 (
                     "/srv/imars-objects/modis_aqua_{roi}/EXT_TS_AQUA/OC/"

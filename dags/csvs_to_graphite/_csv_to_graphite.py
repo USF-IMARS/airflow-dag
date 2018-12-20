@@ -21,6 +21,7 @@ PORT = 2004  # TODO
 
 
 def main(csv_path, prefix, fields):
+    print('loading {} to {} from file \n{}'.format(fields, prefix, csv_path))
     carbon = GraphiteInterface.GraphiteInterface(HOSTNAME, PORT)
 
     with open(csv_path, 'r') as csvfile:

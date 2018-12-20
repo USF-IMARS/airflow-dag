@@ -20,25 +20,35 @@ this_dag = DAG(
     max_active_runs=1,
 )
 
-# for args in CSV2GRAPH_ARGS:
-#     PythonOperator(
-#         task_id=(
-#             "csv2graphite_" +
-#             args[1].replace('.', '_').replace('imars_regions_', '')
-#         ),
-#         python_callable=csv2graph,
-#         dag=this_dag,
-#         op_args=args,
-#         provide_context=True,
-#     )
-# same thing, but as bash op:
-BashOperator(
-    task_id=(
-        "all_csvs2graphite"
-    ),
-    bash_command="""
-        python2 \
-        /home/airflow/dags/imars_dags/dags/csvs_to_graphite/_csvs_to_graphite.py
-    """,
-    dag=this_dag,
-)
+with this_dag as dag:
+    # for args in CSV2GRAPH_ARGS:
+    #     PythonOperator(
+    #         task_id=(
+    #             "csv2graphite_" +
+    #             args[1].replace('.', '_').replace('imars_regions_', '')
+    #         ),
+    #         python_callable=csv2graph,
+    #         dag=this_dag,
+    #         op_args=args,
+    #         provide_context=True,
+    #     )
+    # same thing, but as bash op:
+    fgbnms_csvs2graphite = BashOperator(
+        task_id=(
+            "fgbnms_csvs2graphite"
+        ),
+        bash_command="""
+            python2 \
+            /home/airflow/dags/imars_dags/dags/csvs_to_graphite/fgbnms_csvs2graph.py
+        """,
+    )
+
+    moda_convention_csv2graph = BashOperator(
+        task_id=(
+            "moda_convention_csv2graph"
+        ),
+        bash_command="""
+            python2 \
+            /home/airflow/dags/imars_dags/dags/csvs_to_graphite/moda_convention_csv2graph.py
+        """,
+    )

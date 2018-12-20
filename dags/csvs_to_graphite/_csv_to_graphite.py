@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 """
 Reads a single CSV file into graphite.
+Assumes "Time" is the first row and is a unix time in seconds.
 
 Based on https://gist.github.com/agleyzer/8697616
 
 example usage:
-_csv_to_graphite.py /path/to/file.csv graphite.id.string mean,clim,anom
+_csv_to_graphite.py /path/2/file.csv graphite.var.name.heir col,names,to,load
+
 """
 import csv
 import sys
@@ -18,6 +20,7 @@ except ImportError:  # as script
 
 HOSTNAME = "graphitemaster"  # TODO
 PORT = 2004  # TODO
+TIMEKEY = "Time"
 
 
 def main(csv_path, prefix, fields):
@@ -31,14 +34,14 @@ def main(csv_path, prefix, fields):
         )
 
         for row in r:
-            if (row['time'].startswith("#")):
+            if (row[TIMEKEY].startswith("#")):
                 continue
 
             # TIME_FMT_STR = "%m/%d/%Y %I:%M:%S %p"  # for other time formats
             # ts = datetime.strptime(
             #     row['time'], TIME_FMT_STR
             # ).strftime("%s")
-            ts = row['time']
+            ts = row[TIMEKEY]
 
             for field in fields:
                 carbon.add_data(

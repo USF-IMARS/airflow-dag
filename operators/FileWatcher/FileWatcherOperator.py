@@ -10,10 +10,15 @@ from airflow.operators.python_operator import PythonOperator
 from airflow.utils.state import State
 import imars_etl
 
-from imars_dags.operators.FileWatcher.FileTriggerSubDAG \
-    import get_sql_selection
-
 DAWN_OF_TIME = datetime(2018, 5, 5, 5, 5)  # any date in past is fine
+
+
+def get_sql_selection(product_ids):
+    VALID_STATUS_IDS = [1, 3, 4]
+    return "status_id IN ({}) AND product_id IN ({})".format(
+        ",".join(map(str, VALID_STATUS_IDS)),
+        ",".join(map(str, product_ids))
+    )
 
 
 class FileWatcherOperator(PythonOperator):

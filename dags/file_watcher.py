@@ -67,7 +67,7 @@ with this_dag as dag:
         product_ids=id_list,
         dags_to_trigger=[],
     )
-    claimed_ids.append(id_list)
+    claimed_ids.extend(id_list)
 
     assert 35 not in claimed_ids
     file_trigger_myd0_otis_l2 = FileWatcherOperator(
@@ -106,7 +106,7 @@ with this_dag as dag:
         ],
         area_names=['na', 'big_bend'],
     )
-    claimed_ids.append(5)
+    claimed_ids.append(11)
 
     assert 6 not in claimed_ids
     file_trigger_zip_wv2_ftp_ingest = FileWatcherOperator(
@@ -120,4 +120,9 @@ with this_dag as dag:
 
     # assert no duplicates in claimed_ids
     # (https://stackoverflow.com/a/1541827/1483986)
-    assert len(claimed_ids) == len(set(claimed_ids))
+    if len(claimed_ids) != len(set(claimed_ids)):
+        raise AssertionError(
+            "too many claims on product #s {}".format(
+                set([x for x in claimed_ids if claimed_ids.count(x) > 1])
+                )
+        )

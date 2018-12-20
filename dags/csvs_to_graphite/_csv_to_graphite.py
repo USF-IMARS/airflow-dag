@@ -5,7 +5,7 @@ Reads a single CSV file into graphite.
 Based on https://gist.github.com/agleyzer/8697616
 
 example usage:
-_csv_to_graphite.py /path/to/file.csv graphite.id.string
+_csv_to_graphite.py /path/to/file.csv graphite.id.string mean,clim,anom
 """
 import csv
 import sys
@@ -19,26 +19,18 @@ except ImportError:  # as script
 HOSTNAME = "graphitemaster"  # TODO
 PORT = 2004  # TODO
 
-# all cols in the csv file
-# 1. Time (UNIX)
-# 2. Mean
-# 3. Climatology
-# 4. Anomaly
-FIELDS = [
-    "time", "mean", "climatology", "anomaly"
-]
 
-field_map = {title: num for (num, title) in enumerate(FIELDS)}
-
-# cols we want to load into graphite
-graphite_fields = FIELDS[1:]  # all but the first one (time)
-
-
-def main(csv_path, prefix):
+def main(csv_path, prefix, fields):
     carbon = GraphiteInterface.GraphiteInterface(HOSTNAME, PORT)
 
     with open(csv_path, 'r') as csvfile:
-        r = csv.DictReader(csvfile, fieldnames=FIELDS, delimiter=' ')
+        # TODO: if csv.Sniffer.has_header() ?
+        # TODO: update soon:
+        #   fields read automatically from header, (rm fieldnames=)
+        #   delim=','
+        r = csv.DictReader(
+            csvfile, fieldnames=['time'] + fields, delimiter=' '
+        )
 
         for row in r:
             if (row['time'].startswith("#")):
@@ -50,7 +42,7 @@ def main(csv_path, prefix):
             # ).strftime("%s")
             ts = row['time']
 
-            for field in graphite_fields:
+            for field in fields:
                 carbon.add_data(
                     "{}.{}".format(prefix, field),
                     float(row[field]),
@@ -63,4 +55,4 @@ def main(csv_path, prefix):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1], sys.argv[2])
+    main(sys.argv[1], sys.argv[2], sys.argv[3])

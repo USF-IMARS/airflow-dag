@@ -13,10 +13,17 @@ this_dag = DAG(
     dag_id="file_watcher",
     catchup=False,  # latest only
 )
-
-unprocessed_watcher_task = FileWatcherOperator(
-    task_id="unprocessed_watcher_task",
-    product_ids=[x for x in range(7, 35) if x not in [11]],
-    dags_to_trigger=[],
-    dag=this_dag
-)
+with this_dag as dag:
+    unprocessed_watcher_task = FileWatcherOperator(
+        task_id="unprocessed_watcher_task",
+        product_ids=[x for x in range(7, 35) if x not in [11]],
+        dags_to_trigger=[],
+    )
+    file_trigger_myd0_otis_l2 = FileWatcherOperator(
+        task_id='file_trigger_myd0_otis_l2',
+        product_ids=[35],
+        dags_to_trigger=[
+            # "processing_l2_to_l3_pass"  # deprecated
+        ],
+        area_names=[],
+    )

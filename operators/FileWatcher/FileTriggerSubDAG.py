@@ -44,6 +44,14 @@ def get_subdag(
     )
 
 
+def get_sql_selection(product_ids):
+    VALID_STATUS_IDS = [1, 3, 4]
+    return "status_id IN ({}) AND product_id IN ({})".format(
+        ",".join(map(str, VALID_STATUS_IDS)),
+        ",".join(map(str, product_ids))
+    )
+
+
 class FileTriggerSubDAG(DAG):
     def __init__(
         self,
@@ -82,20 +90,8 @@ class FileTriggerSubDAG(DAG):
 
     def _add_file_trigger_tasks(self):
         with self as dag:  # noqa F841
-            VALID_STATUS_IDS = [1, 3, 4]
-            sql_selection = "status_id IN ({}) AND product_id IN ({});".format(
-                ",".join(map(str, VALID_STATUS_IDS)),
-                ",".join(map(str, self.product_ids))
-            )
-
-
-            # TODO: re-work this using MySqlOperator (NOT imars_etl.select)
-
-
-            sql_str = (
-                "SELECT id FROM file WHERE " + sql_selection +
-                " ORDER BY last_processed DESC LIMIT 1"
-            )
+            sql_selection = get_sql_selection(self.product_ids)
+            # TODO: re-work this using MySqlOperator (NOT imars_etl.select) ?
 
             """
             === get_file_metadata

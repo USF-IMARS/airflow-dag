@@ -60,6 +60,7 @@ CSV2GRAPH_ARGS = [  # TODO: fix duplication here & in dag
 
 def main():
     for args in CSV2GRAPH_ARGS:
+        print("pushing csv into graphite:")
         print(args)
         csv2graph.main(*args)
 

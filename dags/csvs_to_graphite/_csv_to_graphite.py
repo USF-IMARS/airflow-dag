@@ -3,6 +3,9 @@
 Reads a single CSV file into graphite.
 
 Based on https://gist.github.com/agleyzer/8697616
+
+example usage:
+_csv_to_graphite.py /path/to/file.csv graphite.id.string
 """
 import csv
 import sys
@@ -35,7 +38,7 @@ def main(csv_path, prefix):
     carbon = GraphiteInterface.GraphiteInterface(HOSTNAME, PORT)
 
     with open(csv_path, 'r') as csvfile:
-        r = csv.DictReader(csvfile, FIELDS)
+        r = csv.DictReader(csvfile, fieldnames=FIELDS, delimiter=' ')
 
         for row in r:
             if (row['time'].startswith("#")):
@@ -56,7 +59,7 @@ def main(csv_path, prefix):
 
             if r.line_num % 10 == 0:
                 carbon.send_data()
-                print(r.line_num)
+                print("line #{}".format(r.line_num))
 
 
 if __name__ == '__main__':

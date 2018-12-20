@@ -10,7 +10,8 @@ from imars_dags.operators.FileWatcher.FileWatcherOperator \
 
 
 this_dag = DAG(
-    dag_id="file_watcher"
+    dag_id="file_watcher",
+    catchup=False,  # latest only
 )
 
 unprocessed_watcher_task = FileWatcherOperator(

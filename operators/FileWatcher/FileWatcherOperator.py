@@ -66,14 +66,21 @@ def _trigger_dags(
 ):
     # === get file metadata
     # SELECT {cols} FROM file WHERE {sql} {post_where};
-    print('SELECT {} FROM file WHERE {} {};'.format(
-        '*', get_sql_selection(product_ids), "ORDER BY last_processed DESC LIMIT 1"
-    ))
-    file_metadata = imars_etl.select(
-        # cols="id,area_id",
+    # print('SELECT {} FROM file WHERE {} {};'.format(
+    #     '*',
+    #     get_sql_selection(product_ids),
+    #     "ORDER BY last_processed DESC LIMIT 1"
+    # ))
+    result = imars_etl.select(
+        cols="id,area_id,date_time",
         sql=get_sql_selection(product_ids),
         post_where="ORDER BY last_processed DESC LIMIT 1",
         first=True,
+    )
+    file_metadata = dict(
+        id=result[0],
+        area_id=result[1],
+        date_time=result[2],
     )
     # print("\n\tmeta:\n\t{}\n".format(file_metadata))
     # logging.info("\n\n\tmeta:\n\t{}".format(file_metadata))
@@ -87,13 +94,14 @@ def _trigger_dags(
     # trigger the dags
     roi_name = file_metadata['area_name']
     trigger_date = file_metadata['date_time'].strftime('%Y-%m-%d %H:%M:%S.%f')
+    print("triggering dags for ds={}...".format(trigger_date))
     for processing_dag_name in dags_to_trigger:
         # processing_dag_name is root dag,
         # but each region has a dag
         dag_to_trigger = "{}_{}".format(
             processing_dag_name, roi_name
         )
-
+        print(dag_to_trigger + "...")
         # trigger_dag_id=dag_to_trigger,
         run_id_dt = datetime.strptime(
             trigger_date, '%Y-%m-%d %H:%M:%S.%f'
@@ -113,18 +121,26 @@ def _trigger_dags(
         session.add(dr)
         session.commit()
         session.close()
-
-        # === update status and/or last_processed:
-        # TODO: use something like imars_etl.update() ???
-        mysql_hook = MySqlHook(
-            mysql_conn_id='imars_metadata'  # TODO: rm hardcoded value
-        )
-        mysql_hook.run(
-            "UPDATE file SET status_id={status} WHERE id={f_id}",
-            parameters={
-                'status': 1,
-                'f_id': file_metadata['id'],
-                'last_processed': str(datetime.now())
-                # expected date format: 2018-12-19 23:34:08.256244
-            }
-        )
+    print("...done. {} DAGs triggered.".format(len(dags_to_trigger)))
+    # === update status and/or last_processed:
+    # TODO: use something like imars_etl.update() ???
+    mysql_hook = MySqlHook(
+        mysql_conn_id='imars_metadata'  # TODO: rm hardcoded value
+    )
+    dt_now = str(datetime.now())
+    sql_update = (
+        'UPDATE file SET '
+        'status_id={},last_processed="{}" WHERE id={}'
+    ).format(
+        1,  # 1 = status:standard
+        dt_now,
+        file_metadata['id'],
+        # expected date format: 2018-12-19 23:34:08.256244
+    )
+    print("updating metadata db:\n\t" + sql_update)
+    mysql_hook.run(
+        sql_update
+    )
+    # print("file id#{}.last_processed set to {}".format(
+    #     file_metadata['id'], dt_now
+    # ))

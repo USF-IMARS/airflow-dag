@@ -42,21 +42,21 @@ def main():
         product_short_name = product['short_name']
         for weeks_ago in range(0, N_HISTORICAL_WEEKS):
             src_path = imars_etl.select(
-                columns='filepath',
+                cols='filepath',
                 sql=(
                     'product_id={} ORDER BY date_time DESC '.format(pid) +
                     ' LIMIT 1 OFFSET {}'.format(weeks_ago)
                 )
-            )['filepath']
+            )[0]
             dest_path = os.path.join(
                 "/srv", "imars-objects", region_short_name, "dash_links",
                 "{}_{}_weeks_ago.png".format(product_short_name, weeks_ago)
             )
 
-            if os.path.exists(dest_path):  # clear existing link if exists
-                assert os.path.islink(dest_path)
+            if os.path.islink(dest_path):  # clear existing link if exists
                 os.remove(dest_path)
-
+            assert not os.path.exists(dest_path)
+            print('linking...\n\t{}\n\t  |-->{}'.format(src_path, dest_path))
             os.symlink(src_path, dest_path)
 
 

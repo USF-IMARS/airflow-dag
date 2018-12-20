@@ -26,11 +26,8 @@ def main(csv_path, prefix, fields):
 
     with open(csv_path, 'r') as csvfile:
         # TODO: if csv.Sniffer.has_header() ?
-        # TODO: update soon:
-        #   fields read automatically from header, (rm fieldnames=)
-        #   delim=','
         r = csv.DictReader(
-            csvfile, fieldnames=['time'] + fields, delimiter=' '
+            csvfile, delimiter=','
         )
 
         for row in r:

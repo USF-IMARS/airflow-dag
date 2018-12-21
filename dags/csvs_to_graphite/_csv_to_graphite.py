@@ -20,7 +20,7 @@ except ImportError:  # as script
 
 HOSTNAME = "graphitemaster"  # TODO
 PORT = 2004  # TODO
-TIMEKEY = "Time"
+OTHER_TIMEKEYS = ["Time"]
 
 
 def main(csv_path, prefix, fields):
@@ -28,20 +28,43 @@ def main(csv_path, prefix, fields):
     carbon = GraphiteInterface.GraphiteInterface(HOSTNAME, PORT)
 
     with open(csv_path, 'r') as csvfile:
-        # TODO: if csv.Sniffer.has_header() ?
-        r = csv.DictReader(
-            csvfile, delimiter=','
-        )
+        sniffer = csv.Sniffer()
+        dialect = sniffer.sniff(csvfile.read(2048), delimiters=", ")
+        csvfile.seek(0)
+        has_head = sniffer.has_header(csvfile.read(2048))
+        csvfile.seek(0)
+        if(has_head):
+            r = csv.DictReader(
+                csvfile,
+                delimiter=dialect.delimiter,
+            )
+        else:
+            # assume time is first & other cols follow in order
+            r = csv.DictReader(
+                csvfile,
+                delimiter=dialect.delimiter,
+                fieldnames=['time'] + fields,
+            )
 
         for row in r:
-            if (row[TIMEKEY].startswith("#")):
+            # check for other possible names of the time column
+            if 'time' not in row:
+                for alt_key in OTHER_TIMEKEYS:
+                    if alt_key in row:
+                        row['time'] = row[alt_key]
+                        break
+                else:
+                    raise AssertionError("cannot find 'time' column")
+
+            # skip comment rows
+            if (row['time'].startswith("#")):
                 continue
 
             # TIME_FMT_STR = "%m/%d/%Y %I:%M:%S %p"  # for other time formats
             # ts = datetime.strptime(
             #     row['time'], TIME_FMT_STR
             # ).strftime("%s")
-            ts = row[TIMEKEY]
+            ts = row['time']
 
             for field in fields:
                 carbon.add_data(

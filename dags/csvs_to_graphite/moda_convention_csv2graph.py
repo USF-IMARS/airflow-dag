@@ -18,10 +18,10 @@ import _csv_to_graphite as csv2graph
 OC_PRE = "/EXT_TS_AQUA/OC/FKdb_"
 for roi in ['fk']:  # TODO: fgbnms (but sub-locs will be different)
     for prod in [
-        OC_PRE + 'chlor_a',
-        OC_PRE + 'nflh',
-        OC_PRE + 'Rrs_667',
-        "/EXT_TS_AQUA/SST4/FKdb_sst4",
+        [OC_PRE, 'chlor_a'],
+        [OC_PRE, 'nflh'],
+        [OC_PRE, 'Rrs_667'],
+        ["/EXT_TS_AQUA/SST4/FKdb_", "sst4"]
     ]:
         for loc in ['LK', 'MR', 'DTN', 'WS12', 'WS57_3', 'WS68']:
             csv2graph.main(
@@ -29,10 +29,10 @@ for roi in ['fk']:  # TODO: fgbnms (but sub-locs will be different)
                     "/srv/imars-objects/modis_aqua_{roi}"
                     "{prod}_TS_MODA_1D_{loc}.csv"
                 ).format(
-                    roi=roi, prod=prod, loc=loc
+                    roi=roi, prod="".join(prod), loc=loc
                 ),
                 'imars_regions.fk.roi.{loc}.{prod}'.format(
-                    loc=loc, prod=prod
+                    loc=loc, prod=prod[1]
                 ),
                 ["mean"]
             )
@@ -48,8 +48,8 @@ for produ in ['sal', 'temp']:
         ).format(
             produ
         ),
-        'imars_regions.fk.bouys.pkyf1.{prod}'.format(
-            loc=loc, prod=prod
+        'imars_regions.fk.bouys.pkyf1.{}'.format(
+            produ
         ),
         ["mean", "climatology", "anomaly"]
     )
@@ -57,6 +57,6 @@ for produ in ['sal', 'temp']:
 # === rivers:
 csv2graph.main(
     "/srv/imars-objects/modis_aqua_fk/DISCH_TS_USGS/USGS_disch_FKdb.csv",
-    'imars_regions.fk.rivers',
+    'imars_regions.fk.river',
     ["south_river_index", "north_river_index", "all_rivers"]
 )

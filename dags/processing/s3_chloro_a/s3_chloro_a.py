@@ -46,7 +46,7 @@ this_dag = DAG(
 
 l1_to_l2 = IMaRSETLBashOperator(
     task_id='l1_to_l2',
-    bash_command="process_S3_2.sh",
+    bash_command="l1_to_l2.sh",
     inputs={
         "s3_file":
             "product_id="+str(L1_PRODUCT_ID)+" AND date_time='{{ts}}'"

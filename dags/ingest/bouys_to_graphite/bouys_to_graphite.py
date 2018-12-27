@@ -33,7 +33,7 @@ this_dag = DAG(
 
 # d/l file
 # parse file & load to graphite
-data_path = tmp_filepath(this_dag.dag_id, "data.raw", ts="{{ts_nodash}}")
+data_path = tmp_filepath(this_dag.dag_id, "data.raw")
 data_url = (
     "http://tabs.gerg.tamu.edu/~woody/newtabs/viewdata.php?buoy=tabs_fg2&"
     "filename=tabs_fg2.{{ds_nodash}}.raw"

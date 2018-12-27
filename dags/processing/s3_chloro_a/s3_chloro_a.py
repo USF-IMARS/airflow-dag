@@ -58,7 +58,6 @@ l1_to_l2 = IMaRSETLBashOperator(
                 " AND date_time='{{ execution_date }}'"  # TODO: rm?
             ),
             "json": '{'  # noqa E131
-                '"status_id":3,'
                 '"area_short_name":"' + AREA_SHORT_NAME + '"'
             '}',
         },
@@ -91,7 +90,6 @@ l2_to_l3 = IMaRSETLBashOperator(
                 " AND date_time='{{ execution_date }}'"
             ),
             "json": '{'  # noqa E131
-                '"status_id":3,'
                 '"area_short_name":"' + CHAR_AREA_SHORT_NAME + '"'
             '}',
         },
@@ -105,7 +103,6 @@ l2_to_l3 = IMaRSETLBashOperator(
                 " AND date_time='{{ execution_date }}'"  # TODO: rm?
             ),
             "json": '{'  # noqa E131
-                '"status_id":3,'
                 '"area_short_name":"' + PIN_AREA_SHORT_NAME + '"'
             '}',
         },
@@ -119,7 +116,6 @@ l2_to_l3 = IMaRSETLBashOperator(
                 " AND date_time='{{ execution_date }}'"  # TODO: rm?
             ),
             "json": '{'  # noqa E131
-                '"status_id":3,'
                 '"area_short_name":"' + OKA_AREA_SHORT_NAME + '"'
             '}',
         },
@@ -133,7 +129,6 @@ l2_to_l3 = IMaRSETLBashOperator(
                 " AND date_time='{{ execution_date }}'"  # TODO: rm?
             ),
             "json": '{'  # noqa E131
-                '"status_id":3,'
                 '"area_short_name":"' + FLY_AREA_SHORT_NAME + '"'
             '}',
         },

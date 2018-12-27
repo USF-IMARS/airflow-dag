@@ -16,7 +16,7 @@ this_dag = DAG(
     default_args=get_default_args(
         start_date=datetime(2018, 11, 20)
     ),
-    schedule_interval="@hourly",
+    schedule_interval="@daily",
     catchup=False,
     max_active_runs=1,
 )

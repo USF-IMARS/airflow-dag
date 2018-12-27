@@ -45,16 +45,12 @@ this_dag = DAG(
 l1_to_l2 = IMaRSETLBashOperator(
     task_id='l1_to_l2',
     bash_command="process_S3_2.sh",
-    should_overwrite=True,  # TODO: rm after reproc done
     inputs={
         "s3_file":
             "product_id="+str(L1_PRODUCT_ID)+" AND date_time='{{ts}}'"
     },
     outputs={
         'l2_file': {
-            "verbose": 3,  # TODO: rm?
-            "product_id": L2_PRODUCT_ID,  # TODO: rm?
-            "time": "{{ ts }}",  # ts.replace(" ", "T") ?  # TODO: rm?
             "sql": (
                 "product_id={} AND area_id={} ".format(
                         L2_PRODUCT_ID, AREA_ID
@@ -65,10 +61,6 @@ l1_to_l2 = IMaRSETLBashOperator(
                 '"status_id":3,'
                 '"area_short_name":"' + AREA_SHORT_NAME + '"'
             '}',
-            'duplicates_ok': True,  # TODO: rm after reproc done
-            'nohash': True,  # TODO: rm after reproc done
-            # TODO: rm json &
-            # "area_short_name": AREA_SHORT_NAME
         },
     },
     params={
@@ -84,7 +76,6 @@ l1_to_l2 = IMaRSETLBashOperator(
 l2_to_l3 = IMaRSETLBashOperator(
     task_id='l2_to_l3',
     bash_command="process_S3_3.sh",
-    should_overwrite=True,  # TODO: rm after reproc done
     inputs={
         "s2_file":
             "product_id="+str(L2_PRODUCT_ID)+" AND date_time='{{ts}}'"

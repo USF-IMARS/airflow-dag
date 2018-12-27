@@ -7,7 +7,7 @@ import json
 
 def get_uuid(json_metadata_filepath):
     with open(json_metadata_filepath) as m_file:
-        return json.load(m_file)[0]['uuid']
+        return json.load(m_file)['products'][0]['uuid']
 
 
 def get_url(

@@ -222,9 +222,11 @@ class IMaRSETLMixin(object):
         for inpf in self.inputs:
             metadata = self._render_input_metadata(self.inputs[inpf], context)
             out_path = self.tmp_paths[inpf]
-            # print("{}\n\t->\t{}\n\t->\t{}\n\t->\t".format(
-            #     inpf, metadata, out_path
-            # ))
+            print("=== {}".format(inpf))
+            print("imars_etl.extract(\n\t{},\n\t{}\n)".format(
+                metadata,
+                out_path
+            ))
             imars_etl.extract(
                 sql=metadata,
                 output_path=out_path

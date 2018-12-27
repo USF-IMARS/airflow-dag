@@ -34,6 +34,8 @@ AREA_ID = 49
 DAG_ID = get_dag_id(
     __file__, region=AREA_SHORT_NAME, dag_name="s3_chloro_a"
 )
+THIS_DIR = os.path.dirname(os.path.realpath(__file__))
+
 this_dag = DAG(
     dag_id=DAG_ID,
     default_args=get_default_args(
@@ -64,7 +66,7 @@ l1_to_l2 = IMaRSETLBashOperator(
     },
     params={
         "par": os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),  # here
+            THIS_DIR,  # here
             "IMaRS_S3_l2gen.par"
         ),
     },
@@ -135,19 +137,19 @@ l2_to_l3 = IMaRSETLBashOperator(
     },
     params={
         "xml_filec": os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
+            THIS_DIR,
             "map_CHAR_S3_OLCI.xml"
         ),
          "xml_filep": os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
+            THIS_DIR,
             "map_PIN_S3_OLCI.xml"
         ),
         "xml_fileo": os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
+            THIS_DIR,
             "map_OKA_S3_OLCI.xml"
         ),
         "xml_filef": os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
+            THIS_DIR,
             "map_FLBY_S3_OLCI.xml"
         ),
     },

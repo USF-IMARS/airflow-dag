@@ -1,9 +1,16 @@
 from airflow.operators.bash_operator import BashOperator
 
-TMP_PREFIX="/srv/imars-objects/airflow_tmp/"
+TMP_PREFIX = "/srv/imars-objects/airflow_tmp/"
 # TODO: if tmp_filepath was part of a class we could store tmp files on the
 #       instance and automatically add them to the `to_cleanup` list
-def tmp_filepath(dag_id, suffix, ts="{{ts_nodash}}", n=0):
+
+
+def tmp_filepath(
+    dag_id,
+    suffix,
+    ts="{{execution_date.strftime(%Y-%m-%dT%H:%M:%S.%f')}}",
+    n=0
+):
     """
     returns temporary directory (template) for given dag.
 
@@ -26,6 +33,7 @@ def tmp_filepath(dag_id, suffix, ts="{{ts_nodash}}", n=0):
         # + "_" + str(n)  # TODO ?
     )
 
+
 def tmp_filedir(dag, suffix, **kwargs):
     """
     before : Operator[]
@@ -42,8 +50,10 @@ def tmp_filedir(dag, suffix, **kwargs):
     )
     return path, mk_tmp_dir
 
+
 def tmp_format_str():
     return tmp_filepath("{dag_id}", "{tag}", ts="%Y%m%dT%H%M%S").split('/')[-1]
+
 
 def get_tmp_file_suffix(load_args):
     """

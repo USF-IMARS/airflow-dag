@@ -8,7 +8,7 @@ TMP_PREFIX = "/srv/imars-objects/airflow_tmp/"
 def tmp_filepath(
     dag_id,
     suffix,
-    ts="{{execution_date.strftime(%Y-%m-%dT%H:%M:%S.%f')}}",
+    ts="{{execution_date.strftime('%Y%m%dT%H%M%S%f')}}",
     n=0
 ):
     """

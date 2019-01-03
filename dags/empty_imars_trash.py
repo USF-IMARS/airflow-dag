@@ -31,7 +31,7 @@ BashOperator(
             /opt/rclone/rclone \
                 --config /srv/imars-objects/creds/rclone_airflow.conf \
                 --retries 1 \
-                move {} gdrive-ty:/IMARS/backups/trash/
+                move {} gdrive-ry:/IMARS/backups/trash_ry/
     """,
     dag=this_dag,
     queue=QUEUE.PYCMR

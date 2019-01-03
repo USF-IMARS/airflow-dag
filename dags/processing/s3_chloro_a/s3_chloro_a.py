@@ -15,9 +15,11 @@ from imars_dags.operators.IMaRSETLBashOperator import IMaRSETLBashOperator
 from imars_dags.util.globals import QUEUE
 
 # | 36 | s3a_ol_1_efr
+# | 49 | s3a_ol_1_efr_l2          |
+# | 50 | s3a_ol_1_efr_l3          |
 L1_PRODUCT_ID = 36
-L2_PRODUCT_ID = 50
-L3_PRODUCT_ID = 51
+L2_PRODUCT_ID = 49
+L3_PRODUCT_ID = 50
 
 FLY_AREA_ID = 13
 FLY_AREA_SHORT_NAME = "fl_bay"

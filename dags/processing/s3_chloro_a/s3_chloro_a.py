@@ -19,17 +19,17 @@ L1_PRODUCT_ID = 36
 L2_PRODUCT_ID = 50
 L3_PRODUCT_ID = 51
 
-FLY_AREA_ID = 52
+FLY_AREA_ID = 13
 FLY_AREA_SHORT_NAME = "fl_bay"
-OKA_AREA_ID = 53
+OKA_AREA_ID = 14
 OKA_AREA_SHORT_NAME = "okeecho"
-PIN_AREA_ID = 54
+PIN_AREA_ID = 15
 PIN_AREA_SHORT_NAME = "pinellas"
-CHAR_AREA_ID = 55
+CHAR_AREA_ID = 16
 CHAR_AREA_SHORT_NAME = "char_bay"
 
-AREA_SHORT_NAME = "_florida"
-AREA_ID = 49
+AREA_SHORT_NAME = "florida"
+AREA_ID = 12
 
 DAG_ID = get_dag_id(
     __file__, region=AREA_SHORT_NAME, dag_name="s3_chloro_a"

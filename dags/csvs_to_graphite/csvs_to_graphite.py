@@ -15,7 +15,7 @@ this_dag = DAG(
     default_args=get_default_args(
         start_date=datetime(2018, 7, 30)
     ),
-    schedule_interval="@weekly",
+    schedule_interval="43 2 * * * *",
     catchup=False,
     max_active_runs=1,
 )

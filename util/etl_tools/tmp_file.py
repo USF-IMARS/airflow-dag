@@ -52,7 +52,11 @@ def tmp_filedir(dag, suffix, **kwargs):
 
 
 def tmp_format_str():
-    return tmp_filepath("{dag_id}", "{tag}", ts="%Y%m%dT%H%M%S").split('/')[-1]
+    return tmp_filepath(
+        "{dag_id}",
+        "{tag}",
+        ts="%Y%m%dT%H%M%S%f"
+    ).split('/')[-1]
 
 
 def get_tmp_file_suffix(load_args):

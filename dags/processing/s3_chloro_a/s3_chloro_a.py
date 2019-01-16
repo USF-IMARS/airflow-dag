@@ -7,28 +7,19 @@ import os
 
 # deps
 from airflow import DAG
+from airflow.operators.bash_operator import BashOperator
 
 # this package
 from imars_dags.util.get_dag_id import get_dag_id
 from imars_dags.util.get_default_args import get_default_args
-from imars_dags.operators.IMaRSETLBashOperator import IMaRSETLBashOperator
 from imars_dags.util.globals import QUEUE
 
 # | 36 | s3a_ol_1_efr
 # | 49 | s3a_ol_1_efr_l2          |
 # | 50 | s3a_ol_1_efr_l3          |
-L1_PRODUCT_ID = 36
+L1_PRODUCT_ID = 36  # or 48 (chlor_a_s3a_pass) ?
 L2_PRODUCT_ID = 49
 L3_PRODUCT_ID = 50
-
-FLY_AREA_ID = 13
-FLY_AREA_SHORT_NAME = "fl_bay"
-OKA_AREA_ID = 14
-OKA_AREA_SHORT_NAME = "okeecho"
-PIN_AREA_ID = 15
-PIN_AREA_SHORT_NAME = "pinellas"
-CHAR_AREA_ID = 16
-CHAR_AREA_SHORT_NAME = "char_bay"
 
 AREA_SHORT_NAME = "florida"
 AREA_ID = 12
@@ -46,111 +37,33 @@ this_dag = DAG(
     schedule_interval=None,
 )
 
-l1_to_l2 = IMaRSETLBashOperator(
+l1_to_l2 = BashOperator(
     task_id='l1_to_l2',
     bash_command="l1_to_l2.sh",
-    inputs={
-        "s3_file":
-            "product_id="+str(L1_PRODUCT_ID)+" AND date_time='{{ts}}'"
-    },
-    outputs={
-        'l2_file': {
-            "sql": (
-                "product_id={} AND area_id={} ".format(
-                        L2_PRODUCT_ID, AREA_ID
-                ) +
-                " AND date_time='{{ execution_date }}'"  # TODO: rm?
-            ),
-            "json": '{'  # noqa E131
-                '"area_short_name":"' + AREA_SHORT_NAME + '"'
-            '}',
-        },
-    },
     params={
         "par": os.path.join(
             THIS_DIR,  # here
             "IMaRS_S3_l2gen.par"
         ),
+        "l1_pid": L1_PRODUCT_ID,
+        "l2_pid": L2_PRODUCT_ID,
+        "area_id": AREA_ID,
+        "area_short_name": AREA_SHORT_NAME,
     },
     queue=QUEUE.SAT_SCRIPTS,
     dag=this_dag,
 )
 
-l2_to_l3 = IMaRSETLBashOperator(
-    task_id='l2_to_l3',
-    bash_command="process_S3_3.sh",
-    inputs={
-        "s2_file":
-            "product_id="+str(L2_PRODUCT_ID)+" AND date_time='{{ts}}'"
-    },
-    outputs={
-        'c_map': {
-            "product_id": L3_PRODUCT_ID,
-            "time": "{{ ts }}",
-            "sql": (
-                "product_id={} AND area_id={} ".format(
-                        L3_PRODUCT_ID, CHAR_AREA_ID
-                ) +
-                " AND date_time='{{ execution_date }}'"
-            ),
-            "json": '{'  # noqa E131
-                '"area_short_name":"' + CHAR_AREA_SHORT_NAME + '"'
-            '}',
-        },
-        'p_map': {
-            "product_id": L3_PRODUCT_ID,
-            "time": "{{ ts }}",
-            "sql": (
-                "product_id={} AND area_id={} ".format(
-                        L3_PRODUCT_ID, PIN_AREA_ID
-                ) +
-                " AND date_time='{{ execution_date }}'"  # TODO: rm?
-            ),
-            "json": '{'  # noqa E131
-                '"area_short_name":"' + PIN_AREA_SHORT_NAME + '"'
-            '}',
-        },
-        'o_map': {
-            "product_id": L3_PRODUCT_ID,
-            "time": "{{ ts }}",
-            "sql": (
-                "product_id={} AND area_id={} ".format(
-                        L3_PRODUCT_ID, OKA_AREA_ID
-                ) +
-                " AND date_time='{{ execution_date }}'"  # TODO: rm?
-            ),
-            "json": '{'  # noqa E131
-                '"area_short_name":"' + OKA_AREA_SHORT_NAME + '"'
-            '}',
-        },
-        'f_map': {
-            "product_id": L3_PRODUCT_ID,
-            "time": "{{ ts }}",
-            "sql": (
-                "product_id={} AND area_id={} ".format(
-                        L3_PRODUCT_ID, FLY_AREA_ID
-                ) +
-                " AND date_time='{{ execution_date }}'"  # TODO: rm?
-            ),
-            "json": '{'  # noqa E131
-                '"area_short_name":"' + FLY_AREA_SHORT_NAME + '"'
-            '}',
-        },
-    },
+FLY_AREA_ID = 13
+# FLY_AREA_SHORT_NAME = "fl_bay"
+l3_fl_bay = BashOperator(
+    task_id='l3_fl_bay',
+    bash_command="l2_to_l3.sh",
     params={
-        "xml_filec": os.path.join(
-            THIS_DIR,
-            "map_CHAR_S3_OLCI.xml"
-        ),
-         "xml_filep": os.path.join(
-            THIS_DIR,
-            "map_PIN_S3_OLCI.xml"
-        ),
-        "xml_fileo": os.path.join(
-            THIS_DIR,
-            "map_OKA_S3_OLCI.xml"
-        ),
-        "xml_filef": os.path.join(
+        "input_area_id": AREA_ID,
+        "p_id": L3_PRODUCT_ID,
+        "area_id": FLY_AREA_ID,
+        "gpt_xml": os.path.join(
             THIS_DIR,
             "map_FLBY_S3_OLCI.xml"
         ),
@@ -159,4 +72,61 @@ l2_to_l3 = IMaRSETLBashOperator(
     dag=this_dag,
 )
 
-l1_to_l2 >> l2_to_l3
+OKA_AREA_ID = 14
+# OKA_AREA_SHORT_NAME = "okeecho"
+l3_okeecho = BashOperator(
+    task_id='l3_okeecho',
+    bash_command="l2_to_l3.sh",
+    params={
+        "input_area_id": AREA_ID,
+        "p_id": L3_PRODUCT_ID,
+        "area_id": OKA_AREA_ID,
+        "gpt_xml": os.path.join(
+            THIS_DIR,
+            "map_OKA_S3_OLCI.xml"
+        ),
+    },
+    queue=QUEUE.SAT_SCRIPTS,
+    dag=this_dag,
+)
+
+PIN_AREA_ID = 15
+# PIN_AREA_SHORT_NAME = "pinellas"
+l3_pinellas = BashOperator(
+    task_id='l3_pinellas',
+    bash_command="l2_to_l3.sh",
+    params={
+        "input_area_id": AREA_ID,
+        "p_id": L3_PRODUCT_ID,
+        "area_id": PIN_AREA_ID,
+        "gpt_xml": os.path.join(
+            THIS_DIR,
+            "map_PIN_S3_OLCI.xml"
+        ),
+    },
+    queue=QUEUE.SAT_SCRIPTS,
+    dag=this_dag,
+)
+
+CHAR_AREA_ID = 16
+# CHAR_AREA_SHORT_NAME = "char_bay"
+l3_char_bay = BashOperator(
+    task_id='l3_char_bay',
+    bash_command="l2_to_l3.sh",
+    params={
+        "input_area_id": AREA_ID,
+        "p_id": L3_PRODUCT_ID,
+        "area_id": CHAR_AREA_ID,
+        "gpt_xml": os.path.join(
+            THIS_DIR,
+            "map_CHAR_S3_OLCI.xml"
+        ),
+    },
+    queue=QUEUE.SAT_SCRIPTS,
+    dag=this_dag,
+)
+
+l1_to_l2 >> l3_fl_bay
+l1_to_l2 >> l3_okeecho
+l1_to_l2 >> l3_pinellas
+l1_to_l2 >> l3_char_bay

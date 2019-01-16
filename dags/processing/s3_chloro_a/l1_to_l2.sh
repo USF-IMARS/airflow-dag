@@ -1,19 +1,43 @@
 #!/bin/bash
+set -e
 
-L1_PATH={{ params.s3_file }}
-L2_PATH={{ params.l2_file }}
-PARFILE_PATH={{ params.par }}
+echo '=== Extract...'
+# TODO: use this:
+# L1_PATH=$( \
+#     imars-etl extract \
+#         'product_id={{params.l1_pid}} AND date_time="{{ts}}"'
+# )
+# instead of this:
+imars-etl extract \
+    'product_id={{params.l1_pid}} AND date_time="{{ts}}"'
+L1_PATH=$(ls *.SEN3)
 
-# set environment variabless
+
+echo '=== Transform...'
+
+# set environment variables
+OCSSWROOT=/opt/ocssw
 export OCSSWROOT=/opt/ocssw
+
+set +e
 source $OCSSWROOT/OCSSW_bash.env
+set -e
 
 echo unzipping...
 mv $L1_PATH $L1_PATH.zip
 unzip $L1_PATH.zip -d $L1_PATH
 
 # find the file we're looking for inside the unzipped dir
-L1_SEN3_DIR=$(find $L1_PATH/ -maxdepth 1 -name *SEN3 -type d -print)
+L1_SEN3_XML=$(find $L1_PATH/ -name xfdumanifest.xml -type f -print0)
+# NOTE: what if we find more than one?
 
 echo running l2gen...
-l2gen ifile=$L1_SEN3_DIR/xfdumanifest.xml ofile=$L2_PATH par=$PARFILE_PATH
+L2_PATH='l2_file.nc'
+l2gen ifile=${L1_SEN3_XML} ofile=$L2_PATH par='{{ params.par }}'
+
+
+echo '=== Load...'
+imars-etl load \
+    --sql 'product_id={{params.l2_pid}} AND area_id={{params.area_id}} AND date_time="{{execution_date}}"'\
+    --json '{"area_short_name":"{{params.area_short_name}}"}'\
+    $L2_PATH

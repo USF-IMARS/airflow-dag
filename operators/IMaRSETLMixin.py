@@ -248,6 +248,19 @@ class IMaRSETLMixin(object):
 
     def load_outputs(self, context):
         print("loading output files into IMaRS data warehouse...")
+        # check for bash snippets
+        # for outf in self.outputs:
+        #     if outf.startswith("find "):
+        #         load_args = self.outputs[outf]
+        #         output_path = self.tmp_paths[outf]
+        #         load_args['filepath'] = output_path
+        #         load_args = self._render_output_metadata(load_args, context)
+        #         # TODO execute bash, load each result
+        #         # TODO: break & restart
+        #         # TODO: protect from arbitrary bash injection?
+        #         output = subprocess.check_output(outf)
+        #         self.outputs.pop(outf)
+
         for outf in self.outputs:
             load_args = self.outputs[outf]
             output_path = self.tmp_paths[outf]

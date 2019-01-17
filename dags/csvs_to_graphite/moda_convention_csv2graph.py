@@ -3,7 +3,7 @@ Here, you'll see that the roi (FK), product (chlor_a), and location
 (LK -  Looe Key) are contained in the filename in the following example.
 This naming convention will hold for FGB and any other roi we add.
 
-/srv/imars-objects/modis_aqua_fk/EXT_TS_AQUA/OC/FKdb_chlor_a_TS_MODA_1D_LK.csv
+/srv/imars-objects/modis_aqua_fk/EXT_TS_AQUA/OC/FKdb_chlor_a_TS_MODA_daily_LK.csv
 
 In these files, the first two columns are what we want. Time is column 1 in
 unix time format. These are just the daily unbinned data at this point. Column
@@ -15,6 +15,7 @@ the data.
 import _csv_to_graphite as csv2graph
 
 # === sat ts:
+ROIS = ['DT', 'LK', 'MR', 'SFP12', 'SFP68', 'SFP57', 'SFP30', 'SFP3']
 OC_PRE = "/EXT_TS_AQUA/OC/FKdb_"
 for roi in ['fk']:  # TODO: fgbnms (but sub-locs will be different)
     for prod in [
@@ -23,11 +24,11 @@ for roi in ['fk']:  # TODO: fgbnms (but sub-locs will be different)
         [OC_PRE, 'Rrs_667'],
         ["/EXT_TS_AQUA/SST4/FKdb_", "sst4"]
     ]:
-        for loc in ['LK', 'MR', 'DTN', 'WS12', 'WS57_3', 'WS68']:
+        for loc in ROIS:
             csv2graph.main(
                 (
                     "/srv/imars-objects/modis_aqua_{roi}"
-                    "{prod}_TS_MODA_1D_{loc}.csv"
+                    "{prod}_TS_MODA_daily_{loc}.csv"
                 ).format(
                     roi=roi, prod="".join(prod), loc=loc
                 ),
@@ -58,5 +59,5 @@ for produ in ['sal', 'temp']:
 csv2graph.main(
     "/srv/imars-objects/modis_aqua_fk/DISCH_TS_USGS/USGS_disch_FKdb.csv",
     'imars_regions.fk.river',
-    ["south_river_index", "north_river_index", "all_rivers"]
+    ["FL_Bay_river_index"]
 )

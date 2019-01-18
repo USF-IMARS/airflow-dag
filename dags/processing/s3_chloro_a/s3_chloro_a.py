@@ -61,6 +61,7 @@ l3_fl_bay = BashOperator(
     bash_command="l2_to_l3.sh",
     params={
         "input_area_id": AREA_ID,
+        "input_pid": L2_PRODUCT_ID,
         "p_id": L3_PRODUCT_ID,
         "area_id": FLY_AREA_ID,
         "gpt_xml": os.path.join(
@@ -79,6 +80,7 @@ l3_okeecho = BashOperator(
     bash_command="l2_to_l3.sh",
     params={
         "input_area_id": AREA_ID,
+        "input_pid": L2_PRODUCT_ID,
         "p_id": L3_PRODUCT_ID,
         "area_id": OKA_AREA_ID,
         "gpt_xml": os.path.join(
@@ -97,6 +99,7 @@ l3_pinellas = BashOperator(
     bash_command="l2_to_l3.sh",
     params={
         "input_area_id": AREA_ID,
+        "input_pid": L2_PRODUCT_ID,
         "p_id": L3_PRODUCT_ID,
         "area_id": PIN_AREA_ID,
         "gpt_xml": os.path.join(
@@ -115,6 +118,7 @@ l3_char_bay = BashOperator(
     bash_command="l2_to_l3.sh",
     params={
         "input_area_id": AREA_ID,
+        "input_pid": L2_PRODUCT_ID,
         "p_id": L3_PRODUCT_ID,
         "area_id": CHAR_AREA_ID,
         "gpt_xml": os.path.join(

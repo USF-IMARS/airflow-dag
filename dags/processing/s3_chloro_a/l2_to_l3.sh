@@ -8,16 +8,20 @@ set -e
 echo '=== Extract...'
 L2_PATH='input.nc'
 imars-etl extract -o $L2_PATH \
-    "product_id={{params.input_area_id}} AND date_time='{{ts}}'"
+    "product_id={{params.input_pid}} AND area_id={{params.input_area_id}} AND date_time='{{ts}}'"
 
 GPT_XML={{ params.gpt_xml }}
-OUTFILE='mapped.nc'
+OUTFILE='mapped.tif'
 
 echo '=== Transform...'
 echo mapping w/ ${GPT_XML}...
 /opt/snap_6_0/bin/gpt $GPT_XML -t $OUTFILE -f GeoTIFF $L2_PATH
 
+echo "output file $OUTFILE is ready?"
+ls -lh .
+echo "I guess so?"
+
 echo '=== Load...'
 imars-etl load --sql \
-    "product_id={{params.p_id}} AND area_id={{params.area_id}} AND date_time='{{execution_date}}'"\
+    "product_id={{params.p_id}} AND area_id={{params.area_id}} AND date_time='{{ts}}'" \
     $OUTFILE

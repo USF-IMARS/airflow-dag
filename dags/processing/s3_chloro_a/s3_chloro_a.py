@@ -13,6 +13,7 @@ from airflow.operators.bash_operator import BashOperator
 from imars_dags.util.get_dag_id import get_dag_id
 from imars_dags.util.get_default_args import get_default_args
 from imars_dags.util.globals import QUEUE
+from imars_dags.util.globals import LAUNCH_DATE
 
 # | 36 | s3a_ol_1_efr
 # | 49 | s3a_ol_1_efr_l2          |
@@ -32,7 +33,7 @@ THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 this_dag = DAG(
     dag_id=DAG_ID,
     default_args=get_default_args(
-        start_date=datetime.utcnow()
+        start_date=LAUNCH_DATE.S3
     ),
     schedule_interval=None,
 )

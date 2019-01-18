@@ -2,7 +2,24 @@
 these are constants that can be referenced from multiple DAGs.
 """
 
+from datetime import datetime
 from datetime import timedelta
+
+
+class LAUNCH_DATE:
+    """
+    datetime objects of satellite launch dates
+    """
+    S3_A = datetime(2016, 2, 16)  # Sentinel-3A
+    S3 = S3_A
+
+    # WV1 = datetime(2007, 9, 18)  # WorldView-1
+    WV2 = datetime(2009, 10, 8)  # WorldView-2
+    WV3 = datetime(2014, 8, 13)  # WorldView-3
+
+    MODIS_T = datetime(1999, 12, 18)  # Terra
+    MODIS_A = datetime(2002, 5, 4)  # Aqua
+    MODIS_T = MODIS_T
 
 
 class QUEUE:

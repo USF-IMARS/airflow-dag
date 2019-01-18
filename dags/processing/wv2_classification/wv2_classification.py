@@ -16,9 +16,9 @@ import os
 from airflow import DAG
 
 # this package
-from imars_dags.util.etl_tools.tmp_file import tmp_format_str
 from imars_dags.util.get_default_args import get_default_args
 from imars_dags.util.globals import QUEUE
+from imars_dags.util.globals import LAUNCH_DATE
 from imars_dags.util.get_dag_id import get_dag_id
 from imars_dags.operators.IMaRSETLBashOperator import IMaRSETLBashOperator
 
@@ -31,7 +31,7 @@ def get_dag(area_short_name, area_id):
             dag_name="wv2_classification"
         ),
         default_args=get_default_args(
-            start_date=datetime.utcnow()
+            start_date=LAUNCH_DATE.WV2
         ),
         schedule_interval=None,
     )
@@ -157,8 +157,3 @@ big_bend_dag = get_dag('fl_ne', 8)
 big_bend_dag = get_dag('monroe', 9)
 big_bend_dag = get_dag('panhandle', 10)
 big_bend_dag = get_dag('wet_fl_pen', 11)
-
-
-
-
-

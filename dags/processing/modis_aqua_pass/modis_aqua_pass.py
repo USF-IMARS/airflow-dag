@@ -13,6 +13,7 @@ from imars_dags.util.get_dag_id import get_dag_id
 from imars_dags.util.get_default_args import get_default_args
 from imars_dags.operators.IMaRSETLBashOperator import IMaRSETLBashOperator
 from imars_dags.util.globals import QUEUE
+from imars_dags.util.globals import LAUNCH_DATE
 
 L1_PRODUCT_ID = 5
 L2_PRODUCT_ID = 35
@@ -29,7 +30,7 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
     this_dag = DAG(
         dag_id=DAG_ID,
         default_args=get_default_args(
-            start_date=datetime.utcnow()
+            start_date=LAUNCH_DATE.MODIS_A
         ),
         schedule_interval=None,
     )

@@ -39,16 +39,36 @@ with this_dag as dag:
         ),
         bash_command="""
             python2 \
-            /home/airflow/dags/imars_dags/dags/csvs_to_graphite/fgbnms_csvs2graph.py
+            /home/airflow/dags/imars_dags/dags/csvs_to_graphite/py_scripts/fgbnms_csvs2graph.py
         """,
     )
 
-    moda_convention_csv2graph = BashOperator(
+    bouy_ts = BashOperator(
         task_id=(
-            "moda_convention_csv2graph"
+            "bouy_ts"
         ),
         bash_command="""
             python2 \
-            /home/airflow/dags/imars_dags/dags/csvs_to_graphite/moda_convention_csv2graph.py
+            /home/airflow/dags/imars_dags/dags/csvs_to_graphite/py_scripts/bouy_ts.py
+        """,
+    )
+
+    river_ts = BashOperator(
+        task_id=(
+            "river_ts"
+        ),
+        bash_command="""
+            python2 \
+            /home/airflow/dags/imars_dags/dags/csvs_to_graphite/py_scripts/river_ts.py
+        """,
+    )
+
+    sat_region_station_ts = BashOperator(
+        task_id=(
+            "sat_region_station_ts"
+        ),
+        bash_command="""
+            python2 \
+            /home/airflow/dags/imars_dags/dags/csvs_to_graphite/py_scripts/sat_region_station_ts.py
         """,
     )

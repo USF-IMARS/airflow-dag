@@ -4,6 +4,7 @@ Here, you'll see that the roi (FK), product (chlor_a), and location
 This naming convention will hold for FGB and any other roi we add.
 
 /srv/imars-objects/modis_aqua_fk/EXT_TS_AQUA/OC/FKdb_chlor_a_TS_MODA_daily_LK.csv
+/srv/imars-objects/modis_aqua_fk/EXT_TS_AQUA/OC/FKdb_chlor_a_TS_MODA_weekly_LK.csv
 
 In these files, the first two columns are what we want. Time is column 1 in
 unix time format. These are just the daily unbinned data at this point. Column
@@ -16,6 +17,10 @@ import _csv_to_graphite as csv2graph
 
 # === sat ts:
 ROIS = ['DT', 'LK', 'MR', 'SFP12', 'SFP68', 'SFP57', 'SFP30', 'SFP3']
+FILENAME_FORMAT = (
+    "/srv/imars-objects/modis_aqua_{roi}"
+    "{prod}_TS_MODA_{timescale}_{loc}.csv"
+)
 OC_PRE = "/EXT_TS_AQUA/OC/FKdb_"
 for roi in ['fk']:  # TODO: fgbnms (but sub-locs will be different)
     for prod in [
@@ -25,39 +30,27 @@ for roi in ['fk']:  # TODO: fgbnms (but sub-locs will be different)
         ["/EXT_TS_AQUA/SST4/FKdb_", "sst4"]
     ]:
         for loc in ROIS:
+            # === daily
+            fname = FILENAME_FORMAT.format(
+                roi=roi, prod="".join(prod), loc=loc, timescale="daily"
+            )
             csv2graph.main(
-                (
-                    "/srv/imars-objects/modis_aqua_{roi}"
-                    "{prod}_TS_MODA_daily_{loc}.csv"
-                ).format(
-                    roi=roi, prod="".join(prod), loc=loc
-                ),
+                fname,
                 'imars_regions.fk.roi.{loc}.{prod}'.format(
                     loc=loc, prod=prod[1]
                 ),
                 ["mean"]
             )
 
-# === bouys:
-# /srv/imars-objects/modis_aqua_fk/SAL_TS_NDBC/pkyf1_NDBC_sal_FKdb.csv
-# /srv/imars-objects/modis_aqua_fk/SAL_TS_NDBC/pkyf1_NDBC_temp_FKdb.csv
-for produ in ['sal', 'temp']:
-    csv2graph.main(
-        (
-            "/srv/imars-objects/modis_aqua_fk/SAL_TS_NDBC/"
-            "pkyf1_NDBC_{}_FKdb.csv"
-        ).format(
-            produ
-        ),
-        'imars_regions.fk.bouys.pkyf1.{}'.format(
-            produ
-        ),
-        ["mean", "climatology", "anomaly"]
-    )
-
-# === rivers:
-csv2graph.main(
-    "/srv/imars-objects/modis_aqua_fk/DISCH_TS_USGS/USGS_disch_FKdb.csv",
-    'imars_regions.fk.river',
-    ["FL_Bay_river_index"]
-)
+            # === weekly
+            # TODO: enable? what graphite namespace?
+            # fname = FILENAME_FORMAT.format(
+            #     roi=roi, prod="".join(prod), loc=loc, timescale="weekly"
+            # )
+            # csv2graph.main(
+            #     fname,
+            #     'weekly.imars_regions.fk.roi.{loc}.{prod}'.format(
+            #         loc=loc, prod=prod[1]
+            #     ),
+            #     ["mean"]
+            # )

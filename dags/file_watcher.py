@@ -56,8 +56,11 @@ this_dag = DAG(
     dag_id="file_watcher",
     catchup=False,  # latest only
 )
-claimed_ids = []
 with this_dag as dag:
+    claimed_ids = []  # used to help prevent unwanted duplicate id claims
+    # ======================================================================
+    # === unused products:
+    # TODO: this is no longer needed?
     id_list = [
         x for x in range(7, 35) if x not in [11]
     ]
@@ -69,6 +72,7 @@ with this_dag as dag:
     )
     claimed_ids.extend(id_list)
 
+    # === myd0_otis_l2 (now unused)
     assert 35 not in claimed_ids
     file_trigger_myd0_otis_l2 = FileWatcherOperator(
         task_id='file_trigger_myd0_otis_l2',
@@ -80,6 +84,7 @@ with this_dag as dag:
     )
     claimed_ids.append(35)
 
+    # === incoming modis l1 myd01 files
     assert 5 not in claimed_ids
     file_trigger_myd01 = FileWatcherOperator(
         task_id="file_trigger_myd01",
@@ -94,6 +99,7 @@ with this_dag as dag:
     )
     claimed_ids.append(5)
 
+    # === incoming wv2 (already unzipped)
     assert 11 not in claimed_ids
     file_trigger_ntf_wv2_m1bs = FileWatcherOperator(
         task_id="file_trigger_ntf_wv2_m1bs",
@@ -108,6 +114,7 @@ with this_dag as dag:
     )
     claimed_ids.append(11)
 
+    # === incoming zipped wv2 files
     assert 6 not in claimed_ids
     file_trigger_zip_wv2_ftp_ingest = FileWatcherOperator(
         task_id="file_trigger_zip_wv2_ftp_ingest",
@@ -118,6 +125,8 @@ with this_dag as dag:
     )
     claimed_ids.append(6)
 
+    # ======================================================================
+    # ids cannot be claimed more than once; that would cause missing DAGRuns.
     # assert no duplicates in claimed_ids
     # (https://stackoverflow.com/a/1541827/1483986)
     if len(claimed_ids) != len(set(claimed_ids)):

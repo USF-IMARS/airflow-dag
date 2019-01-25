@@ -54,83 +54,105 @@ l1_to_l2 = BashOperator(
     dag=this_dag,
 )
 
-FLY_AREA_ID = 13
-# FLY_AREA_SHORT_NAME = "fl_bay"
-l3_fl_bay = BashOperator(
-    task_id='l3_fl_bay',
+l2_to_l3 = BashOperator(
+    task_id='l2_to_l3',
     bash_command="l2_to_l3.sh",
     params={
-        "input_area_id": AREA_ID,
-        "input_pid": L2_PRODUCT_ID,
         "p_id": L3_PRODUCT_ID,
-        "area_id": FLY_AREA_ID,
+        "input_pid": L2_PRODUCT_ID,
+        "input_area_id": AREA_ID,
+        "area_id": AREA_ID,
         "gpt_xml": os.path.join(
             THIS_DIR,
-            "map_FLBY_S3_OLCI.xml"
+            "map_FL_S3_OLCI.xml"  # TODO: create this file
         ),
     },
     queue=QUEUE.SAT_SCRIPTS,
     dag=this_dag,
 )
 
-OKA_AREA_ID = 14
-# OKA_AREA_SHORT_NAME = "okeecho"
-l3_okeecho = BashOperator(
-    task_id='l3_okeecho',
-    bash_command="l2_to_l3.sh",
-    params={
-        "input_area_id": AREA_ID,
-        "input_pid": L2_PRODUCT_ID,
-        "p_id": L3_PRODUCT_ID,
-        "area_id": OKA_AREA_ID,
-        "gpt_xml": os.path.join(
-            THIS_DIR,
-            "map_OKA_S3_OLCI.xml"
-        ),
-    },
-    queue=QUEUE.SAT_SCRIPTS,
-    dag=this_dag,
-)
+l1_to_l2 >> l2_to_l3
 
-PIN_AREA_ID = 15
-# PIN_AREA_SHORT_NAME = "pinellas"
-l3_pinellas = BashOperator(
-    task_id='l3_pinellas',
-    bash_command="l2_to_l3.sh",
-    params={
-        "input_area_id": AREA_ID,
-        "input_pid": L2_PRODUCT_ID,
-        "p_id": L3_PRODUCT_ID,
-        "area_id": PIN_AREA_ID,
-        "gpt_xml": os.path.join(
-            THIS_DIR,
-            "map_PIN_S3_OLCI.xml"
-        ),
-    },
-    queue=QUEUE.SAT_SCRIPTS,
-    dag=this_dag,
-)
-
-CHAR_AREA_ID = 16
-# CHAR_AREA_SHORT_NAME = "char_bay"
-l3_char_bay = BashOperator(
-    task_id='l3_char_bay',
-    bash_command="l2_to_l3.sh",
-    params={
-        "input_area_id": AREA_ID,
-        "input_pid": L2_PRODUCT_ID,
-        "p_id": L3_PRODUCT_ID,
-        "area_id": CHAR_AREA_ID,
-        "gpt_xml": os.path.join(
-            THIS_DIR,
-            "map_CHAR_S3_OLCI.xml"
-        ),
-    },
-    queue=QUEUE.SAT_SCRIPTS,
-    dag=this_dag,
-)
-
-l1_to_l2 >> l3_fl_bay
-l1_to_l2 >> l3_okeecho
-l1_to_l2 >> l3_pinellas
-l1_to_l2 >> l3_char_bay
+# === DEPRECATED FL SUB-REGIONS:
+# TODO: Remove these or do we still want them though the FL prod fully covers?
+#
+# FLY_AREA_ID = 13
+# # FLY_AREA_SHORT_NAME = "fl_bay"
+# l3_fl_bay = BashOperator(
+#     task_id='l3_fl_bay',
+#     bash_command="l2_to_l3.sh",
+#     params={
+#         "input_area_id": AREA_ID,
+#         "input_pid": L2_PRODUCT_ID,
+#         "p_id": L3_PRODUCT_ID,
+#         "area_id": FLY_AREA_ID,
+#         "gpt_xml": os.path.join(
+#             THIS_DIR,
+#             "map_FLBY_S3_OLCI.xml"
+#         ),
+#     },
+#     queue=QUEUE.SAT_SCRIPTS,
+#     dag=this_dag,
+# )
+#
+# OKA_AREA_ID = 14
+# # OKA_AREA_SHORT_NAME = "okeecho"
+# l3_okeecho = BashOperator(
+#     task_id='l3_okeecho',
+#     bash_command="l2_to_l3.sh",
+#     params={
+#         "input_area_id": AREA_ID,
+#         "input_pid": L2_PRODUCT_ID,
+#         "p_id": L3_PRODUCT_ID,
+#         "area_id": OKA_AREA_ID,
+#         "gpt_xml": os.path.join(
+#             THIS_DIR,
+#             "map_OKA_S3_OLCI.xml"
+#         ),
+#     },
+#     queue=QUEUE.SAT_SCRIPTS,
+#     dag=this_dag,
+# )
+#
+# PIN_AREA_ID = 15
+# # PIN_AREA_SHORT_NAME = "pinellas"
+# l3_pinellas = BashOperator(
+#     task_id='l3_pinellas',
+#     bash_command="l2_to_l3.sh",
+#     params={
+#         "input_area_id": AREA_ID,
+#         "input_pid": L2_PRODUCT_ID,
+#         "p_id": L3_PRODUCT_ID,
+#         "area_id": PIN_AREA_ID,
+#         "gpt_xml": os.path.join(
+#             THIS_DIR,
+#             "map_PIN_S3_OLCI.xml"
+#         ),
+#     },
+#     queue=QUEUE.SAT_SCRIPTS,
+#     dag=this_dag,
+# )
+#
+# CHAR_AREA_ID = 16
+# # CHAR_AREA_SHORT_NAME = "char_bay"
+# l3_char_bay = BashOperator(
+#     task_id='l3_char_bay',
+#     bash_command="l2_to_l3.sh",
+#     params={
+#         "input_area_id": AREA_ID,
+#         "input_pid": L2_PRODUCT_ID,
+#         "p_id": L3_PRODUCT_ID,
+#         "area_id": CHAR_AREA_ID,
+#         "gpt_xml": os.path.join(
+#             THIS_DIR,
+#             "map_CHAR_S3_OLCI.xml"
+#         ),
+#     },
+#     queue=QUEUE.SAT_SCRIPTS,
+#     dag=this_dag,
+# )
+#
+# l1_to_l2 >> l3_fl_bay
+# l1_to_l2 >> l3_okeecho
+# l1_to_l2 >> l3_pinellas
+# l1_to_l2 >> l3_char_bay

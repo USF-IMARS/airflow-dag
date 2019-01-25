@@ -19,6 +19,7 @@ echo mapping w/ ${GPT_XML}...
 
 echo "output file $OUTFILE is ready?"
 ls -lh .
+# TODO: assert $OUTFILE exists & size is reasonable
 echo "I guess so?"
 
 echo '=== Load...'

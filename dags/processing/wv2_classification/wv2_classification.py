@@ -10,13 +10,11 @@ classification on WorldView-2 images
 """
 # std libs
 from datetime import datetime
-import os
 
 # deps
 from airflow import DAG
 
 # this package
-from imars_dags.util.etl_tools.tmp_file import tmp_format_str
 from imars_dags.util.get_default_args import get_default_args
 from imars_dags.util.globals import QUEUE
 from imars_dags.util.get_dag_id import get_dag_id
@@ -157,8 +155,3 @@ big_bend_dag = get_dag('fl_ne', 8)
 big_bend_dag = get_dag('monroe', 9)
 big_bend_dag = get_dag('panhandle', 10)
 big_bend_dag = get_dag('wet_fl_pen', 11)
-
-
-
-
-

@@ -107,7 +107,7 @@ with this_dag as dag:
         dags_to_trigger=[
             # "proc_wv2_classification"  # deprecated
             get_dag_id(
-                dag_name="wv2_classification", dag_type=DAGType.PROCESSING
+                dag_name="wv_classification", dag_type=DAGType.PROCESSING
             )
         ],
         area_names=['na', 'big_bend'],

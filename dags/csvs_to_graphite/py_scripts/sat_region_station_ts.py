@@ -16,7 +16,9 @@ the data.
 import _csv_to_graphite as csv2graph
 
 # === sat ts:
-ROIS = ['DT', 'LK', 'MR', 'SFP12', 'SFP68', 'SFP57', 'SFP30', 'SFP3']
+ROIS = [
+    'BB', 'UK', 'MR', 'SFP12', 'SFP18', 'WS', 'LK', 'DT', 'GOM', 'SR', 'FLB'
+]
 FILENAME_FORMAT = (
     "/srv/imars-objects/modis_aqua_{roi}"
     "{prod}_TS_MODA_{timescale}_{loc}.csv"

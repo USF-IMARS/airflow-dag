@@ -77,6 +77,8 @@ def main(csv_path, prefix, fields):
                 carbon.send_data()
                 print("line #{}".format(r.line_num))
 
+        carbon.send_data()  # send the last (partial) chunk
+
 
 if __name__ == '__main__':
     main(sys.argv[1], sys.argv[2], sys.argv[3])

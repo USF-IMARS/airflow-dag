@@ -120,7 +120,9 @@ with this_dag as dag:
         task_id="file_trigger_zip_wv2_ftp_ingest",
         product_ids=[6],
         dags_to_trigger=[
-            "proc_wv2_unzip"
+            get_dag_id(
+                dag_name="wv2_unzip", dag_type=DAGType.PROCESSING
+            )
         ],
     )
     claimed_ids.append(6)

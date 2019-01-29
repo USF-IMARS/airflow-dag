@@ -2,6 +2,7 @@
 Sets up a watch for a product file type in the metadata db.
 """
 from datetime import datetime
+from datetime import timezone
 
 from airflow import settings
 from airflow.models import DagBag
@@ -99,7 +100,11 @@ def _trigger_dags(
 
     # trigger the dags
     roi_name = file_metadata['area_name']
-    trigger_date = file_metadata['date_time'].strftime('%Y-%m-%d %H:%M:%S.%f')
+    trigger_dt = file_metadata['date_time']
+    # "fix" for "ValueError: naive datetime is disallowed":
+    # (assumes tz is UTC)
+    trigger_dt = trigger_dt.replace(tzinfo=timezone.utc)
+    trigger_date = trigger_dt.strftime('%Y-%m-%d %H:%M:%S.%f')
     print("triggering dags for ds={}...".format(trigger_date))
     for processing_dag_name in dags_to_trigger:
         # processing_dag_name is root dag,
@@ -108,17 +113,14 @@ def _trigger_dags(
             processing_dag_name, roi_name
         )
         print(dag_to_trigger + "...")
-        # trigger_dag_id=dag_to_trigger,
-        run_id_dt = datetime.strptime(
-            trigger_date, '%Y-%m-%d %H:%M:%S.%f'
-        )
+
         session = settings.Session()
         dbag = DagBag(settings.DAGS_FOLDER)
         trigger_dag = dbag.get_dag(dag_to_trigger)
         dr = trigger_dag.create_dagrun(
-            run_id='trig__' + run_id_dt.isoformat(),
+            run_id='trig__' + trigger_dt.isoformat(),
             state=State.RUNNING,
-            execution_date=trigger_date,
+            execution_date=trigger_dt,
             # conf=dro.payload,  # ??? docs say: user defined dictionary
             #                    #               passed from CLI :type: dict
             external_trigger=True

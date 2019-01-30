@@ -101,16 +101,14 @@ with this_dag as dag:
 
     # === incoming wv2 (already unzipped)
     assert 11 not in claimed_ids
+    from imars_dags.dags.processing.wv2_classification import wv_classification
     file_trigger_ntf_wv2_m1bs = FileWatcherOperator(
         task_id="file_trigger_ntf_wv2_m1bs",
         product_ids=[11],
         dags_to_trigger=[
-            # "proc_wv2_classification"  # deprecated
-            get_dag_id(
-                dag_name="wv_classification", dag_type=DAGType.PROCESSING
-            )
+            wv_classification.DAG_NAME
         ],
-        area_names=['na', 'big_bend'],
+        area_names=wv_classification.AREAS,
     )
     claimed_ids.append(11)
 

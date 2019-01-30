@@ -59,46 +59,6 @@ this_dag = DAG(
 with this_dag as dag:
     claimed_ids = []  # used to help prevent unwanted duplicate id claims
     # ======================================================================
-    # === unused products:
-    # TODO: this is no longer needed?
-    id_list = [
-        x for x in range(7, 35) if x not in [11]
-    ]
-    assert [x not in claimed_ids for x in id_list]
-    unprocessed_watcher_task = FileWatcherOperator(
-        task_id="unprocessed_watcher_task",
-        product_ids=id_list,
-        dags_to_trigger=[],
-    )
-    claimed_ids.extend(id_list)
-
-    # === myd0_otis_l2 (now unused)
-    assert 35 not in claimed_ids
-    file_trigger_myd0_otis_l2 = FileWatcherOperator(
-        task_id='file_trigger_myd0_otis_l2',
-        product_ids=[35],
-        dags_to_trigger=[
-            # "processing_l2_to_l3_pass"  # deprecated
-        ],
-        area_names=[],
-    )
-    claimed_ids.append(35)
-
-    # === incoming modis l1 myd01 files
-    assert 5 not in claimed_ids
-    file_trigger_myd01 = FileWatcherOperator(
-        task_id="file_trigger_myd01",
-        product_ids=[5],
-        dags_to_trigger=[
-            # "proc_myd01_to_myd0_otis_l2"  # deprecated
-            # get_dag_id(  # deprecated
-            #     dag_name="modis_aqua_pass", dag_type=DAGType.PROCESSING
-            # )
-        ],
-        area_names=['gom', 'fgbnms'],
-    )
-    claimed_ids.append(5)
-
     # === incoming wv2 (already unzipped)
     assert 11 not in claimed_ids
     from imars_dags.dags.processing.wv2_classification import wv_classification

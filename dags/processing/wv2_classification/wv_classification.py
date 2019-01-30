@@ -19,6 +19,16 @@ from airflow.operators.bash_operator import BashOperator
 from imars_dags.util.get_default_args import get_default_args
 from imars_dags.util.globals import QUEUE
 from imars_dags.util.get_dag_id import get_dag_id
+from imars_dags.util.Area import Area
+
+AREAS = [
+    Area('big_bend'),
+    Area('fl_se'),
+    Area('fl_ne'),
+    Area('monroe'),
+    Area('panhandle'),
+    Area('west_fl_pen'),
+]
 
 
 def get_dag(area_short_name, area_id):
@@ -58,13 +68,9 @@ def get_dag(area_short_name, area_id):
         },
         queue=QUEUE.WV2_PROC,
     )
-
     return this_dag
 
-na_dag = get_dag('na', 5)
-big_bend_dag = get_dag('big_bend', 6)
-fl_se_dag = get_dag('fl_se', 7)
-fl_ne_dag = get_dag('fl_ne', 8)
-monroe_dag = get_dag('monroe', 9)
-panhandle_dag = get_dag('panhandle', 10)
-west_fl_pen_dag = get_dag('west_fl_pen', 11)
+for area in AREAS:
+    the_dag = get_dag(area.short_name, area.id)
+    # must add the dag to globals with unique name so airflow can find it
+    globals()[the_dag.dag_id] = the_dag

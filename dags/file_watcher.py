@@ -133,7 +133,7 @@ with this_dag as dag:
     # === incoming Sentinel 3 zipped EFR files
     assert 36 not in claimed_ids
     from imars_dags.dags.processing.s3_chloro_a import s3_chloro_a
-    file_trigger_zip_wv2_ftp_ingest = FileWatcherOperator(
+    file_trigger_s3a_zipped_ol_1_efr = FileWatcherOperator(
         task_id="file_trigger_s3a_zipped_ol_1_efr",
         product_ids=[36],
         dags_to_trigger=[

@@ -13,7 +13,13 @@ from airflow.operators.bash_operator import BashOperator
 from imars_dags.util.get_dag_id import get_dag_id
 from imars_dags.util.get_default_args import get_default_args
 from imars_dags.util.globals import QUEUE
+from imars_dags.util.Area import Area
 
+DAG_NAME = os.path.splitext(os.path.basename(__file__))[0]
+
+AREAS = [
+    "florida"
+]
 # | 36 | s3a_ol_1_efr
 # | 49 | s3a_ol_1_efr_l2          |
 # | 50 | s3a_ol_1_efr_l3          |
@@ -21,57 +27,63 @@ L1_PRODUCT_ID = 36  # or 48 (chlor_a_s3a_pass) ?
 L2_PRODUCT_ID = 49
 L3_PRODUCT_ID = 50
 
-AREA_SHORT_NAME = "florida"
-AREA_ID = 12
+for area_short_name in AREAS:
+    area = Area(area_short_name)
+    AREA_SHORT_NAME = area.short_name
+    AREA_ID = area.id
 
-DAG_ID = get_dag_id(
-    __file__, region=AREA_SHORT_NAME, dag_name="s3_chloro_a"
-)
-THIS_DIR = os.path.dirname(os.path.realpath(__file__))
+    DAG_ID = get_dag_id(
+        __file__, region=AREA_SHORT_NAME, dag_name=DAG_NAME
+    )
+    THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 
-this_dag = DAG(
-    dag_id=DAG_ID,
-    default_args=get_default_args(
-        start_date=datetime.utcnow()
-    ),
-    schedule_interval=None,
-)
-
-l1_to_l2 = BashOperator(
-    task_id='l1_to_l2',
-    bash_command="l1_to_l2.sh",
-    params={
-        "par": os.path.join(
-            THIS_DIR,  # here
-            "IMaRS_S3_l2gen.par"
+    this_dag = DAG(
+        dag_id=DAG_ID,
+        default_args=get_default_args(
+            start_date=datetime.utcnow()
         ),
-        "l1_pid": L1_PRODUCT_ID,
-        "l2_pid": L2_PRODUCT_ID,
-        "area_id": AREA_ID,
-        "area_short_name": AREA_SHORT_NAME,
-    },
-    queue=QUEUE.SAT_SCRIPTS,
-    dag=this_dag,
-)
+        schedule_interval=None,
+    )
 
-l2_to_l3 = BashOperator(
-    task_id='l2_to_l3',
-    bash_command="l2_to_l3.sh",
-    params={
-        "p_id": L3_PRODUCT_ID,
-        "input_pid": L2_PRODUCT_ID,
-        "input_area_id": AREA_ID,
-        "area_id": AREA_ID,
-        "gpt_xml": os.path.join(
-            THIS_DIR,
-            "map_FL_S3_OLCI.xml"  # TODO: create this file
-        ),
-    },
-    queue=QUEUE.SAT_SCRIPTS,
-    dag=this_dag,
-)
+    l1_to_l2 = BashOperator(
+        task_id='l1_to_l2',
+        bash_command="l1_to_l2.sh",
+        params={
+            "par": os.path.join(
+                THIS_DIR,  # here
+                "IMaRS_S3_l2gen.par"
+            ),
+            "l1_pid": L1_PRODUCT_ID,
+            "l2_pid": L2_PRODUCT_ID,
+            "area_id": AREA_ID,
+            "area_short_name": AREA_SHORT_NAME,
+        },
+        queue=QUEUE.SAT_SCRIPTS,
+        dag=this_dag,
+    )
 
-l1_to_l2 >> l2_to_l3
+    l2_to_l3 = BashOperator(
+        task_id='l2_to_l3',
+        bash_command="l2_to_l3.sh",
+        params={
+            "p_id": L3_PRODUCT_ID,
+            "input_pid": L2_PRODUCT_ID,
+            "input_area_id": AREA_ID,
+            "area_id": AREA_ID,
+            "gpt_xml": os.path.join(
+                THIS_DIR,
+                "map_FL_S3_OLCI.xml"  # TODO: create this file
+            ),
+        },
+        queue=QUEUE.SAT_SCRIPTS,
+        dag=this_dag,
+    )
+
+    l1_to_l2 >> l2_to_l3
+
+    # must add the dag to globals with unique name so
+    # airflow can find it
+    globals()[this_dag.dag_id] = this_dag
 
 # === DEPRECATED FL SUB-REGIONS:
 # TODO: Remove these or do we still want them though the FL prod fully covers?

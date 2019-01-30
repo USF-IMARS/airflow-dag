@@ -17,7 +17,8 @@ import _csv_to_graphite as csv2graph
 
 # === sat ts:
 ROIS = [
-    'BB', 'UK', 'MR', 'SFP12', 'SFP18', 'WS', 'LK', 'DT', 'GOM', 'SR', 'FLB'
+    'BB', 'UK', 'MR', 'SFP12', 'SFP18', 'WS', 'LK', 'DT', 'WFS', 'SR', 'FLB',
+    'IFB'
 ]
 FILENAME_FORMAT = (
     "/srv/imars-objects/modis_aqua_{roi}"

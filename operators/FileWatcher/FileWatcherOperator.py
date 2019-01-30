@@ -52,6 +52,7 @@ class FileWatcherOperator(PythonOperator):
             op_kwargs={
                 'product_ids': product_ids,
                 'dags_to_trigger': dags_to_trigger,
+                'area_names': area_names,
             },
             templates_dict={
                 'metadata_file_filepath': 'metadata_file_filepath',
@@ -68,6 +69,7 @@ def _trigger_dags(
     *args,
     product_ids,
     dags_to_trigger,
+    area_names,
     templates_dict={},
     **kwargs
 ):
@@ -98,40 +100,47 @@ def _trigger_dags(
         value=file_metadata['area_id']
     )
 
-    # trigger the dags
-    roi_name = file_metadata['area_name']
-    trigger_dt = file_metadata['date_time']
-    # "fix" for "ValueError: naive datetime is disallowed":
-    # (assumes tz is UTC)
-    trigger_dt = trigger_dt.replace(tzinfo=timezone.utc)
-    trigger_date = trigger_dt.strftime('%Y-%m-%d %H:%M:%S.%f')
-    print("triggering dags for ds={}...".format(trigger_date))
-    for processing_dag_name in dags_to_trigger:
-        # processing_dag_name is root dag,
-        # but each region has a dag
-        dag_to_trigger = "{}_{}".format(
-            processing_dag_name, roi_name
-        )
-        print(dag_to_trigger + "...")
+    if file_metadata['area_name'] not in area_names:
+        print((
+            "File area '{}' not included in DAG AREAS list. "
+            "Skipping DAG triggers."
+        ).format(file_metadata['area_name']))
+    else:
+        # trigger the dags
+        roi_name = file_metadata['area_name']
+        trigger_dt = file_metadata['date_time']
+        # "fix" for "ValueError: naive datetime is disallowed":
+        # (assumes tz is UTC)
+        trigger_dt = trigger_dt.replace(tzinfo=timezone.utc)
+        trigger_date = trigger_dt.strftime('%Y-%m-%d %H:%M:%S.%f')
+        print("triggering dags for ds={}...".format(trigger_date))
+        for processing_dag_name in dags_to_trigger:
+            # processing_dag_name is root dag,
+            # but each region has a dag
+            dag_to_trigger = "{}_{}".format(
+                processing_dag_name, roi_name
+            )
+            print(dag_to_trigger + "...")
 
-        session = settings.Session()
-        dbag = DagBag(settings.DAGS_FOLDER)
-        trigger_dag = dbag.get_dag(dag_to_trigger)
-        dr = trigger_dag.create_dagrun(
-            run_id='trig__' + trigger_dt.isoformat(),
-            state=State.RUNNING,
-            execution_date=trigger_dt,
-            # conf=dro.payload,  # ??? docs say: user defined dictionary
-            #                    #               passed from CLI :type: dict
-            external_trigger=True
-        )
-        # logging.info("Creating DagRun {}".format(dr))
-        session.add(dr)
-        session.commit()
-        session.close()
-    print("...done. {} DAGs triggered.".format(len(dags_to_trigger)))
-    # === update status and/or last_processed:
-    # TODO: use something like imars_etl.update() ???
+            session = settings.Session()
+            dbag = DagBag(settings.DAGS_FOLDER)
+            trigger_dag = dbag.get_dag(dag_to_trigger)
+            # TODO: mark this task "skipped" if duplicate
+            dr = trigger_dag.create_dagrun(
+                run_id='trig__' + trigger_dt.isoformat(),
+                state=State.RUNNING,
+                execution_date=trigger_dt,
+                # conf=dro.payload,  # ??? docs say: user defined dictionary
+                #                    #             passed from CLI :type: dict
+                external_trigger=True
+            )
+            # logging.info("Creating DagRun {}".format(dr))
+            session.add(dr)
+            session.commit()
+            session.close()
+        print("...done. {} DAGs triggered.".format(len(dags_to_trigger)))
+        # === update status and/or last_processed:
+        # TODO: use something like imars_etl.update() ???
     mysql_hook = MySqlHook(
         mysql_conn_id='imars_metadata'  # TODO: rm hardcoded value
     )

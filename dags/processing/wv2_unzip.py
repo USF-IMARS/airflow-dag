@@ -44,7 +44,7 @@ for area_short_name in AREAS:
     unzip_wv2_ingest = BashOperator(
         task_id="unzip_wv2_ingest",
         dag=this_dag,
-        bash_command="wv2_unzip_na.sh",
+        bash_command="wv2_unzip.sh",
         params=dict(
             area_id=AREA_ID
         )

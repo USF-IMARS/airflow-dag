@@ -114,14 +114,14 @@ with this_dag as dag:
 
     # === incoming zipped wv2 files
     assert 6 not in claimed_ids
+    from imars_dags.dags.processing import wv2_unzip_na
     file_trigger_zip_wv2_ftp_ingest = FileWatcherOperator(
         task_id="file_trigger_zip_wv2_ftp_ingest",
         product_ids=[6],
         dags_to_trigger=[
-            get_dag_id(
-                dag_name="wv2_unzip", dag_type=DAGType.PROCESSING
-            )
+            wv2_unzip_na.DAG_NAME
         ],
+        area_names=wv2_unzip_na.AREAS
     )
     claimed_ids.append(6)
 

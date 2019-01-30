@@ -4,11 +4,13 @@ Sets up a watch for a product file type in the metadata db.
 from datetime import datetime
 from datetime import timezone
 
+from _mysql_exceptions import IntegrityError
 from airflow import settings
 from airflow.models import DagBag
 from airflow.hooks.mysql_hook import MySqlHook
 from airflow.operators.python_operator import PythonOperator
 from airflow.utils.state import State
+from airflow.exceptions import AirflowSkipException
 
 import imars_etl
 
@@ -125,19 +127,27 @@ def _trigger_dags(
             session = settings.Session()
             dbag = DagBag(settings.DAGS_FOLDER)
             trigger_dag = dbag.get_dag(dag_to_trigger)
-            # TODO: mark this task "skipped" if duplicate
-            dr = trigger_dag.create_dagrun(
-                run_id='trig__' + trigger_dt.isoformat(),
-                state=State.RUNNING,
-                execution_date=trigger_dt,
-                # conf=dro.payload,  # ??? docs say: user defined dictionary
-                #                    #             passed from CLI :type: dict
-                external_trigger=True
-            )
-            # logging.info("Creating DagRun {}".format(dr))
-            session.add(dr)
-            session.commit()
-            session.close()
+            try:
+                dr = trigger_dag.create_dagrun(
+                    run_id='trig__' + trigger_dt.isoformat(),
+                    state=State.RUNNING,
+                    execution_date=trigger_dt,
+                    # conf=dro.payload,  # ? docs say: user defined dictionary
+                    #                    #          passed from CLI :type: dict
+                    external_trigger=True
+                )
+                # logging.info("Creating DagRun {}".format(dr))
+                session.add(dr)
+                session.commit()
+            except IntegrityError:
+                # mark this task "skipped" if duplicate
+                # TODO: how to ensure this is duplicate and not foreign
+                #       key issue?
+                raise AirflowSkipException(
+                    'Processing DAG for this date_time already in airflow db.'
+                )
+            finally:
+                session.close()
         print("...done. {} DAGs triggered.".format(len(dags_to_trigger)))
         # === update status and/or last_processed:
         # TODO: use something like imars_etl.update() ???

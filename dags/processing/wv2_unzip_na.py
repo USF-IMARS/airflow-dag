@@ -3,22 +3,27 @@
 # =========================================================================
 from datetime import datetime
 from datetime import timedelta
+import os
 
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 
 from imars_dags.util.get_dag_id import get_dag_id
 from imars_dags.util.get_default_args import get_default_args
+from imars_dags.util.Area import Area
 
+DAG_NAME = os.path.splitext(os.path.basename(__file__))[0]
 
-REGIONS = [
-    ("monroe", 9),
+AREAS = [
+    "monroe",
 ]
 
-
-for AREA_SHORT_NAME, AREA_ID in REGIONS:
+for area_short_name in AREAS:
+    area = Area(area_short_name)
+    AREA_SHORT_NAME = area.short_name
+    AREA_ID = area.id
     DAG_ID = get_dag_id(
-        __file__, region=AREA_SHORT_NAME, dag_name="wv2_unzip"
+        __file__, region=AREA_SHORT_NAME, dag_name=DAG_NAME
     )
     this_dag = DAG(
         dag_id=DAG_ID,

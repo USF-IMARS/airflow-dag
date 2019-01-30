@@ -55,6 +55,7 @@ from imars_dags.util.DAGType import DAGType
 this_dag = DAG(
     dag_id="file_watcher",
     catchup=False,  # latest only
+    schedule_interval="*/5 * * * *",
 )
 with this_dag as dag:
     claimed_ids = []  # used to help prevent unwanted duplicate id claims

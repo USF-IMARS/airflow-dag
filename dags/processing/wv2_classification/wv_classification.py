@@ -10,6 +10,7 @@ classification on WorldView-2 images
 """
 # std libs
 from datetime import datetime
+import os
 
 # deps
 from airflow import DAG
@@ -21,22 +22,26 @@ from imars_dags.util.globals import QUEUE
 from imars_dags.util.get_dag_id import get_dag_id
 from imars_dags.util.Area import Area
 
+DAG_NAME = os.path.splitext(os.path.basename(__file__))[0]
+
 AREAS = [
-    Area('big_bend'),
-    Area('fl_se'),
-    Area('fl_ne'),
-    Area('monroe'),
-    Area('panhandle'),
-    Area('west_fl_pen'),
+    'big_bend',
+    'fl_se',
+    'fl_ne',
+    'monroe',
+    'panhandle',
+    'west_fl_pen',
 ]
 
-
-def get_dag(area_short_name, area_id):
+for area_short_name in AREAS:
+    area = Area(area_short_name)
+    area_short_name = area.short_name
+    area_id = area.id
     this_dag = DAG(
         dag_id=get_dag_id(
             __file__,
             region=area_short_name,
-            dag_name="wv_classification"
+            dag_name=DAG_NAME
         ),
         default_args=get_default_args(
             start_date=datetime.utcnow()
@@ -68,9 +73,7 @@ def get_dag(area_short_name, area_id):
         },
         queue=QUEUE.WV2_PROC,
     )
-    return this_dag
 
-for area in AREAS:
-    the_dag = get_dag(area.short_name, area.id)
-    # must add the dag to globals with unique name so airflow can find it
-    globals()[the_dag.dag_id] = the_dag
+    # must add the dag to globals with unique name so
+    # airflow can find it
+    globals()[this_dag.dag_id] = this_dag

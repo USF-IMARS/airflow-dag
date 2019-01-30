@@ -81,7 +81,7 @@ def _trigger_dags(
     result = imars_etl.select(
         cols="id,area_id,date_time",
         sql=get_sql_selection(product_ids),
-        post_where="ORDER BY last_processed DESC LIMIT 1",
+        post_where="ORDER BY last_processed ASC LIMIT 1",
         first=True,
     )
     file_metadata = dict(

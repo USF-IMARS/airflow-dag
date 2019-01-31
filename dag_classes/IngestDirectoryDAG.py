@@ -34,6 +34,7 @@ class IngestDirectoryDAG(DAG):
     COMMON_ARGS = {
         'duplicates_ok': True,  # don't freak out over duplicates
         'nohash': True,  # speeds things up a lot
+        'status_id': 1,
         # 'dry_run': True,  # True if we are just testing
     }
 

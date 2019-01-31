@@ -4,7 +4,7 @@ Sets up a watch for a product file type in the metadata db.
 from datetime import datetime
 from datetime import timezone
 
-from _mysql_exceptions import IntegrityError
+from MySQLdb import IntegrityError
 from airflow import settings
 from airflow.models import DagBag
 from airflow.hooks.mysql_hook import MySqlHook

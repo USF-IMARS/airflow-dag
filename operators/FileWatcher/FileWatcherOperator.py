@@ -4,7 +4,6 @@ Sets up a watch for a product file type in the metadata db.
 from datetime import datetime
 from datetime import timezone
 
-from MySQLdb import IntegrityError
 from airflow import settings
 from airflow.models import DagBag
 from airflow.hooks.mysql_hook import MySqlHook
@@ -124,10 +123,10 @@ def _trigger_dags(
             )
             print(dag_to_trigger + "...")
 
-            session = settings.Session()
-            dbag = DagBag(settings.DAGS_FOLDER)
-            trigger_dag = dbag.get_dag(dag_to_trigger)
             try:
+                session = settings.Session()
+                dbag = DagBag(settings.DAGS_FOLDER)
+                trigger_dag = dbag.get_dag(dag_to_trigger)
                 dr = trigger_dag.create_dagrun(
                     run_id='trig__' + trigger_dt.isoformat(),
                     state=State.RUNNING,
@@ -139,13 +138,17 @@ def _trigger_dags(
                 # logging.info("Creating DagRun {}".format(dr))
                 session.add(dr)
                 session.commit()
-            except IntegrityError:
+            except Exception as err:
                 # mark this task "skipped" if duplicate
-                # TODO: how to ensure this is duplicate and not foreign
-                #       key issue?
-                raise AirflowSkipException(
-                    'Processing DAG for this date_time already in airflow db.'
-                )
+                if('uplicate' in str(err)):
+                    # NOTE: yes, this is a terrible way to check but it's the
+                    #      best I can do in this circumstance.
+                    raise AirflowSkipException(
+                        'Processing DAG for this date_time already in '
+                        'airflow db.'
+                    )
+                else:
+                    raise
             finally:
                 session.close()
         print("...done. {} DAGs triggered.".format(len(dags_to_trigger)))

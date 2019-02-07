@@ -33,8 +33,8 @@ class IngestDirectoryDAG(DAG):
     # but can be overridden in the load_kwargs_list passed in.
     COMMON_ARGS = {
         'duplicates_ok': True,  # don't freak out over duplicates
-        'nohash': True,  # speeds things up a lot
-        'status_id': 1,
+        'nohash': True,  # speeds things up a lot if True
+        'status_id': 3,
         # 'dry_run': True,  # True if we are just testing
     }
 

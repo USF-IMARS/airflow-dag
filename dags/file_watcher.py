@@ -61,7 +61,8 @@ this_dag = DAG(
 with this_dag as dag:
     claimed_ids = []  # used to help prevent unwanted duplicate id claims
     # ======================================================================
-    # === incoming wv2 (already unzipped)
+    # === incoming wv2 .ntf files (already unzipped)
+    # pid=11, short_name=ntf_wv2_m1bs
     assert 11 not in claimed_ids
     from imars_dags.dags.processing.wv2_classification import wv_classification
     file_trigger_ntf_wv2_m1bs = FileWatcherOperator(
@@ -78,6 +79,7 @@ with this_dag as dag:
     claimed_ids.append(11)
 
     # === incoming zipped wv2 files
+    # id 6 == zip_wv3_ftp_ingest
     assert 6 not in claimed_ids
     from imars_dags.dags.processing import wv2_unzip
     file_trigger_zip_wv2_ftp_ingest = FileWatcherOperator(

@@ -23,7 +23,7 @@ AREAS = [
 # | 36 | s3a_ol_1_efr
 # | 49 | s3a_ol_1_efr_l2          |
 # | 50 | s3a_ol_1_efr_l3          |
-L1_PRODUCT_ID = 36  # or 48 (chlor_a_s3a_pass) ?
+L1_PRODUCT_ID = 36
 L2_PRODUCT_ID = 49
 L3_PRODUCT_ID = 50
 

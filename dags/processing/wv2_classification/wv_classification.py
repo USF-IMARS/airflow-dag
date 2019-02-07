@@ -31,6 +31,7 @@ AREAS = [
     'monroe',
     'panhandle',
     'west_fl_pen',
+    'tx_coast',
 ]
 
 for area_short_name in AREAS:

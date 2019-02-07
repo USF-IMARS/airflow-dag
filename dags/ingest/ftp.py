@@ -39,6 +39,7 @@ with this_dag as dag:
                 imars-etl load \
                     --product_id 36 \
                     --sql "status_id=3 AND area_id=12" \
+                    --ingest_key dhus_abbrev \
                     --duplicates_ok \
                     --nohash \
                     % &&

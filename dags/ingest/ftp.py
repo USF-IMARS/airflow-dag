@@ -15,10 +15,10 @@ this_dag = IngestDirectoryDAG(
     dag_id=get_dag_id(__file__, "na"),
     load_kwargs_list=[
         {
-            'product_id': 6,  # from metaDB
+            'product_id': 6,  # from metaDB zip_wv2_ftp_ingest
         },
         {
-            'product_id': 47,  # from metaDB
+            'product_id': 47,  # from metaDB zip_wv3_ftp_ingest
         },
     ],
     schedule_interval="2 22 * * 0",

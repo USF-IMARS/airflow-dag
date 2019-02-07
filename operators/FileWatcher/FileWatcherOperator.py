@@ -65,6 +65,26 @@ class FileWatcherOperator(PythonOperator):
         )
 
 
+def update_metadata_db(file_metadata):
+    mysql_hook = MySqlHook(
+        mysql_conn_id='imars_metadata'  # TODO: rm hardcoded value
+    )
+    dt_now = str(datetime.now())
+    sql_update = (
+        'UPDATE file SET '
+        'status_id={},last_processed="{}",proc_counter=proc_counter+1 '
+        'WHERE id={}'
+    ).format(
+        1, dt_now,
+        file_metadata['id'],
+        # expected date format: 2018-12-19 23:34:08.256244
+    )
+    print("updating metadata db:\n\t" + sql_update)
+    mysql_hook.run(
+        sql_update
+    )
+
+
 def _trigger_dags(
     ds,
     *args,
@@ -75,16 +95,18 @@ def _trigger_dags(
     **kwargs
 ):
     # === get file metadata
+    sql_selection = get_sql_selection(product_ids)
+    post_where_str = "ORDER BY last_processed ASC LIMIT 1"
     # SELECT {cols} FROM file WHERE {sql} {post_where};
-    # print('SELECT {} FROM file WHERE {} {};'.format(
-    #     '*',
-    #     get_sql_selection(product_ids),
-    #     "ORDER BY last_processed DESC LIMIT 1"
-    # ))
+    print('SELECT {} FROM file WHERE {} {};'.format(
+        '*',
+        sql_selection,
+        post_where_str
+    ))
     result = imars_etl.select(
         cols="id,area_id,date_time",
-        sql=get_sql_selection(product_ids),
-        post_where="ORDER BY last_processed ASC LIMIT 1",
+        sql=sql_selection,
+        post_where=post_where_str,
         first=True,
     )
     file_metadata = dict(
@@ -100,7 +122,7 @@ def _trigger_dags(
         table='area',
         value=file_metadata['area_id']
     )
-
+    n_dags_triggered = 0
     if file_metadata['area_name'] not in area_names:
         print((
             "File area '{}' not included in DAG AREAS list. "
@@ -138,39 +160,24 @@ def _trigger_dags(
                 # logging.info("Creating DagRun {}".format(dr))
                 session.add(dr)
                 session.commit()
+                n_dags_triggered += 1
             except Exception as err:
                 # mark this task "skipped" if duplicate
                 if('uplicate' in str(err)):
                     # NOTE: yes, this is a terrible way to check but it's the
                     #      best I can do in this circumstance.
-                    raise AirflowSkipException(
-                        'Processing DAG for this date_time already in '
-                        'airflow db.'
-                    )
+                    # we need to update even if skipping
+                    pass
                 else:
                     raise
             finally:
                 session.close()
-        print("...done. {} DAGs triggered.".format(len(dags_to_trigger)))
-        # === update status and/or last_processed:
-        # TODO: use something like imars_etl.update() ???
-    mysql_hook = MySqlHook(
-        mysql_conn_id='imars_metadata'  # TODO: rm hardcoded value
-    )
-    dt_now = str(datetime.now())
-    sql_update = (
-        'UPDATE file SET '
-        'status_id={},last_processed="{}" WHERE id={}'
-    ).format(
-        1,  # 1 = status:standard
-        dt_now,
-        file_metadata['id'],
-        # expected date format: 2018-12-19 23:34:08.256244
-    )
-    print("updating metadata db:\n\t" + sql_update)
-    mysql_hook.run(
-        sql_update
-    )
-    # print("file id#{}.last_processed set to {}".format(
-    #     file_metadata['id'], dt_now
-    # ))
+        print("...done. {} DAGs triggered.".format(n_dags_triggered))
+    # === update status and/or last_processed:
+    # TODO: use something like imars_etl.update() ???
+    update_metadata_db(file_metadata)
+    if n_dags_triggered < 1:
+        raise AirflowSkipException(
+            'No DAGs triggered for this file. '
+            'DAGRuns may already exist.'
+        )

@@ -30,6 +30,7 @@ for roi in ['fk']:  # TODO: fgbnms (but sub-locs will be different)
         [OC_PRE, 'chlor_a'],
         [OC_PRE, 'nflh'],
         [OC_PRE, 'Rrs_667'],
+        [OC_PRE, 'ABI'],
         ["/EXT_TS_AQUA/SST4/FKdb_", "sst4"]
     ]:
         for loc in ROIS:

@@ -77,12 +77,16 @@ class GraphiteInterface(object):
             return True
         return False
 
-    def send_data(self, data=None):
+    def send_data(self, data=None, verbose=False):
         '''
         If data is empty, current buffer is sent. Otherwise data must be like:
         data = [('metricname', (timestamp, value)),
               ('metricname', (timestamp, value)),
               ...]
+
+        returns
+        -------
+        False if send failed, else number of bytes sent.
         '''
         save_in_error = False
         if not data:
@@ -106,13 +110,14 @@ class GraphiteInterface(object):
                 self.__data.extend(data)
             return False
         else:
-            print(
-                'Sent data to {host}:{port}: {0} metrics, {1} bytes'.format(
-                    len(data), len(message), host=self.host, port=self.port
+            if verbose:
+                print(
+                    'Sent data to {host}:{port}: {0} metrics {1} bytes'.format(
+                        len(data), len(message), host=self.host, port=self.port
+                    )
                 )
-            )
-            # print(data)
-            return True
+                # print(data)
+            return len(message)
         finally:
             s.close()
 

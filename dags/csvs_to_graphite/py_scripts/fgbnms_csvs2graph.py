@@ -1,4 +1,5 @@
 """
+Deprecated method has been replaced by sat_region_station_ts. (I think...)
 Reads each csv file and pushes the data into graphite.
 """
 import _csv_to_graphite as csv2graph

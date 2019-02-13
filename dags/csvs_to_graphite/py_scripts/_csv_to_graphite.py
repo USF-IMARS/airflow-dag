@@ -46,6 +46,7 @@ def main(csv_path, prefix, fields):
                 fieldnames=['time'] + fields,
             )
 
+        bytes_sent = 0
         for row in r:
             # check for other possible names of the time column
             if 'time' not in row:
@@ -74,11 +75,11 @@ def main(csv_path, prefix, fields):
                 )
 
             if r.line_num % 10 == 0:
-                carbon.send_data()
-                print("line #{}".format(r.line_num))
+                bytes_sent += carbon.send_data()
+                # print(".", end="")
 
-        carbon.send_data()  # send the last (partial) chunk
-
+        bytes_sent += carbon.send_data()  # send the last (partial) chunk
+        print("done. {} bytes sent to graphite".format(bytes_sent))
 
 if __name__ == '__main__':
     main(sys.argv[1], sys.argv[2], sys.argv[3])

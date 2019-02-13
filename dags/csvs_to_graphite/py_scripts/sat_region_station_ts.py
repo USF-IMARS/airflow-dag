@@ -15,35 +15,37 @@ the data.
 
 import _csv_to_graphite as csv2graph
 
-# === sat ts:
-ROIS = [
-    'BB', 'UK', 'MR', 'SFP12', 'SFP18', 'WS', 'LK', 'DT', 'WFS', 'SR', 'FLB',
-    'IFB'
-]
 FILENAME_FORMAT = (
-    "/srv/imars-objects/modis_aqua_{roi}"
-    "{prod}_TS_MODA_{timescale}_{loc}.csv"
+    "{directory}{prod}_TS_MODA_{timescale}_{loc}.csv"
 )
-OC_PRE = "/EXT_TS_AQUA/OC/FKdb_"
-for roi in ['fk']:  # TODO: fgbnms (but sub-locs will be different)
+
+
+def csv2graph_roi(roi, subregions, directory):
+    # TODO: could use glob instead of manually passing subregions
     for prod in [
-        [OC_PRE, 'chlor_a'],
-        [OC_PRE, 'nflh'],
-        [OC_PRE, 'Rrs_667'],
-        [OC_PRE, 'ABI'],
-        ["/EXT_TS_AQUA/SST4/FKdb_", "sst4"]
+        "/EXT_TS_AQUA/OC/{roi}db_chlor_a",
+        "/EXT_TS_AQUA/OC/{roi}db_nflh",
+        "/EXT_TS_AQUA/OC/{roi}db_Rrs_667",
+        "/EXT_TS_AQUA/OC/{roi}db_ABI",
+        "/EXT_TS_AQUA/SST4/{roi}db_sst4"
     ]:
-        for loc in ROIS:
+        for loc in subregions:
             # === daily
+
             fname = FILENAME_FORMAT.format(
-                roi=roi, prod="".join(prod), loc=loc, timescale="daily"
+                directory=directory,
+                prod=prod.format(
+                    roi=roi
+                ),
+                timescale="daily",
+                loc=loc,
             )
             csv2graph.main(
                 fname,
                 'imars_regions.fk.roi.{loc}.{prod}'.format(
                     loc=loc, prod=prod[1]
                 ),
-                ["mean"]
+                ["mean", "climatology", "anomaly"]
             )
 
             # === weekly

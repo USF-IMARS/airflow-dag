@@ -21,18 +21,8 @@ this_dag = DAG(
 )
 
 with this_dag as dag:
-    # for args in CSV2GRAPH_ARGS:
-    #     PythonOperator(
-    #         task_id=(
-    #             "csv2graphite_" +
-    #             args[1].replace('.', '_').replace('imars_regions_', '')
-    #         ),
-    #         python_callable=csv2graph,
-    #         dag=this_dag,
-    #         op_args=args,
-    #         provide_context=True,
-    #     )
-    # same thing, but as bash op:
+    # TODO: I think fgbnms_csvs2graphite has been replaced by fgb_sat_region.
+    #       rm it?
     fgbnms_csvs2graphite = BashOperator(
         task_id=(
             "fgbnms_csvs2graphite"
@@ -63,12 +53,22 @@ with this_dag as dag:
         """,
     )
 
-    sat_region_station_ts = BashOperator(
+    fgb_sat_region = BashOperator(
         task_id=(
-            "sat_region_station_ts"
+            "fgb_sat_region"
         ),
         bash_command="""
             python2 \
-            /home/airflow/dags/imars_dags/dags/csvs_to_graphite/py_scripts/sat_region_station_ts.py
+            /home/airflow/dags/imars_dags/dags/csvs_to_graphite/py_scripts/fgb_sat_region.py
+        """,
+    )
+
+    fk_sat_region = BashOperator(
+        task_id=(
+            "fk_sat_region"
+        ),
+        bash_command="""
+            python2 \
+            /home/airflow/dags/imars_dags/dags/csvs_to_graphite/py_scripts/fk_sat_region.py
         """,
     )

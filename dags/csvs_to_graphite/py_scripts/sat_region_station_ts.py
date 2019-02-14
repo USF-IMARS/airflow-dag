@@ -23,11 +23,11 @@ FILENAME_FORMAT = (
 def csv2graph_roi(roi, subregions, directory):
     # TODO: could use glob instead of manually passing subregions
     for prod in [
-        "/EXT_TS_AQUA/OC/{roi}db_chlor_a",
-        "/EXT_TS_AQUA/OC/{roi}db_nflh",
-        "/EXT_TS_AQUA/OC/{roi}db_Rrs_667",
-        "/EXT_TS_AQUA/OC/{roi}db_ABI",
-        "/EXT_TS_AQUA/SST4/{roi}db_sst4"
+        "/EXT_TS_AQUA/OC/{roi_upper}db_chlor_a",
+        "/EXT_TS_AQUA/OC/{roi_upper}db_nflh",
+        "/EXT_TS_AQUA/OC/{roi_upper}db_Rrs_667",
+        "/EXT_TS_AQUA/OC/{roi_upper}db_ABI",
+        "/EXT_TS_AQUA/SST4/{roi_upper}db_sst4"
     ]:
         for loc in subregions:
             # === daily
@@ -35,16 +35,17 @@ def csv2graph_roi(roi, subregions, directory):
             fname = FILENAME_FORMAT.format(
                 directory=directory,
                 prod=prod.format(
-                    roi=roi
+                    roi_upper=roi.upper()
                 ),
                 timescale="daily",
                 loc=loc,
             )
             csv2graph.main(
                 fname,
-                'imars_regions.{roi}.roi.{loc}.{prod}'.format(
-                    loc=loc, product_name=product_name,
-                    roi=roi
+                'imars_regions.{roi_lower}.roi.{loc}.{product_name}'.format(
+                    loc=loc,
+                    product_name=product_name,
+                    roi_lower=roi.lower()
                 ),
                 ["mean", "climatology", "anomaly"]
             )

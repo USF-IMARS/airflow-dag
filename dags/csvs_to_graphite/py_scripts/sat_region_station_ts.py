@@ -31,7 +31,7 @@ def csv2graph_roi(roi, subregions, directory):
     ]:
         for loc in subregions:
             # === daily
-
+            product_name = prod.split("db_")[1]
             fname = FILENAME_FORMAT.format(
                 directory=directory,
                 prod=prod.format(
@@ -42,8 +42,9 @@ def csv2graph_roi(roi, subregions, directory):
             )
             csv2graph.main(
                 fname,
-                'imars_regions.fk.roi.{loc}.{prod}'.format(
-                    loc=loc, prod=prod[1]
+                'imars_regions.{roi}.roi.{loc}.{prod}'.format(
+                    loc=loc, product_name=product_name,
+                    roi=roi
                 ),
                 ["mean", "climatology", "anomaly"]
             )

@@ -17,7 +17,7 @@ unzip $WV2_ZIP_FILE -d $UNZIPPED_DIRNAME
 # NOTE: GIS_FILES need to be removed so they aren't accidentally ingested.
 rm -r $UNZIPPED_DIRNAME/*/*/GIS_FILES
 
-echo load...
+echo load xml and ntf files...
 # find $UNZIPPED_DIRNAME -name *M1BS* -name *.ATT | \
 #     xargs -n 1 \
 #     imars-etl load \

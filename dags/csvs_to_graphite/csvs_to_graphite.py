@@ -33,15 +33,6 @@ with this_dag as dag:
             /home/airflow/dags/imars_dags/dags/csvs_to_graphite/py_scripts/fgbnms_csvs2graph.py
         """,
     )
-    bouy_ts = BashOperator(
-        task_id=(
-            "bouy_ts"
-        ),
-        bash_command="""
-            python2 \
-            /home/airflow/dags/imars_dags/dags/csvs_to_graphite/py_scripts/bouy_ts.py
-        """,
-    )
     fgb_river_ts = BashOperator(
         task_id=(
             "fgb_river_ts"
@@ -78,5 +69,14 @@ with this_dag as dag:
         bash_command="""
             python2 \
             /home/airflow/dags/imars_dags/dags/csvs_to_graphite/py_scripts/fk_river_ts.py
+        """,
+    )
+    fk_bouy_ts = BashOperator(
+        task_id=(
+            "fk_bouy_ts"
+        ),
+        bash_command="""
+            python2 \
+            /home/airflow/dags/imars_dags/dags/csvs_to_graphite/py_scripts/fk_bouy_ts.py
         """,
     )

@@ -19,7 +19,6 @@ from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 
 from imars_dags.util.get_default_args import get_default_args
-from imars_dags.util.etl_tools.tmp_file import tmp_filepath
 
 
 this_dag = DAG(
@@ -33,18 +32,25 @@ this_dag = DAG(
 
 # d/l file
 # parse file & load to graphite
-data_path = tmp_filepath(this_dag.dag_id, "data.raw")
+data_path = "tabs_fg2.{{ds_nodash}}.raw"
 data_url = (
-    "http://tabs.gerg.tamu.edu/~woody/newtabs/viewdata.php?buoy=tabs_fg2&"
-    "filename=tabs_fg2.{{ds_nodash}}.raw"
+    "http://tabs.gerg.tamu.edu/~woody/newtabs/viewdata.php?buoy=tabs_fg2"
+)
+script_path = (
+    "/home/airflow/dags/imars_dags/dags/ingest/bouys_to_graphite/" +
+    "bouy_file_to_graphite.py"
 )
 load_data_to_graphite = BashOperator(
     task_id="load_data_to_graphite",
-    bash_command=(
-        "lynx -dump -minimal -nolist -nostatus -width=200 '" + data_url + "' >> " + data_path + " && "
-        "python /home/airflow/dags/imars_dags/dags/ingest/bouys_to_graphite/"
-        "bouy_file_to_graphite.py " + data_path + " && "
-        "rm " + data_path
-    ),
+    bash_command=("""
+        lynx -dump -minimal -nolist -nostatus -width=200 \
+            '{{params.data_url}}&filename=tabs_fg2.{{ds_nodash}}.raw'\
+            >> tabs_fg2.raw &&
+        python2 {{params.script_path}} tabs_fg2.raw
+    """),
     dag=this_dag,
+    params={
+        "data_url": data_url,
+        "script_path": script_path
+    }
 )

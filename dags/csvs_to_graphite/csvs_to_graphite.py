@@ -21,6 +21,7 @@ this_dag = DAG(
 )
 
 with this_dag as dag:
+    # === FGBNMS
     # TODO: I think fgbnms_csvs2graphite has been replaced by fgb_sat_region.
     #       rm it?
     fgbnms_csvs2graphite = BashOperator(
@@ -32,7 +33,6 @@ with this_dag as dag:
             /home/airflow/dags/imars_dags/dags/csvs_to_graphite/py_scripts/fgbnms_csvs2graph.py
         """,
     )
-
     bouy_ts = BashOperator(
         task_id=(
             "bouy_ts"
@@ -42,17 +42,15 @@ with this_dag as dag:
             /home/airflow/dags/imars_dags/dags/csvs_to_graphite/py_scripts/bouy_ts.py
         """,
     )
-
-    river_ts = BashOperator(
+    fgb_river_ts = BashOperator(
         task_id=(
-            "river_ts"
+            "fgb_river_ts"
         ),
         bash_command="""
             python2 \
-            /home/airflow/dags/imars_dags/dags/csvs_to_graphite/py_scripts/river_ts.py
+            /home/airflow/dags/imars_dags/dags/csvs_to_graphite/py_scripts/fgb_river_ts.py
         """,
     )
-
     fgb_sat_region = BashOperator(
         task_id=(
             "fgb_sat_region"
@@ -63,6 +61,7 @@ with this_dag as dag:
         """,
     )
 
+    # === FKNMS
     fk_sat_region = BashOperator(
         task_id=(
             "fk_sat_region"
@@ -70,5 +69,14 @@ with this_dag as dag:
         bash_command="""
             python2 \
             /home/airflow/dags/imars_dags/dags/csvs_to_graphite/py_scripts/fk_sat_region.py
+        """,
+    )
+    fk_river_ts = BashOperator(
+        task_id=(
+            "fk_river_ts"
+        ),
+        bash_command="""
+            python2 \
+            /home/airflow/dags/imars_dags/dags/csvs_to_graphite/py_scripts/fk_river_ts.py
         """,
     )

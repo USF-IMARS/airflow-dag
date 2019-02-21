@@ -47,7 +47,8 @@ for area_short_name in AREAS:
         bash_command="wv2_unzip.sh",
         params=dict(
             area_id=AREA_ID
-        )
+        ),
+        task_concurrency=2  # TODO: increase this as # workers increases
     )
 
     # must add the dag to globals with unique name so airflow can find it

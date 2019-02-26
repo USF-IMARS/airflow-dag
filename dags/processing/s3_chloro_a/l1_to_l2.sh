@@ -38,6 +38,6 @@ l2gen ifile=${L1_SEN3_XML} ofile=$L2_PATH par='{{ params.par }}'
 
 echo '=== Load...'
 imars-etl load \
-    --sql 'product_id={{params.l2_pid}} AND area_id={{params.area_id}} AND date_time="{{execution_date}}"'\
+    --sql 'product_id={{params.l2_pid}} AND area_id={{params.area_id}} AND date_time="{{execution_date}}" AND provenance=" AND provenance="af-l1tol2_v1""'\
     --json '{"area_short_name":"{{params.area_short_name}}"}'\
     $L2_PATH

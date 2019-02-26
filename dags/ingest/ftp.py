@@ -38,7 +38,11 @@ with this_dag as dag:
             xargs -n 1 -I % sh -c ' \
                 imars-etl load \
                     --product_id 36 \
-                    --sql "status_id=3 AND area_id=12" \
+                    --sql " \
+                        status_id=3 AND
+                        area_id=12 AND
+                        provenance='af-ftp_v1' \
+                    " \
                     --ingest_key dhus_abbrev \
                     --duplicates_ok \
                     --nohash \

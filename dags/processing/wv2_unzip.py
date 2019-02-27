@@ -48,7 +48,7 @@ for area_short_name in AREAS:
         params=dict(
             area_id=AREA_ID
         ),
-        task_concurrency=2  # TODO: increase this as # workers increases
+        task_concurrency=5  # TODO: increase this as # workers increases
     )
 
     # must add the dag to globals with unique name so airflow can find it

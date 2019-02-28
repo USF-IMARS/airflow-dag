@@ -7,7 +7,16 @@ confused or something isn't working for you.
 This is under heavy development so documentation and code likely contain errors.
 
 ## DAG development guidelines
-Please see the (private to IMaRS users) [DAG Development Workflows document](https://github.com/USF-IMARS/IMaRS-docs/blob/master/docs/airflow/workflows.md).
+Please see details in the (private to IMaRS users) [DAG Development Workflows document](https://github.com/USF-IMARS/IMaRS-docs/blob/master/docs/airflow/workflows.md).
+
+The short version of the simplest workflow:
+1. Edit DAGs on github
+2. Wait for test server to pull your changes (via puppet). Pulls occur approximately once every half hour.
+3. Run the DAG tasks by
+    1. waiting for a new DagRun to trigger
+    2. Trigger a new DAGRun 
+    3. Clear an existing DAGRun
+4. View Results in web GUI
 
 Additional documentation in the [`./docs`](https://github.com/USF-IMARS/imars_dags/tree/master/doc) directory.
 

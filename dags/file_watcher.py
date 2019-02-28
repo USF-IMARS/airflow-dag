@@ -55,7 +55,7 @@ from imars_dags.util.DAGType import DAGType
 this_dag = DAG(
     dag_id="file_watcher",
     catchup=False,  # latest only
-    schedule_interval="* * * * *",
+    schedule_interval="*/5 * * * *",
     concurrency=1
 )
 with this_dag as dag:

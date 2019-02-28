@@ -3,6 +3,9 @@ Sets up a watch for a product file type in the metadata db.
 """
 from datetime import datetime
 from datetime import timezone
+import subprocess.check_output
+import os.path
+import socket
 
 from airflow import settings
 from airflow.models import DagBag
@@ -65,17 +68,19 @@ class FileWatcherOperator(PythonOperator):
         )
 
 
-def update_metadata_db(file_metadata):
+def update_metadata_db(file_metadata, validation_meta):
     mysql_hook = MySqlHook(
         mysql_conn_id='imars_metadata'  # TODO: rm hardcoded value
     )
     dt_now = str(datetime.now())
     sql_update = (
         'UPDATE file SET '
-        'status_id={},last_processed="{}",proc_counter=proc_counter+1 '
+        'status_id={},last_processed="{}",proc_counter=proc_counter+1,'
+        'last_ipfs_host="{}",multihash="{}" '
         'WHERE id={}'
     ).format(
         1, dt_now,
+        validation_meta['last_ipfs_host'], validation_meta['multihash'],
         file_metadata['id'],
         # expected date format: 2018-12-19 23:34:08.256244
     )
@@ -83,6 +88,29 @@ def update_metadata_db(file_metadata):
     mysql_hook.run(
         sql_update
     )
+
+
+def _validate_file(f_meta):
+    """performs validation on file row before triggering"""
+    fpath = f_meta['filepath']
+    # ensure accessible at local
+    assert os.path.isfile(fpath)
+    # ensure accessbile over IPFS
+    # TODO: adding it everytime is probably overkill
+    new_hash = subprocess.check_output(
+        "ipfs add -Q --nocopy {localpath}".format(
+            localpath=fpath
+        )
+    )
+    old_hash = f_meta["multihash"]
+    if old_hash is not None and old_hash != "" and old_hash != new_hash:
+        raise ValueError(
+            "file hash does not match db!\n\tdb_hash:{}\n\tactual:{}"
+        )
+    return {
+        "last_ipfs_host": socket.gethostname(),
+        "multihash": new_hash
+    }
 
 
 def _trigger_dags(
@@ -104,7 +132,7 @@ def _trigger_dags(
         post_where_str
     ))
     result = imars_etl.select(
-        cols="id,area_id,date_time",
+        cols="id,area_id,date_time,filepath,multihash",
         sql=sql_selection,
         post_where=post_where_str,
         first=True,
@@ -113,6 +141,8 @@ def _trigger_dags(
         id=result[0],
         area_id=result[1],
         date_time=result[2],
+        filepath=result[3],
+        multihash=result[4],
     )
     # print("\n\tmeta:\n\t{}\n".format(file_metadata))
     # logging.info("\n\n\tmeta:\n\t{}".format(file_metadata))
@@ -122,6 +152,7 @@ def _trigger_dags(
         table='area',
         value=file_metadata['area_id']
     )
+    validation_meta = _validate_file(file_metadata)
     n_dags_triggered = 0
     if file_metadata['area_name'] not in area_names:
         print((
@@ -175,7 +206,7 @@ def _trigger_dags(
         print("...done. {} DAGs triggered.".format(n_dags_triggered))
     # === update status and/or last_processed:
     # TODO: use something like imars_etl.update() ???
-    update_metadata_db(file_metadata)
+    update_metadata_db(file_metadata, validation_meta)
     if n_dags_triggered < 1:
         raise AirflowSkipException(
             'No DAGs triggered for this file. '

@@ -23,7 +23,7 @@ try:  # w/in airflow
 except ImportError:  # as script
     import GraphiteInterface
 
-HOSTNAME = "graphitemaster"  # TODO
+HOSTNAME = "graphite"  # TODO
 PORT = 2004  # TODO
 
 PREFIX = "imars_bouys.fg2"

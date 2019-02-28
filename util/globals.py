@@ -21,10 +21,10 @@ class QUEUE:
     PYCMR = 'pycmr'  # https://github.com/7yl4r/pyCMR
     SNAP = 'snap'  # https://github.com/USF-IMARS/snap-puppet
     RCLONE = 'rclone'  # https://rclone.org/ configured by puppet
-
+    # https://github.com/USF-IMARS/imars_puppet/blob/test/modules/imars_airflow/manifests/worker_queues/ipfs_private_node.pp
+    IPFS_PRIVATE_NODE = 'ipfs_private_node'
     MATLAB = 'matlab'
     WV2_PROC = 'wv2_proc'  # https://github.com/USF-IMARS/wv2-processing
-    # WV2_PROC requires MATLAB... so WV2_PROC should imply MATLAB as well?!?
 
 
 class POOL:

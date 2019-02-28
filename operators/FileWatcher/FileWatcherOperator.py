@@ -16,6 +16,8 @@ from airflow.exceptions import AirflowSkipException
 
 import imars_etl
 
+from imars_dags.util.globals import QUEUE
+
 DAWN_OF_TIME = datetime(2018, 5, 5, 5, 5)  # any date in past is fine
 
 
@@ -37,6 +39,7 @@ class FileWatcherOperator(PythonOperator):
         provide_context=True,
         start_date=DAWN_OF_TIME,
         retries=0,
+        queue=QUEUE.IPFS_PRIVATE_NODE,
         **kwargs
     ):
         """
@@ -64,6 +67,7 @@ class FileWatcherOperator(PythonOperator):
             provide_context=provide_context,
             retries=retries,
             start_date=start_date,
+            queue=queue,
             **kwargs
         )
 

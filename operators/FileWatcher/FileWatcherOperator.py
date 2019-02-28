@@ -3,7 +3,7 @@ Sets up a watch for a product file type in the metadata db.
 """
 from datetime import datetime
 from datetime import timezone
-import subprocess.check_output
+import subprocess
 import os.path
 import socket
 

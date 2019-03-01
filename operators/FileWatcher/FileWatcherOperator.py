@@ -39,7 +39,7 @@ class FileWatcherOperator(PythonOperator):
         provide_context=True,
         start_date=DAWN_OF_TIME,
         retries=0,
-        queue=QUEUE.IPFS_PRIVATE_NODE,
+        # queue=QUEUE.IPFS_PRIVATE_NODE,
         **kwargs
     ):
         """
@@ -67,7 +67,7 @@ class FileWatcherOperator(PythonOperator):
             provide_context=provide_context,
             retries=retries,
             start_date=start_date,
-            queue=queue,
+            # queue=queue,
             **kwargs
         )
 
@@ -101,8 +101,10 @@ def _validate_file(f_meta):
     assert os.path.isfile(fpath)
     # ensure accessbile over IPFS
     # TODO: adding it everytime is probably overkill
+    #       but it needs to be added, not just hashed.
     new_hash = subprocess.check_output(
-        "ipfs add -Q --nocopy {localpath}".format(
+        # "ipfs add -Q --nocopy {localpath}".format(
+        "ipfs add -Q --only-hash {localpath}".format(
             localpath=fpath
         )
     )

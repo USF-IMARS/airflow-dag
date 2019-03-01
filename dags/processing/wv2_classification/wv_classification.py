@@ -53,7 +53,7 @@ for area_short_name in AREAS:
     wv_classify = BashOperator(  # noqa F841
         dag=this_dag,
         task_id='wv_classify',
-        bash_command='wv_classify.sh',
+        bash_command='scripts/ntf_to_rrs.sh',
         params={
             # product ids from metadata db
             "Rrs_ID": 37,

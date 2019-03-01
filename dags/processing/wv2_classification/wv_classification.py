@@ -15,12 +15,16 @@ import os
 # deps
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
+from airflow.operators.python_operator import PythonOperator
 
 # this package
 from imars_dags.util.get_default_args import get_default_args
 from imars_dags.util.globals import QUEUE
 from imars_dags.util.get_dag_id import get_dag_id
 from imars_dags.util.Area import Area
+from imars_dags.dags.processing.wv2_classification.scripts.add_img_points_to_csv \
+    import add_img_points_to_csv
+
 
 DAG_NAME = os.path.splitext(os.path.basename(__file__))[0]
 
@@ -50,13 +54,14 @@ for area_short_name in AREAS:
         schedule_interval=None,
     )
 
-    wv_classify = BashOperator(  # noqa F841
+    PRODUCT_ID_Rrs = 37
+    ntf_to_rrs = BashOperator(  # noqa F841
         dag=this_dag,
-        task_id='wv_classify',
+        task_id='ntf_to_rrs',
         bash_command='scripts/ntf_to_rrs.sh',
-        params={
+        params={  # TODO: clean up unused params here
             # product ids from metadata db
-            "Rrs_ID": 37,
+            "Rrs_ID": PRODUCT_ID_Rrs,
             "rrs_ID": 38,
             "bth_ID": 39,
             "classf_ID": 40,
@@ -75,6 +80,26 @@ for area_short_name in AREAS:
         queue=QUEUE.WV2_PROC,
     )
 
-    # must add the dag to globals with unique name so
-    # airflow can find it
+    # TODO: rrs_to_class
+
+    # === save band values from selected points for later analysis
+    # TODO: all points currently in west fl pen,
+    #       but hopefully we get more and rm this if.
+    if area_short_name == 'west_fl_pen':
+        img_bands_at_pts_to_csv = PythonOperator(
+            dag=this_dag,
+            task_id='img_bands_at_pts_to_csv',
+            queue=QUEUE.WV2_PROC,
+            provide_context=True,
+            python_callable=add_img_points_to_csv,
+            op_kwargs={
+                'product_id': PRODUCT_ID_Rrs
+            }
+        )
+        ntf_to_rrs >> img_bands_at_pts_to_csv
+
+    # === DAG connections
+    # ntf_to_rrs >> rrs_to_class
+
+    # === add the dag to globals with unique name so airflow can find it
     globals()[this_dag.dag_id] = this_dag

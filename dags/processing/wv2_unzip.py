@@ -15,7 +15,13 @@ from imars_dags.util.Area import Area
 DAG_NAME = os.path.splitext(os.path.basename(__file__))[0]
 
 AREAS = [
-    "monroe",
+    'big_bend',
+    'fl_se',
+    'fl_ne',
+    'monroe',
+    'panhandle',
+    'west_fl_pen',
+    'tx_coast',
 ]
 
 for area_short_name in AREAS:

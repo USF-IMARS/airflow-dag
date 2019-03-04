@@ -96,6 +96,7 @@ def update_metadata_db(file_metadata, validation_meta):
 
 def _validate_file(f_meta):
     """performs validation on file row before triggering"""
+    IPFS_PATH = "/usr/local/bin/ipfs"
     fpath = f_meta['filepath']
     # ensure accessible at local
     assert os.path.isfile(fpath)
@@ -104,7 +105,8 @@ def _validate_file(f_meta):
     #       but it needs to be added, not just hashed.
     new_hash = subprocess.check_output(
         # "ipfs add -Q --nocopy {localpath}".format(
-        "ipfs add -Q --only-hash {localpath}".format(
+        "{ipfs} add -Q --only-hash {localpath}".format(
+            ipfs=IPFS_PATH,
             localpath=fpath
         )
     )

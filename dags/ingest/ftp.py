@@ -34,7 +34,7 @@ with this_dag as dag:
         bash_command="""\
             find /srv/imars-objects/ftp-ingest/fl_sen3/ \
                 -type f \
-                -name "S3A_OL_1_EFR___*" |
+                -name "S3A_OL_1_EFR___*.zip" |
             xargs -n 1 -I % sh -c ' \
                 imars-etl load \
                     --product_id 36 \

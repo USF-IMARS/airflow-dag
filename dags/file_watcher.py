@@ -56,7 +56,7 @@ this_dag = DAG(
     dag_id="file_watcher",
     catchup=False,  # latest only
     schedule_interval="*/5 * * * *",
-    concurrency=1
+    max_active_runs=1
 )
 with this_dag as dag:
     claimed_ids = []  # used to help prevent unwanted duplicate id claims

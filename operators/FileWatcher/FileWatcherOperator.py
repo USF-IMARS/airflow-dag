@@ -96,27 +96,28 @@ def update_metadata_db(file_metadata, validation_meta):
 
 def _validate_file(f_meta):
     """performs validation on file row before triggering"""
-    IPFS_PATH = "/usr/local/bin/ipfs"
     fpath = f_meta['filepath']
     # ensure accessible at local
     assert os.path.isfile(fpath)
     # ensure accessbile over IPFS
     # TODO: adding it everytime is probably overkill
     #       but it needs to be added, not just hashed.
-    new_hash = subprocess.check_output(
-        # "ipfs add -Q --nocopy {localpath}".format(
-        "{ipfs} add -Q --only-hash {localpath}".format(
-            ipfs=IPFS_PATH,
-            localpath=fpath
-        )
-    )
     old_hash = f_meta["multihash"]
+    new_hash = old_hash
+    # new_hash = subprocess.check_output(
+    #     # "ipfs add -Q --only-hash {localpath}".format(
+    #     "ipfs add -Q --nocopy {localpath}".format(
+    #         ipfs=IPFS_PATH,
+    #         localpath=fpath
+    #     ),
+    #     shell=True
+    # )
     if old_hash is not None and old_hash != "" and old_hash != new_hash:
         raise ValueError(
             "file hash does not match db!\n\tdb_hash:{}\n\tactual:{}"
         )
     return {
-        "last_ipfs_host": socket.gethostname(),
+        "last_ipfs_host": "NA",  # socket.gethostname(),
         "multihash": new_hash
     }
 

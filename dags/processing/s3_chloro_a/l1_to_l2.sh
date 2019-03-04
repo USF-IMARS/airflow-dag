@@ -10,7 +10,7 @@ echo '=== Extract...'
 # instead of this:
 imars-etl extract \
     'product_id={{params.l1_pid}} AND date_time="{{ts}}"'
-L1_PATH=$(ls *.SEN3)
+L1_PATH=$(ls *.SEN3)  # should this be *.zip?
 
 
 echo '=== Transform...'

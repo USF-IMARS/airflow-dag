@@ -12,7 +12,7 @@ from imars_dags.util.get_dag_id import get_dag_id
 
 
 this_dag = IngestDirectoryDAG(
-    directory_path='/srv/imars-objects/ftp-ingest/',
+    directory_path='/srv/imars-objects/ftp-ingest/complete/',
     dag_id=get_dag_id(__file__, "na"),
     load_kwargs_list=[
         {

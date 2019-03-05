@@ -43,7 +43,7 @@ with this_dag as dag:
                         area_id=12 AND
                         provenance='af-ftp_v1' \
                     " \
-                    --ingest_key dhus_abbrev \
+                    --slstr path_format \
                     --duplicates_ok \
                     --nohash \
                     % &&

@@ -22,8 +22,9 @@ DAWN_OF_TIME = datetime(2018, 5, 5, 5, 5)  # any date in past is fine
 
 
 def get_sql_selection(product_ids):
-    VALID_STATUS_IDS = [1, 3, 4]
-    return "status_id IN ({}) AND product_id IN ({})".format(
+    # 1=std, 2=external, 3=to_load
+    VALID_STATUS_IDS = [1, 2, 3]  # += NULL
+    return "(status_id IN ({}) OR status_id IS NULL) AND product_id IN ({})".format(
         ",".join(map(str, VALID_STATUS_IDS)),
         ",".join(map(str, product_ids))
     )

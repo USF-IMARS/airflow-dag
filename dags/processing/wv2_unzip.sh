@@ -13,7 +13,8 @@ echo transform...
 UNZIPPED_DIRNAME=wv2_unzipped
 mkdir $UNZIPPED_DIRNAME
 
-unzip $WV2_ZIP_FILE -d $UNZIPPED_DIRNAME
+# ionice best-effort (2) lowest priority (7)
+ionice -c 2 -n 7 unzip $WV2_ZIP_FILE -d $UNZIPPED_DIRNAME
 # NOTE: GIS_FILES need to be removed so they aren't accidentally ingested.
 rm -r $UNZIPPED_DIRNAME/*/*/GIS_FILES
 

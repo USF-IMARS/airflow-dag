@@ -40,7 +40,7 @@ for area_short_name in AREAS:
     this_dag = DAG(
         dag_id=DAG_ID,
         default_args=get_default_args(
-            start_date=datetime.utcnow()
+            start_date=datetime(2016, 2, 16)  # S3-A launch
         ),
         schedule_interval=None,
     )

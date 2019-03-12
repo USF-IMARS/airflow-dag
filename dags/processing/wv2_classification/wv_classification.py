@@ -49,7 +49,7 @@ for area_short_name in AREAS:
             dag_name=DAG_NAME
         ),
         default_args=get_default_args(
-            start_date=datetime.utcnow()
+            start_date=datetime(2007, 9, 18)  # WV1 launch
         ),
         schedule_interval=None,
     )

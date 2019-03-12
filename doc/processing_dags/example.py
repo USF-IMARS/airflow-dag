@@ -59,7 +59,7 @@ DAG_ID = get_dag_id(
 this_dag = DAG(
     dag_id=DAG_ID,
     default_args=get_default_args(
-        start_date=datetime.utcnow()
+        start_date=datetime(2001, 11, 28)  # use earliest possible date
     ),
     schedule_interval=None,
 )

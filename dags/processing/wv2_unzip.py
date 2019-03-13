@@ -37,7 +37,8 @@ for area_short_name in AREAS:
         dag_id=DAG_ID,
         default_args=get_default_args(
             start_date=datetime(1980, 1, 1),
-            retry_delay=timedelta(minutes=3)
+            retry_delay=timedelta(minutes=3),
+            retries=3
         ),
         schedule_interval=None,
     )
@@ -58,7 +59,7 @@ for area_short_name in AREAS:
         params=dict(
             area_id=AREA_ID
         ),
-        task_concurrency=2  # TODO: increase this as # workers increases
+        task_concurrency=2  # TODO: increase this as # workers increases?
     )
 
     # must add the dag to globals with unique name so airflow can find it

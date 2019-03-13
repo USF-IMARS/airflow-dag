@@ -36,6 +36,7 @@ dotis_cronjob_outputs_chlor_a = IngestDirectoryDAG(
         )
     ]
 )
+dotis_cronjob_outputs_chlor_a.doc_md = __doc__
 
 # TODO: these DAGs should be in different files
 dotis_cronjob_outputs_sst = IngestDirectoryDAG(
@@ -58,3 +59,4 @@ dotis_cronjob_outputs_sst = IngestDirectoryDAG(
         )
     ]
 )
+dotis_cronjob_outputs_sst.doc_md = __doc__

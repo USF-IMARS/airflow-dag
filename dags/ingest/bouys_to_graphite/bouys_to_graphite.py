@@ -29,6 +29,7 @@ this_dag = DAG(
     schedule_interval="59 23 * * *",
     max_active_runs=3,  # low to ensure we don't hurt his server
 )
+this_dag.doc_md = __doc__
 
 # d/l file
 # parse file & load to graphite

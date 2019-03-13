@@ -44,6 +44,7 @@ for area_short_name in AREAS:
         ),
         schedule_interval=None,
     )
+    this_dag.doc_md = __doc__
 
     l1_to_l2 = BashOperator(
         task_id='l1_to_l2',

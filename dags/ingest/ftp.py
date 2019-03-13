@@ -26,6 +26,7 @@ this_dag = IngestDirectoryDAG(
     rm_loaded=True,
     concurrency=1,
 )
+this_dag.doc_md = __doc__
 
 with this_dag as dag:
     # new way of doing it: just use bashOp & imars-etl:

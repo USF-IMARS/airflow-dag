@@ -1,3 +1,6 @@
+"""
+Checks NASA CMR for daytime modis aqua passes over the GoM region.
+"""
 from datetime import timedelta
 
 # unused DAG import is required for airflow to find the dag
@@ -21,3 +24,4 @@ this_dag = CMRCoverageCheckDAG(
     granule_len=timedelta(minutes=5),
     check_delay=timedelta(hours=3)
 )
+this_dag.doc_md = __doc__

@@ -63,6 +63,7 @@ this_dag = DAG(
     ),
     schedule_interval=None,
 )
+this_dag.doc_md = __doc__  # sets web GUI to use docstring at top of file
 # =====================================================================
 # =====================================================================
 # === Defining the first operator.

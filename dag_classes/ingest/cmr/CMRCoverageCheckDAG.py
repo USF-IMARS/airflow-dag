@@ -1,6 +1,10 @@
 """
-Checks the coverage of each granule using NASA's CMR
-(Common Metadata Repository).
+Checks coverage of an RoI using NASA CMR.
+Skips if coverage requirements not met, else downloads the file.
+
+Can check for day/night using cmr_search_kwargs.
+
+Creates a DagRun for every granule.
 """
 # this package
 from imars_dags.util.get_dag_id import get_dag_id

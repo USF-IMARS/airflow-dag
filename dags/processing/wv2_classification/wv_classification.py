@@ -53,6 +53,7 @@ for area_short_name in AREAS:
         ),
         schedule_interval=None,
     )
+    this_dag.doc_md = __doc__
 
     PRODUCT_ID_Rrs = 37
     ntf_to_rrs = BashOperator(  # noqa F841

@@ -58,6 +58,8 @@ this_dag = DAG(
     schedule_interval="* * * * *",
     max_active_runs=1
 )
+this_dag.doc_md = __doc__
+
 with this_dag as dag:
     claimed_ids = []  # used to help prevent unwanted duplicate id claims
     # ======================================================================

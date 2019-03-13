@@ -20,6 +20,7 @@ this_dag = DAG(
     catchup=False,
     max_active_runs=1,
 )
+this_dag.doc_md = __doc__
 
 BashOperator(
     task_id=(

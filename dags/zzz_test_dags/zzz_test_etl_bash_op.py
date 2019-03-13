@@ -16,6 +16,7 @@ this_dag = DAG(
     ),
     catchup=False,  # latest only
 )
+this_dag.doc_md = __doc__
 
 test_op = IMaRSETLBashOperator(
     dag=this_dag,

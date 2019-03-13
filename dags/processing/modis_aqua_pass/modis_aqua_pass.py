@@ -1,5 +1,5 @@
 """
-processing for one modis pass
+processing for one modis aqua pass
 """
 # std libs
 from datetime import datetime
@@ -33,6 +33,7 @@ for AREA_SHORT_NAME, AREA_ID in REGIONS:
         ),
         schedule_interval=None,
     )
+    this_dag.doc_md = __doc__
 
     l1_to_l2 = IMaRSETLBashOperator(
         task_id='l1_to_l2',

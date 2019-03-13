@@ -1,6 +1,8 @@
-# =========================================================================
-# wv2 unzip to final destination
-# =========================================================================
+"""
+=========================================================================
+wv2 unzip to final destination
+=========================================================================
+"""
 from datetime import datetime
 from datetime import timedelta
 import os
@@ -39,6 +41,8 @@ for area_short_name in AREAS:
         ),
         schedule_interval=None,
     )
+    this_dag.doc_md = __doc__
+
     COMMON_LOAD_ARGS = {  # args common to all outputs
         # example file: "./058655513010_01_003/058655513010_01/
         #               058655513010_01_P001_MUL/

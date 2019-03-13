@@ -19,6 +19,7 @@ this_dag = DAG(
     catchup=False,
     max_active_runs=1,
 )
+this_dag.doc_md = __doc__
 
 with this_dag as dag:
     # === FGBNMS

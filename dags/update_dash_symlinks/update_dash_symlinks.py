@@ -1,3 +1,6 @@
+"""
+Updates symlinks to point at latest data for github.com/USF-IMARS/img-dash
+"""
 from datetime import datetime
 
 from airflow import DAG
@@ -17,6 +20,7 @@ this_dag = DAG(
     catchup=False,
     max_active_runs=1,
 )
+this_dag.doc_md = __doc__
 
 update_symlinks = PythonOperator(
     task_id="update_symlinks",

@@ -15,6 +15,7 @@ this_dag = DAG(
         start_date=datetime.utcnow()
     )
 )
+this_dag.doc_md = __doc__
 
 
 def myfunc(**kwargs):

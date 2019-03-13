@@ -1,0 +1,7 @@
+# dag definitions are only in dags/ dir
+dag_classes/*
+doc/*
+operators/*
+regions/*
+settings/*
+util/*

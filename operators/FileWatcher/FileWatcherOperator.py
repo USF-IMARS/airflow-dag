@@ -98,6 +98,7 @@ def update_metadata_db(file_metadata, validation_meta):
 def _validate_file(f_meta):
     """performs validation on file row before triggering"""
     fpath = f_meta['filepath']
+    print("validating fpath:\n\t{}".format(fpath))
     # ensure accessible at local
     assert os.path.isfile(fpath)
     # ensure accessbile over IPFS

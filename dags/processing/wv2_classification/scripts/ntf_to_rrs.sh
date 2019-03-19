@@ -20,7 +20,7 @@ mkdir $RRS_OUT
 # (if not we get USF-IMARS/imars_dags#64) so here we match
 # "(?P<ts>\d\d[a-z]{3}\d{8})-(?P<prod>\w{4})?(?P<tile>\w+)?-(?P<oid>\d{12}_\d\d)_(?P<pnum>p\d{3})"
 # using a hard-coded sensor "wv02" + a fake date & catalog id
-cd input_dir
+cd $INPUT_DIR
 # NOTE: I think these two must have the same file basename:
 # === ntf image is product_id # 11
 imars-etl extract "product_id=11 AND date_time='{{ts}}'"

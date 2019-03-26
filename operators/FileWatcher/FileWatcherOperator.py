@@ -147,7 +147,7 @@ def _trigger_dags(
         sql=sql_selection,
         post_where=post_where_str,
         first=True,
-    )
+    )[0]
     file_metadata = dict(
         id=result[0],
         area_id=result[1],

@@ -1,10 +1,10 @@
-# Dependencies to be installed by pip. 
+# Dependencies to be installed by pip.
 # Can be generated using `pip freeze`, but this one has been crafted manually.
-# This is included because our airflow dockerfile wants this when building the contaner rather than using the `setup.py`
 
 # === examples:
 # install from github like:
 # -e git://github.com/USF-IMARS/imars_dags.git@master#egg=imars_airflow_config
+-e git://github.com/7yl4r/pycmr.git/@prod#egg=pyCMR
 
 # install from pypi like:
 # TODO

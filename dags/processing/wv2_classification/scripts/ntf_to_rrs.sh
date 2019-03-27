@@ -68,7 +68,7 @@ MET2=$ORTHO_DIR/${BASENAME}${PGC_SUFFIX}.xml
 python3.6 /opt/wv2_processing/wv_classify/wv_classify.py \
     $ORTHO_FILE $MET2 $RRS_OUT FAKELOC "EPSG:4326" 0 1
 
-RRS_TIF_PATH=$RRS_OUT/${BASENAME}_FAKELOC_Rrs.tif
+RRS_TIF_PATH=$(ls ${RRS_OUT}/*Rrs.tif)  # TODO: also dumb
 
 # =================================================================
 # === LOAD

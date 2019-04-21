@@ -52,7 +52,7 @@ for area_short_name in AREAS:
             start_date=datetime(2007, 9, 18)  # WV1 launch
         ),
         schedule_interval=None,
-        max_active_runs=20,
+        concurrency=20,
     )
     this_dag.doc_md = __doc__
 

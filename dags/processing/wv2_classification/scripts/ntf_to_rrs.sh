@@ -23,11 +23,11 @@ mkdir $RRS_OUT
 cd $INPUT_DIR
 # NOTE: I think these two must have the same file basename:
 # === ntf image is product_id # 11
-imars-etl extract "product_id=11 AND date_time='{{ts}}'"
+imars-etl extract "product_id=11 AND date_time='{{ts}}' AND area_id='{{params.area_id}}'"
 ORIG_NTF_BASENAME=$(ls *.ntf)  # TODO: this is dumb
 
 # === met xml is product_id # 14
-imars-etl extract "product_id=14 AND date_time='{{ts}}'"
+imars-etl extract "product_id=14 AND date_time='{{ts}}' AND area_id='{{params.area_id}}'"
 ORIG_MET_BASENAME=$(ls *.xml)  # TODO: also dumb
 
 # === rename files so we can predict what pgc_ortho will do.

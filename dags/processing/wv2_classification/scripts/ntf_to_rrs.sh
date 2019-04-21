@@ -63,17 +63,26 @@ MET=$INPUT_DIR/$MET_BASENAME
 # pgc moves the xml file from $MET to $MET2 and modifies it
 MET2=$ORTHO_DIR/${BASENAME}${PGC_SUFFIX}.xml
 
-# TODO: use python instead:
-# === matlab
-python3.6 /opt/wv2_processing/wv_classify/wv_classify.py \
-    $ORTHO_FILE $MET2 $RRS_OUT FAKELOC "EPSG:4326" 0 1
-
-RRS_TIF_PATH=$(ls ${RRS_OUT}/*Rrs.tif)  # TODO: also dumb
+python3.6 -m wv_classify.wv_classify \
+    $ORTHO_FILE $MET2 $RRS_OUT FAKELOC "EPSG:4326" 2 1
 
 # =================================================================
 # === LOAD
 # =================================================================
+RRS_TIF_PATH=$(ls ${RRS_OUT}/*Rrs.tif)  # TODO: also dumb
+rrs_TIF_PATH=$(ls ${RRS_OUT}/*_rrssub.tif)  # TODO: also also dumb
+MAP_TIF_PATH=$(ls ${RRS_OUT}/*_Map_pytest.tif)  # TODO: also also also dumb
+
 imars-etl load --noparse --sql \
-    "area_id={{params.area_id}} AND product_id={{params.Rrs_ID}} AND date_time='{{ts}}' AND provenance='af-ntftorrs_v1'" \
+    "area_id={{params.area_id}} AND product_id={{params.Rrs_ID}} AND date_time='{{ts}}' AND provenance='af-ntftorrs_v2'" \
     $RRS_TIF_PATH
+    
+imars-etl load --noparse --sql \
+    "area_id={{params.area_id}} AND product_id={{params.rrs_ID}} AND date_time='{{ts}}' AND provenance='af-ntftorrs_v2'" \
+    $rrs_TIF_PATH
+    
+imars-etl load --noparse --sql \
+    "area_id={{params.area_id}} AND product_id={{params.classf_ID}} AND date_time='{{ts}}' AND provenance='af-ntftorrs_v2'" \
+    $MAP_TIF_PATH
+    
 # =================================================================

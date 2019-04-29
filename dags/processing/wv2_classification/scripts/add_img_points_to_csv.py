@@ -12,7 +12,7 @@ from imars_dags.dags.processing.wv2_classification.scripts.read_bands_at \
     import read_bands_at
 
 
-def add_img_points_to_csv(execution_date, op_kwargs, **kwargs):
+def add_img_points_to_csv(execution_date, **op_kwargs):
     product_id = op_kwargs['product_id']
     ISO_8601_SPACEY_FMT = "%Y-%m-%d %H:%M:%S.%f"
 

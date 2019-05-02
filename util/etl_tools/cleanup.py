@@ -77,7 +77,7 @@ def add_cleanup(dag, to_cleanup, upstream_operators):
         #         task_id="tmp_cleanup"
         #         AND state IN ('success','failed')
         #         AND dag_id="{{ dag.dag_id }}"
-        #         AND execution_date="{{ execution_date }}";
+        #         AND execution_date="{{ execution_date }}"
         #     """
         # )
         # start poking immediately

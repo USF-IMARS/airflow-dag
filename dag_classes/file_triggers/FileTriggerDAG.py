@@ -95,7 +95,7 @@ class FileTriggerDAG(DAG):
             # TODO: SQL watch for pid=={} & status_id==to_load
             # === mysql_sensor
             # =================================================================
-            sql_selection = "status_id={} AND {};".format(
+            sql_selection = "status_id={} AND {}".format(
                 STATUS.TO_LOAD,
                 list_to_sql_or('product_id', self.product_ids)
             )

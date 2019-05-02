@@ -40,7 +40,7 @@ def add_l3gen(dag, region_name, gpt_xml):
                         '{{execution_date.replace(hour=23,minute=59)}}'
                     )
                     AND dag_id='"""+region_name+"""_modis_aqua_coverage_check'
-                    AND state='success';
+                    AND state='success'
             """
         )
         # wait_for_day_end >> wait_for_all_day_granules_checked

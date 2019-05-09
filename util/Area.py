@@ -1,6 +1,8 @@
 import imars_etl
 
 
+# TODO: memoize this?
+#  https://stackoverflow.com/questions/10879137/how-can-i-memoize-a-class-instantiation-in-python
 class Area(object):
     """
     Usage:

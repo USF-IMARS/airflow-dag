@@ -3,9 +3,7 @@ Sets up a watch for a product file type in the metadata db.
 """
 from datetime import datetime
 from datetime import timezone
-import subprocess
 import os.path
-import socket
 
 from airflow import settings
 from airflow.models import DagBag
@@ -17,6 +15,8 @@ from airflow.exceptions import AirflowSkipException
 import imars_etl
 
 from imars_dags.util.globals import QUEUE
+from imars_dags.operators.FileWather.integrity_checks \
+    import ensure_ipfs_accessible
 
 DAWN_OF_TIME = datetime(2018, 5, 5, 5, 5)  # any date in past is fine
 
@@ -24,7 +24,9 @@ DAWN_OF_TIME = datetime(2018, 5, 5, 5, 5)  # any date in past is fine
 def get_sql_selection(product_ids):
     # 1=std, 2=external, 3=to_load
     VALID_STATUS_IDS = [1, 2, 3]  # += NULL
-    return "(status_id IN ({}) OR status_id IS NULL) AND product_id IN ({})".format(
+    return (
+        "(status_id IN ({}) OR status_id IS NULL) AND product_id IN ({})"
+    ).format(
         ",".join(map(str, VALID_STATUS_IDS)),
         ",".join(map(str, product_ids))
     )
@@ -101,26 +103,12 @@ def _validate_file(f_meta):
     print("validating fpath:\n\t{}".format(fpath))
     # ensure accessible at local
     assert os.path.isfile(fpath)
-    # ensure accessbile over IPFS
-    # TODO: adding it everytime is probably overkill
-    #       but it needs to be added, not just hashed.
-    old_hash = f_meta["multihash"]
-    new_hash = old_hash
-    # new_hash = subprocess.check_output(
-    #     # "ipfs add -Q --only-hash {localpath}".format(
-    #     "ipfs add -Q --nocopy {localpath}".format(
-    #         ipfs=IPFS_PATH,
-    #         localpath=fpath
-    #     ),
-    #     shell=True
-    # )
-    if old_hash is not None and old_hash != "" and old_hash != new_hash:
-        raise ValueError(
-            "file hash does not match db!\n\tdb_hash:{}\n\tactual:{}"
-        )
+    # TODO: make available on ipfs
+    # hash, ipfs_host = ensure_ipfs_accessible(f_meta)
+    hash, ipfs_host = (f_meta['filepath'], "NA")  # temporary disable
     return {
-        "last_ipfs_host": "NA",  # socket.gethostname(),
-        "multihash": new_hash
+        "last_ipfs_host": ipfs_host,
+        "multihash": hash,
     }
 
 

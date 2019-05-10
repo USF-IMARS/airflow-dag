@@ -1,5 +1,11 @@
+import os.path
 import socket
 import subprocess
+
+
+def ensure_locally_accessible(file_meta):
+    # ensure accessible at local
+    assert os.path.isfile(file_meta['filepath'])
 
 
 def ensure_ipfs_accessible(file_meta):

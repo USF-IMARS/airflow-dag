@@ -3,7 +3,6 @@ Sets up a watch for a product file type in the metadata db.
 """
 from datetime import datetime
 from datetime import timezone
-import os.path
 
 from airflow import settings
 from airflow.models import DagBag
@@ -17,6 +16,8 @@ import imars_etl
 from imars_dags.util.globals import QUEUE
 from imars_dags.operators.FileWather.integrity_checks \
     import ensure_ipfs_accessible
+from imars_dags.operators.FileWather.integrity_checks \
+    import ensure_locally_accessible
 
 DAWN_OF_TIME = datetime(2018, 5, 5, 5, 5)  # any date in past is fine
 
@@ -101,8 +102,7 @@ def _validate_file(f_meta):
     """performs validation on file row before triggering"""
     fpath = f_meta['filepath']
     print("validating fpath:\n\t{}".format(fpath))
-    # ensure accessible at local
-    assert os.path.isfile(fpath)
+    ensure_locally_accessible()
     # TODO: make available on ipfs
     # hash, ipfs_host = ensure_ipfs_accessible(f_meta)
     hash, ipfs_host = (f_meta['filepath'], "NA")  # temporary disable

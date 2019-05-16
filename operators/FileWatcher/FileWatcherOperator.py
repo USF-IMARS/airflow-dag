@@ -18,6 +18,8 @@ from imars_dags.operators.FileWather.integrity_checks \
     import ensure_ipfs_accessible
 from imars_dags.operators.FileWather.integrity_checks \
     import ensure_locally_accessible
+from imars_dags.operators.FileWather.integrity_checks \
+    import check_for_duplicates
 
 DAWN_OF_TIME = datetime(2018, 5, 5, 5, 5)  # any date in past is fine
 
@@ -103,9 +105,12 @@ def _validate_file(f_meta):
     fpath = f_meta['filepath']
     print("validating fpath:\n\t{}".format(fpath))
     ensure_locally_accessible()
+
     # TODO: make available on ipfs
     # hash, ipfs_host = ensure_ipfs_accessible(f_meta)
     hash, ipfs_host = (f_meta['filepath'], "NA")  # temporary disable
+
+    check_for_duplicates(f_meta)
     return {
         "last_ipfs_host": ipfs_host,
         "multihash": hash,

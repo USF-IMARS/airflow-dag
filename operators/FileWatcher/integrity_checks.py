@@ -4,6 +4,8 @@ import subprocess
 
 import imars_etl
 
+NITF_PRODUCT_IDS = [11, 24]  # TODO: add wv3 products
+
 
 def ensure_locally_accessible(file_meta):
     # ensure accessible at local
@@ -56,9 +58,9 @@ def check_for_duplicates(file_meta):
         LIMIT 2
         ORDER BY last_processed
     """.format(
-        pid=file_meta['?'],  # 30
-        dt=file_meta['?'],  # 2016-07-27T16:00:59.016650+00:00
-        aid=file_meta['?']  # 9
+        pid=file_meta['product_id'],  # 30
+        dt=file_meta['date_time'],  # 2016-07-27T16:00:59.016650+00:00
+        aid=file_meta['area_id']  # 9
     )
 
     result = imars_etl.select(
@@ -82,8 +84,10 @@ def check_for_duplicates(file_meta):
             print("duplicate entries are an exact match.")
             _handle_duplicate_entries(keepfile_path, delfile_path)
             return True
-        # TODO: only perform these checks on
-        elif _nitf_files_are_synonyms(keepfile_path, delfile_path):
+        elif (
+            _is_nitf_prod_id(file_meta['product_id']) and
+            _nitf_files_are_synonyms(keepfile_path, delfile_path)
+        ):
             print("duplicate entries are NITF-synonyms")
             _handle_duplicate_entries(keepfile_path, delfile_path)
             return True
@@ -94,6 +98,10 @@ def check_for_duplicates(file_meta):
             )
     else:
         raise AssertionError("query resturs >2 results?")
+
+
+def _is_nitf_prod_id(prod_id):
+    return prod_id in NITF_PRODUCT_IDS
 
 
 def _nitf_files_are_synonyms(filepath1, filepath2):
@@ -110,7 +118,10 @@ def _nitf_files_are_synonyms(filepath1, filepath2):
             * NITF_FTITLE
             * NITF_IID2
 
-    assumes two given filepaths are locally accessible
+    assumptions:
+    ------------
+    * the two given filepaths are locally accessible
+    * the two given files are NITF format
     """
     # TODO: stat files
     # TODO: gdalinfo files

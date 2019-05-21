@@ -1,4 +1,5 @@
 import os.path
+from os import stat
 import socket
 import subprocess
 
@@ -14,11 +15,11 @@ def ensure_locally_accessible(file_meta):
 
 def ensure_ipfs_accessible(file_meta):
     # ensure accessbile over IPFS
-    # TODO: adding it everytime is probably overkill
-    #       but it needs to be added, not just hashed.
     IPFS_PATH = "/usr/local/bin/ipfs"
     fpath = file_meta['filepath']
     old_hash = file_meta["multihash"]
+    # TODO: adding it everytime is probably overkill
+    #       but it needs to be added, not just hashed.
     new_hash = subprocess.check_output(
         # "ipfs add -Q --only-hash {localpath}".format(
         "ipfs add -Q --nocopy {localpath}".format(
@@ -123,10 +124,33 @@ def _nitf_files_are_synonyms(filepath1, filepath2):
     * the two given filepaths are locally accessible
     * the two given files are NITF format
     """
-    # TODO: stat files
-    # TODO: gdalinfo files
-    raise NotImplementedError("NYI")
+    # compare file sizes
+    FILE_SIZE_THRESHOLD = 1
+    if stat(filepath1).st_size - stat(filepath2).st_size > FILE_SIZE_THRESHOLD:
+        return False
 
+    # gdalinfo the files
+    info1 =
+    info2 = subprocess.check_output(
+        "gdalinfo {}".format(filepath2), shell=True
+    )
+
+    for i,s in enumerate(difflib.ndiff(
+        subprocess.check_output("gdalinfo {}".format(filepath1), shell=True),
+        subprocess.check_output("gdalinfo {}".format(filepath2), shell=True)
+    )):
+        if s[0]==' ':  # skip blank lines
+            continue
+        elif s[0] in ['-', '+']:
+            # if diff line is okay...
+            if any([s[1:].strip().startswith(d) for d in ACCEPTABLE_DIFFS]):
+                continue
+            else:
+                return False
+        else:
+            raise ValueError("undexpected diff line not starting w/ - or +")
+    else:
+        return True
 
 def _handle_duplicate_entries(keep_path, del_path):
     """

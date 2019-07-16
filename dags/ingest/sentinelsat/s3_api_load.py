@@ -89,6 +89,9 @@ meta_appended = getJSON('metadata_s3_appended.json')
 for each in meta_appended['features']:                                    
 	only_uuid = each['properties']['uuid']							  #add if statement that searches for incomplete and complete download in the status, 												  
 	api.download(only_uuid)
+	# TODO: 
+	# bash `mv "./*.zip" "/srv/imars-objects/ftp-ingest/."`
+	#    in python: os.move shutil.move
 	each['properties'].update({'status':'Complete'})	
 	with open('metadata_s3_appended.json','w') as outfile:
 		json.dump(meta_appended,outfile)

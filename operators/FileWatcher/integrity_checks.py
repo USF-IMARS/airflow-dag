@@ -2,6 +2,7 @@ import os.path
 from os import stat
 import socket
 import subprocess
+import difflib
 
 import imars_etl
 
@@ -105,6 +106,48 @@ def _is_nitf_prod_id(prod_id):
     return prod_id in NITF_PRODUCT_IDS
 
 
+def gdalinfo(filepath):
+    return subprocess.check_output("gdalinfo {}".format(filepath), shell=True)
+
+
+def same_filesize(filepath1, filepath2):
+    """ returns true if files are the same size """
+    FILE_SIZE_THRESHOLD = 1
+    if stat(filepath1).st_size - stat(filepath2).st_size > FILE_SIZE_THRESHOLD:
+        return False
+    else:
+        return True
+
+
+def synonymous_gdalinfo(filepath1, filepath2):
+    """ returns true if files have "synonymous" gdalinfo output """
+    ACCEPTABLE_DIFFS = [
+        'NITF_FDT', 'NITF_FTITLE', 'NITF_IID2'
+    ]
+    n = 0
+    for s in difflib.ndiff([gdalinfo(filepath1)], [gdalinfo(filepath2)]):
+        print("{} | {}".format(n, s))
+        n += 1
+        if s[0] == ' ':  # skip blank lines
+            continue
+        elif s[0] in ['-', '+']:
+            print(s)
+            # if diff line is okay...
+            if any([s[1:].strip().startswith(d) for d in ACCEPTABLE_DIFFS]):
+                continue
+            else:
+                print('ooops')
+                print(s[1:])
+                return False
+        # other acceptable lines in the diff:
+        elif any([s.startswith(d) for d in ['?']]):
+            continue
+        else:
+            raise ValueError("undexpected diff line not starting w/ - or +")
+    else:
+        return True
+
+
 def _nitf_files_are_synonyms(filepath1, filepath2):
     """
     returns true if the two files have "synonymous" content.
@@ -125,32 +168,15 @@ def _nitf_files_are_synonyms(filepath1, filepath2):
     * the two given files are NITF format
     """
     # compare file sizes
-    FILE_SIZE_THRESHOLD = 1
-    if stat(filepath1).st_size - stat(filepath2).st_size > FILE_SIZE_THRESHOLD:
+    if not same_filesize(filepath1, filepath2):
         return False
 
     # gdalinfo the files
-    info1 =
-    info2 = subprocess.check_output(
-        "gdalinfo {}".format(filepath2), shell=True
-    )
-
-    for i,s in enumerate(difflib.ndiff(
-        subprocess.check_output("gdalinfo {}".format(filepath1), shell=True),
-        subprocess.check_output("gdalinfo {}".format(filepath2), shell=True)
-    )):
-        if s[0]==' ':  # skip blank lines
-            continue
-        elif s[0] in ['-', '+']:
-            # if diff line is okay...
-            if any([s[1:].strip().startswith(d) for d in ACCEPTABLE_DIFFS]):
-                continue
-            else:
-                return False
-        else:
-            raise ValueError("undexpected diff line not starting w/ - or +")
-    else:
+    if synonymous_gdalinfo(filepath1, filepath2):
         return True
+    else:
+        return False
+
 
 def _handle_duplicate_entries(keep_path, del_path):
     """

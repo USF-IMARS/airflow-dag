@@ -13,7 +13,7 @@ import os
 
 # non-std python librarys
 from airflow import DAG
-from airflow.operators.bash_operator import BashOperator
+from airflow.operators.python_operator import PythonOperator
 
 # this package
 from imars_dags.util.get_dag_id import get_dag_id

@@ -12,7 +12,7 @@ import collections
 #import pandas as pd  # not needed as I haven't used Pandas for a dataframe
 import json
 
-api = SentinelAPI("sebastiandig", "Naruto1234.", "https://scihub.copernicus.eu/dhus") ##### should we use a general IMARS password and user? 
+api = SentinelAPI("user", "pass", "https://scihub.copernicus.eu/dhus") ##### should we use a general IMARS password and user? 
 data_dir = os.getcwd()                                                 # the only way I found to get all the parts of code to work in my directory
 
 # download single scene by known product id							   #used if downloading one image using the UUID

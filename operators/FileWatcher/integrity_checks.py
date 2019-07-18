@@ -72,6 +72,10 @@ def check_for_duplicates(file_meta):
         first=False,
     )
 
+    print("--- result " + "-"*50)
+    print(result)
+    print("-----------" + "-"*50)
+
     if len(result) < 1:
         raise AssertionError("query returns 0 results?")
     elif len(result) == 1:

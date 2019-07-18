@@ -17,10 +17,10 @@ External DAGs triggered should be triggered with `execution_date` set using
 metadata from the file. Because of this each file within a `product_id`
 and `area_id` must have a unique `date_time`.
 I.e.:
-```mysql
-SELECT COUNT(*) FROM file WHERE
-    date_time="2015-02-01 13:30:00" AND product_id=6;
-```
+
+    SELECT COUNT(*) FROM file WHERE
+        date_time="2015-02-01 13:30:00" AND product_id=6;
+
 should return only 1 result for any value of `date_time` and `product_id`.
 
 This should be enforced by the following constraint:
@@ -41,7 +41,6 @@ key:                                                  |====> (processing_dag_n)
 ---------
 (dag_name)
 ["status"]
-
 ```
 """
 from airflow import DAG

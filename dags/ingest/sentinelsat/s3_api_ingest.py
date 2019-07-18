@@ -86,7 +86,7 @@ this_dag.doc_md = __doc__  # sets web GUI to use docstring at top of file
 
 s3_api_query_metadata = PythonOperator(
     task_id='s3_api',
-    python_command="s3_api.py",
+    python_callable="s3_api.py",
     params={
         "region_name": AREA_SHORT_NAME,
         "area_id": AREA_ID,

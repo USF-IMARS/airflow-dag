@@ -188,10 +188,12 @@ def _handle_duplicate_entries(keep_path, del_path):
     """
     removes del_path entry from database and deletes the file at del_path.
     """
-    print("="*80 + "\n !!! DUPLICATE !!! \n" + "v"*80)
-    print("keeping:\n" + keep_path)
-    print(del_path + "\nis being deleted")
-    print("^"*80 + "\n LOL JK; DO IT MANUALLY YOU FAT DINK. \n" + "="*80)
+    print(
+        "\n" + "="*200 + "\n !!! DUPLICATE !!! \n" + "v"*200 +
+        "\nkeeping:\n" + keep_path + "\n...\n" +
+        del_path + "\nis being deleted...\n" +
+        "^"*200 + "\n LOL JK; DO IT MANUALLY YOU FAT DINK. \n" + "="*200
+    )
     # TODO: rm del_path entry in db
     # TODO: rm file @ del_path
     raise NotImplementedError("NYI")

@@ -1,4 +1,3 @@
-#!/bin/bash
 """
 This is a ingest DAG for Sentinel 3 OLI products.
 """

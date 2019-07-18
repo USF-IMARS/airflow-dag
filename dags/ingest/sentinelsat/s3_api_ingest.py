@@ -9,6 +9,7 @@ This is a ingest DAG for Sentinel 3 OLI products.
 # =====================================================================
 # python std librarys
 from datetime import datetime
+import os  
 
 # non-std python librarys
 from airflow import DAG
@@ -50,7 +51,9 @@ DAG_NAME = "s3_api_ingest"
 DAG_ID = get_dag_id(
     __file__, region=AREA_SHORT_NAME, dag_name=DAG_NAME
 )
+
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
+
 this_dag = DAG(
     dag_id=DAG_ID,
     # KEEP ONLY ONE SECTION BELOW:
@@ -87,19 +90,27 @@ s3_api_query_metadata = PythonOperator(
     params={
         "region_name": AREA_SHORT_NAME,
         "area_id": AREA_ID,
+        "florida_geojson" : os.path.join(
+            THIS_DIR,
+            "florida.geojson"
+        ),
+        "metadata_s3" : os.path.join(
+            THIS_DIR,
+            "metadata_s3.json"
+        )
     },
     dag=this_dag,
 )
-s3_api_download = PythonOperator(
-    task_id='s3_api_load',
-    python_command="s3_api_load.py",
-    params={
-        "region_name": AREA_SHORT_NAME,
-        "area_id": AREA_ID,
-    },
-    dag=this_dag,
-)
+#s3_api_download = PythonOperator(
+#    task_id='s3_api_load',
+#    python_command="s3_api_load.py",
+#    params={
+#        "region_name": AREA_SHORT_NAME,
+#        "area_id": AREA_ID,
+#    },
+#    dag=this_dag,
+#)
 
-s3_api_query_metadata >> s3_api_download
+#s3_api_query_metadata >> s3_api_download
 
 globals()[this_dag.dag_id] = this_dag

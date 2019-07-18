@@ -15,12 +15,20 @@ import json
 api = SentinelAPI("user", "pass", "https://scihub.copernicus.eu/dhus") ##### should we use a general IMARS password and user? 
 data_dir = os.getcwd()                                                 # the only way I found to get all the parts of code to work in my directory
 
+#TODO something to this affect, I looked at dags/processing/s3_chloro_a/l1_to_l2.sh, but not sure since that was a bash
+#and this is python
+imars-etl extract \
+     'fl_geojson = {{params.florida_geojson}} AND 'metadata' ={{params.metadata_s3}}
+
 # download single scene by known product id							   #used if downloading one image using the UUID
 #api.download(<product id>)
 #ex api.download('16e7b752-c1a7-4ea0-8107-756005d6c29a')
 
 # search by polygon, time, and SciHub query keywords				   #where the query starts, GEOJson focuses on florida
-footprint = geojson_to_wkt(read_geojson("florida.geojson"))
+
+footprint = geojson_to_wkt(read_geojson(fl_geojson))
+#footprint = geojson_to_wkt(read_geojson("florida.geojson"))
+
 products = collections.OrderedDict()
 products = api.query(footprint,
 					date=('20171010', date(2017, 10, 15)), 			   #two different ways to show date, once we get it going, change the first date to '20150101' and last to 'NOW', then update to be 'NOW-1 and 'NOW'
@@ -40,6 +48,6 @@ for item in json_stuff:
 	if 'id' in item:
 		del item['id']
 		
-with open('metadata_s3.json','w') as outfile:
+with open(metadata,'w') as outfile:
 	json.dump(json_stuff,outfile)
 

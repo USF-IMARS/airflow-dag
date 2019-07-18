@@ -1,8 +1,12 @@
 import os.path
+from os import stat
 import socket
 import subprocess
+import difflib
 
 import imars_etl
+
+NITF_PRODUCT_IDS = [11, 24]  # TODO: add wv3 products
 
 
 def ensure_locally_accessible(file_meta):
@@ -12,11 +16,11 @@ def ensure_locally_accessible(file_meta):
 
 def ensure_ipfs_accessible(file_meta):
     # ensure accessbile over IPFS
-    # TODO: adding it everytime is probably overkill
-    #       but it needs to be added, not just hashed.
     IPFS_PATH = "/usr/local/bin/ipfs"
     fpath = file_meta['filepath']
     old_hash = file_meta["multihash"]
+    # TODO: adding it everytime is probably overkill
+    #       but it needs to be added, not just hashed.
     new_hash = subprocess.check_output(
         # "ipfs add -Q --only-hash {localpath}".format(
         "ipfs add -Q --nocopy {localpath}".format(
@@ -56,9 +60,9 @@ def check_for_duplicates(file_meta):
         LIMIT 2
         ORDER BY last_processed
     """.format(
-        pid=file_meta['?'],  # 30
-        dt=file_meta['?'],  # 2016-07-27T16:00:59.016650+00:00
-        aid=file_meta['?']  # 9
+        pid=file_meta['product_id'],  # 30
+        dt=file_meta['date_time'],  # 2016-07-27T16:00:59.016650+00:00
+        aid=file_meta['area_id']  # 9
     )
 
     result = imars_etl.select(
@@ -82,8 +86,10 @@ def check_for_duplicates(file_meta):
             print("duplicate entries are an exact match.")
             _handle_duplicate_entries(keepfile_path, delfile_path)
             return True
-        # TODO: only perform these checks on
-        elif _nitf_files_are_synonyms(keepfile_path, delfile_path):
+        elif (
+            _is_nitf_prod_id(file_meta['product_id']) and
+            _nitf_files_are_synonyms(keepfile_path, delfile_path)
+        ):
             print("duplicate entries are NITF-synonyms")
             _handle_duplicate_entries(keepfile_path, delfile_path)
             return True
@@ -94,6 +100,52 @@ def check_for_duplicates(file_meta):
             )
     else:
         raise AssertionError("query resturs >2 results?")
+
+
+def _is_nitf_prod_id(prod_id):
+    return prod_id in NITF_PRODUCT_IDS
+
+
+def gdalinfo(filepath):
+    return subprocess.check_output("gdalinfo {}".format(filepath), shell=True)
+
+
+def same_filesize(filepath1, filepath2):
+    """ returns true if files are the same size """
+    FILE_SIZE_THRESHOLD = 1
+    if stat(filepath1).st_size - stat(filepath2).st_size > FILE_SIZE_THRESHOLD:
+        return False
+    else:
+        return True
+
+
+def synonymous_gdalinfo(filepath1, filepath2):
+    """ returns true if files have "synonymous" gdalinfo output """
+    ACCEPTABLE_DIFFS = [
+        'NITF_FDT', 'NITF_FTITLE', 'NITF_IID2'
+    ]
+    n = 0
+    for s in difflib.ndiff([gdalinfo(filepath1)], [gdalinfo(filepath2)]):
+        print("{} | {}".format(n, s))
+        n += 1
+        if s[0] == ' ':  # skip blank lines
+            continue
+        elif s[0] in ['-', '+']:
+            print(s)
+            # if diff line is okay...
+            if any([s[1:].strip().startswith(d) for d in ACCEPTABLE_DIFFS]):
+                continue
+            else:
+                print('ooops')
+                print(s[1:])
+                return False
+        # other acceptable lines in the diff:
+        elif any([s.startswith(d) for d in ['?']]):
+            continue
+        else:
+            raise ValueError("undexpected diff line not starting w/ - or +")
+    else:
+        return True
 
 
 def _nitf_files_are_synonyms(filepath1, filepath2):
@@ -110,17 +162,30 @@ def _nitf_files_are_synonyms(filepath1, filepath2):
             * NITF_FTITLE
             * NITF_IID2
 
-    assumes two given filepaths are locally accessible
+    assumptions:
+    ------------
+    * the two given filepaths are locally accessible
+    * the two given files are NITF format
     """
-    # TODO: stat files
-    # TODO: gdalinfo files
-    raise NotImplementedError("NYI")
+    # compare file sizes
+    if not same_filesize(filepath1, filepath2):
+        return False
+
+    # gdalinfo the files
+    if synonymous_gdalinfo(filepath1, filepath2):
+        return True
+    else:
+        return False
 
 
 def _handle_duplicate_entries(keep_path, del_path):
     """
     removes del_path entry from database and deletes the file at del_path.
     """
-    # TODO: rm del_path entry
+    print("="*80 + "\n !!! DUPLICATE !!! \n" + "v"*80)
+    print("keeping:\n" + keep_path)
+    print(del_path + "\nis being deleted")
+    print("^"*80 + "\n LOL JK; DO IT MANUALLY YOU FAT DINK. \n" + "="*80)
+    # TODO: rm del_path entry in db
     # TODO: rm file @ del_path
     raise NotImplementedError("NYI")

@@ -99,10 +99,11 @@ def check_for_duplicates(file_meta):
             _handle_duplicate_entries(keepfile_path, delfile_path)
             return True
         else:
-            raise ValueError(
+            print(
                 "duplicate entries are not identical or synonymous" +
                 "\n\t{}\n\t{}".format(keepfile_meta, delfile_meta)
             )
+            return False
     else:
         raise AssertionError("query returns >2 results?")
 

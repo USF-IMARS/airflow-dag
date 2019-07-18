@@ -136,7 +136,7 @@ def _trigger_dags(
         post_where_str
     ))
     result = imars_etl.select(
-        cols="id,area_id,date_time,filepath,multihash",
+        cols="id,area_id,date_time,filepath,multihash,product_id",
         sql=sql_selection,
         post_where=post_where_str,
         first=True,
@@ -147,6 +147,7 @@ def _trigger_dags(
         date_time=result[2],
         filepath=result[3],
         multihash=result[4],
+        product_id=result[5],
     )
     # print("\n\tmeta:\n\t{}\n".format(file_metadata))
     # logging.info("\n\n\tmeta:\n\t{}".format(file_metadata))

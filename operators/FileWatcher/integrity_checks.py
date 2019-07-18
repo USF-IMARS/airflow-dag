@@ -54,6 +54,7 @@ def check_for_duplicates(file_meta):
     # use the query from the airflow extract
     #   and compare the (two) results?
     sql_selection = """
+        WHERE
         product_id={pid} AND
             date_time='{dt}' AND
             area_id={aid}

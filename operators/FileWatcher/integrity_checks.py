@@ -97,10 +97,10 @@ def check_for_duplicates(file_meta):
         else:
             raise ValueError(
                 "duplicate entries are not identical or synonymous" +
-                "\n\t{}\n\t{}".format()
+                "\n\t{}\n\t{}".format(keepfile_meta, delfile_meta)
             )
     else:
-        raise AssertionError("query resturs >2 results?")
+        raise AssertionError("query returns >2 results?")
 
 
 def _is_nitf_prod_id(prod_id):

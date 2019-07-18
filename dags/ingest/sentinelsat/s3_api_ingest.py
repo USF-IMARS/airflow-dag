@@ -50,7 +50,7 @@ DAG_NAME = "s3_api_ingest"
 DAG_ID = get_dag_id(
     __file__, region=AREA_SHORT_NAME, dag_name=DAG_NAME
 )
-    THIS_DIR = os.path.dirname(os.path.realpath(__file__))
+THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 this_dag = DAG(
     dag_id=DAG_ID,
     # KEEP ONLY ONE SECTION BELOW:

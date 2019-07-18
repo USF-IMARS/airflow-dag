@@ -14,11 +14,11 @@ from airflow.exceptions import AirflowSkipException
 import imars_etl
 
 from imars_dags.util.globals import QUEUE
-from imars_dags.operators.FileWather.integrity_checks \
+from imars_dags.operators.FileWatcher.integrity_checks \
     import ensure_ipfs_accessible
-from imars_dags.operators.FileWather.integrity_checks \
+from imars_dags.operators.FileWatcher.integrity_checks \
     import ensure_locally_accessible
-from imars_dags.operators.FileWather.integrity_checks \
+from imars_dags.operators.FileWatcher.integrity_checks \
     import check_for_duplicates
 
 DAWN_OF_TIME = datetime(2018, 5, 5, 5, 5)  # any date in past is fine

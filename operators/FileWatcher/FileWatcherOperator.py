@@ -104,7 +104,7 @@ def _validate_file(f_meta):
     """performs validation on file row before triggering"""
     fpath = f_meta['filepath']
     print("validating fpath:\n\t{}".format(fpath))
-    ensure_locally_accessible()
+    ensure_locally_accessible(f_meta)
 
     # TODO: make available on ipfs
     # hash, ipfs_host = ensure_ipfs_accessible(f_meta)

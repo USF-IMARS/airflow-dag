@@ -58,8 +58,8 @@ def check_for_duplicates(file_meta):
         product_id={pid} AND
             date_time='{dt}' AND
             area_id={aid}
-        LIMIT 2
         ORDER BY last_processed
+        LIMIT 2
     """.format(
         pid=file_meta['product_id'],  # 30
         dt=file_meta['date_time'],  # 2016-07-27T16:00:59.016650+00:00

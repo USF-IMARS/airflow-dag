@@ -3,6 +3,7 @@ Sets up a watch for a product file type in the metadata db.
 """
 from datetime import datetime
 from datetime import timezone
+from os import stat
 
 from airflow import settings
 from airflow.models import DagBag
@@ -110,11 +111,31 @@ def _validate_file(f_meta):
     # hash, ipfs_host = ensure_ipfs_accessible(f_meta)
     hash, ipfs_host = (f_meta['filepath'], "NA")  # temporary disable
 
+    check_filesize(f_meta)
+
     check_for_duplicates(f_meta)
     return {
         "last_ipfs_host": ipfs_host,
         "multihash": hash,
     }
+
+
+def check_filesize(f_meta):
+    """ verify filesize matches size in DB """
+    try:
+        db_size = f_meta['n_bytes']
+        f_size = stat(f_meta['filepath']).st_size
+        if db_size != f_size:
+            raise ValueError(
+                "file size in database does not match actual "
+                " '{}'!='{}' ".format(db_size, f_size)
+            )
+            # TODO: do something about this.
+        else:
+            print("File size verified.")
+            return
+    except TypeError:
+        print("Invalid file size from DB '{}'; skipping filesize check.")
 
 
 def _trigger_dags(
@@ -136,7 +157,7 @@ def _trigger_dags(
         post_where_str
     ))
     result = imars_etl.select(
-        cols="id,area_id,date_time,filepath,multihash,product_id",
+        cols="id,area_id,date_time,filepath,multihash,product_id,n_bytes",
         sql=sql_selection,
         post_where=post_where_str,
         first=True,
@@ -148,6 +169,7 @@ def _trigger_dags(
         filepath=result[3],
         multihash=result[4],
         product_id=result[5],
+        n_bytes=result[6],
     )
     # print("\n\tmeta:\n\t{}\n".format(file_metadata))
     # logging.info("\n\n\tmeta:\n\t{}".format(file_metadata))

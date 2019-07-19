@@ -13,7 +13,7 @@ import os
 
 # non-std python librarys
 from airflow import DAG
-from airflow.operators.python_operator import PythonOperator
+from airflow.operators.bash_operator import BashOperator
 
 # this package
 from imars_dags.util.get_dag_id import get_dag_id
@@ -84,9 +84,9 @@ this_dag.doc_md = __doc__  # sets web GUI to use docstring at top of file
 # the variable name for the operator (run_the_script) should match
 # the "task_id".
 
-s3_api_query_metadata = PythonOperator(
+s3_api_query_metadata = BashOperator(
     task_id='s3_api',
-    python_callable="s3_api.py",
+    bash_command="s3_api_shell.sh",
     params={
         "region_name": AREA_SHORT_NAME,
         "area_id": AREA_ID,

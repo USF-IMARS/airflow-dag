@@ -3,7 +3,7 @@
 echo '== Extact..'
 florida_map_json=$( \
     imars-etl extract \
-    'florida_geojson={{params.florida_goejson}}'
+    'florida_geojson={{params.florida_geojson}}'
 )
 s3_metadata_json = $( \
     imars-etl extract \

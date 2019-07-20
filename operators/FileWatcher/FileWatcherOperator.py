@@ -145,7 +145,7 @@ def check_filesize(f_meta):
         else:
             print("File size verified.")
             return
-    except TypeError, ValueError:
+    except (TypeError, ValueError):
         print(
             (
                 "Invalid file size. DB:'{}', F:'{}';"

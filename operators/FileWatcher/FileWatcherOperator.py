@@ -122,10 +122,20 @@ def _validate_file(f_meta):
 
 def check_filesize(f_meta):
     """ verify filesize matches size in DB """
+    NONE_VALUES = [None, 'None', "NA", ""]
     try:
         db_size = f_meta['n_bytes']
         f_size = stat(f_meta['filepath']).st_size
-        if db_size != f_size:
+        if db_size in NONE_VALUES or f_size in NONE_VALUES:
+            print(
+                (
+                    "Invalid file size. DB:'{}', F:'{}';"
+                    " skipping filesize check."
+                ).format(
+                    db_size, f_size
+                )
+            )
+        elif db_size != f_size:
             raise ValueError(
                 "file size in database does not match actual "
                 " '{}'!='{}' ".format(db_size, f_size)
@@ -135,7 +145,14 @@ def check_filesize(f_meta):
             print("File size verified.")
             return
     except TypeError:
-        print("Invalid file size from DB '{}'; skipping filesize check.")
+        print(
+            (
+                "Invalid file size. DB:'{}', F:'{}';"
+                " skipping filesize check."
+            ).format(
+                db_size, f_size
+            )
+        )
 
 
 def _trigger_dags(

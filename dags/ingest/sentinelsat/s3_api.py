@@ -7,7 +7,7 @@
 
 from sentinelsat import SentinelAPI, read_geojson, geojson_to_wkt
 from datetime import date
-#import os
+import os
 import collections
 #import pandas as pd  # not needed as I haven't used Pandas for a dataframe
 import json

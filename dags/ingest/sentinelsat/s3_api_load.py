@@ -78,6 +78,14 @@ getJSON_write('metadata_s3_appended.json',new_meta)
 meta_appended = getJSON_read('metadata_s3_appended.json')
 for each in meta_appended:
 	only_uuid = each['properties']['uuid']
+	# try:
+	# 	imars_etl.select('WHERE uuid="{}"'.format(
+	# 		only_uuid
+	# 	))
+	# 	file_exists = True
+	# except imars_etl.exceptions.NoMetadataMatchException.NoMetadataMatchException:
+	# 	file_exists = False
+	# if not file_exists:
 	if each['properties']['status']== 'Incomplete':
 		#download_metadata = api.download(only_uuid)			#will need to be uncommented once have user and pass inserted
 			# TODO:

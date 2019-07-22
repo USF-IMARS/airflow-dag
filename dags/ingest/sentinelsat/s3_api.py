@@ -19,7 +19,7 @@ def main(args):
     print(args.metadata_s3_fpath)
     print(args.roi_geojson_fpath)
 
-    authorize = /home/airflow/dags/imars_dags/dags/ingest/sentinelsat/s3_authorization.netrc
+    authorize = /home/airflow/.scihub_netrc
     api = SentinelAPI(authorize, authorize, "https://scihub.copernicus.eu/dhus") ##### should we use a general IMARS password and user?
 #    data_dir = os.getcwd()                                                 # the only way I found to get all the parts of code to work in my directory
 

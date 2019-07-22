@@ -19,7 +19,7 @@ def main(args):
     print(args.metadata_s3_fpath)
     print(args.roi_geojson_fpath)
 
-    api = SentinelAPI("user", "pass", "https://scihub.copernicus.eu/dhus") ##### should we use a general IMARS password and user?
+    api = SentinelAPI(None, None, "https://scihub.copernicus.eu/dhus") ##### should we use a general IMARS password and user?
     data_dir = os.getcwd()                                                 # the only way I found to get all the parts of code to work in my directory
 
     #TODO something to this affect, I looked at dags/processing/s3_chloro_a/l1_to_l2.sh, but not sure since that was a bash

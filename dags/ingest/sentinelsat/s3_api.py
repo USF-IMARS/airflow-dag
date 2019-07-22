@@ -1,7 +1,7 @@
 #!/bin/env python
 # connect to the API
 # https://buildmedia.readthedocs.org/media/pdf/sentinelsat/master/sentinelsat.pdf for help
-#getting it work on mobaxterm: source venv/bin/activate
+#can run locally on mobaxterm: source venv/bin/activate
 #if first time start with: export SLUGIFY_USES_TEXT_UNIDECODE=yes; virtualenv venv; source venv/bin/activate; pip install -e .[test]; py.test -v
 #might have to add: pip install requests-mock; pip install rstcheck; pip install geojson
 
@@ -9,7 +9,6 @@ from sentinelsat import SentinelAPI, read_geojson, geojson_to_wkt
 from datetime import date
 import os
 import collections
-#import pandas as pd  # not needed as I haven't used Pandas for a dataframe
 import json
 from argparse import ArgumentParser
 
@@ -20,8 +19,8 @@ def main(args):
     print(args.roi_geojson_fpath)
 
     authorize = /home/airflow/.scihub_netrc
-    api = SentinelAPI(authorize, authorize, "https://scihub.copernicus.eu/dhus") ##### should we use a general IMARS password and user?
-#    data_dir = os.getcwd()                                                 # the only way I found to get all the parts of code to work in my directory
+    api = SentinelAPI(None, None, "https://scihub.copernicus.eu/dhus") ##### should we use a general IMARS password and user?
+    data_dir = os.getcwd()                                                 # the only way I found to get all the parts of code to work in my directory
 
     #TODO something to this affect, I looked at dags/processing/s3_chloro_a/l1_to_l2.sh, but not sure since that was a bash
     #and this is python

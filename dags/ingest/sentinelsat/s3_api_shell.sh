@@ -15,6 +15,6 @@ s3_api = $( \
     's3-api={{params.s3_api_python}}'
 )
 
-./s3_api florida_map_json s3_metadata_json
+python s3_api florida_map_json s3_metadata_json
 
 s3_api.py --help

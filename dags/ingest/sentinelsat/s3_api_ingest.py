@@ -98,6 +98,10 @@ s3_api_query_metadata = BashOperator(
             THIS_DIR,
             "metadata_s3.json"
         )
+        "s3_api_python" : os.path.join(
+            THIS_DIR,
+            "s3_api.py"
+        )
     },
     dag=this_dag,
 )

@@ -3,7 +3,6 @@ Sets up a watch for a product file type in the metadata db.
 """
 from datetime import datetime
 from datetime import timezone
-from os import stat
 
 from airflow import settings
 from airflow.models import DagBag
@@ -21,6 +20,8 @@ from imars_dags.operators.FileWatcher.check_locally_accessible \
     import check_locally_accessible
 from imars_dags.operators.FileWatcher.check_for_duplicates \
     import check_for_duplicates
+from imars_dags.operators.FileWatcher.check_filesize_match \
+    import check_filesize_match
 
 DAWN_OF_TIME = datetime(2018, 5, 5, 5, 5)  # any date in past is fine
 
@@ -90,7 +91,7 @@ def update_metadata_db(file_metadata, validation_meta):
         'last_ipfs_host="{}",multihash="{}" '
         'WHERE id={}'
     ).format(
-        1, dt_now,
+        validation_meta['status_id'], dt_now,
         validation_meta['last_ipfs_host'], validation_meta['multihash'],
         file_metadata['id'],
         # expected date format: 2018-12-19 23:34:08.256244
@@ -111,49 +112,14 @@ def _validate_file(f_meta):
     # hash, ipfs_host = check_ipfs_accessible(f_meta)
     hash, ipfs_host = (f_meta['filepath'], "NA")  # temporary disable
 
-    check_filesize(f_meta)
+    check_filesize_match(f_meta)
 
     check_for_duplicates(f_meta)
     return {
         "last_ipfs_host": ipfs_host,
         "multihash": hash,
+        "status_id": 1,
     }
-
-
-def check_filesize(f_meta):
-    """ verify filesize matches size in DB """
-    NONE_VALUES = [None, 'None', "NA", ""]
-    try:
-        db_size = f_meta['n_bytes']
-        f_size = stat(f_meta['filepath']).st_size
-        DIFF_THRESHOLD = 0.05 * int(db_size)  # assume +/- 5%
-        if db_size in NONE_VALUES or f_size in NONE_VALUES:
-            print(
-                (
-                    "Invalid file size. DB:'{}', F:'{}';"
-                    " skipping filesize check."
-                ).format(
-                    db_size, f_size
-                )
-            )
-        elif abs(int(db_size) - int(f_size)) > DIFF_THRESHOLD:
-            raise RuntimeError(
-                "file size in database does not match actual "
-                " '{}'!='{}' ".format(db_size, f_size)
-            )
-            # TODO: do something about this.
-        else:
-            print("File size verified.")
-            return
-    except (TypeError, ValueError):
-        print(
-            (
-                "Invalid file size. DB:'{}', F:'{}';"
-                " skipping filesize check."
-            ).format(
-                db_size, f_size
-            )
-        )
 
 
 def _trigger_dags(

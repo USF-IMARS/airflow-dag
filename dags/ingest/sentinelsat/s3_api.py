@@ -80,7 +80,7 @@ def main(args):
     #makes sure the metadata and appended metadata have data within the files before combining them
     new_meta=[]
     if os.stat(args.metadata_s3_fpath).st_size == 0:
-	    if os.stat(args.s3_meta_append_fpath).st_size == 0:
+	if os.stat(args.s3_meta_append_fpath).st_size == 0:
             exit()
         else:
             old_meta = getJSON_read(args.s3_meta_append_fpath)

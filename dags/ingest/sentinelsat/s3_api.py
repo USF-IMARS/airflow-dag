@@ -13,10 +13,31 @@ import json
 from argparse import ArgumentParser
 
 
+def getJSON_read(filePathandName):
+	with open(filePathandName,'r') as infile:
+		return json.load(infile)
+
+def getJSON_write(filePathandName,variables):
+	with open(filePathandName,'w') as outfile:
+		return json.dump(variables,outfile)
+
+#not currently being used, but would block duplicates from being downloaded
+#ef remove_dupes(mymetalist):
+#    newlist = []
+#    for item in mymetalist:
+#        data_exist = False
+#        for ud in newlist:
+#            if ud['properties'] == item['properties']:
+#                data_exists = True
+#                break
+#            else:
+#                newlist.append(item)
+
 def main(args):
     # stuff here
     print(args.metadata_s3_fpath)
     print(args.roi_geojson_fpath)
+    print(args.s3_meta_append_fpath)
 
     api = SentinelAPI(None, None, "https://scihub.copernicus.eu/dhus") ##### should we use a general IMARS password and user?
     data_dir = os.getcwd()                                                 # the only way I found to get all the parts of code to work in my directory
@@ -40,7 +61,6 @@ def main(args):
                         #area_relation({'Intersects','Contains','IsWithin'}) might need to add, default intersect    #propbably wont need
                         platformname='Sentinel-3',
                         producttype='OL_1_EFR___',
-                        #productlevel= 'L1'
                                     )
                                                                            #their are other variable we can add, say if we also want S2 images or another product from S3
 
@@ -56,10 +76,57 @@ def main(args):
 
     with open(args.metadata_s3_fpath,'w') as outfile:
         json.dump(json_stuff,outfile)
-
+        
+    #makes sure the metadata and appended metadata have data within the files before combining them
+    new_meta=[]
+    if os.stat(args.metadata_s3_fpath).st_size == 0:
+	    if os.stat(args.s3_meta_append_fpath).st_size == 0:
+            exit()
+        else:
+            old_meta = getJSON_read(args.s3_meta_append_fpath)
+            new_meta.extend(old_meta)
+    else:
+        metadata = getJSON_read(args.metadata_s3_fpath)
+        if os.stat(args.s3_meta_append_fpath).st_size == 0:
+            new_meta.extend(metadata)
+        else:
+            old_meta = getJSON_read(args.s3_meta_append_fpath)
+            new_meta.extend(old_meta)
+            new_meta.extend(metadata)
+            
+    #pulls UUID from the JSON file, checks status as incomplete or complete, then donwloads, updates the status to complete or pass if complete
+    meta_appended = getJSON_read('metadata_s3_appended.json')
+    for each in meta_appended:
+	    only_uuid = each['properties']['uuid']
+	    # try:
+	    # 	imars_etl.select('WHERE uuid="{}"'.format(
+	    # 		only_uuid
+	    # 	))
+	    # 	file_exists = True
+	    # except imars_etl.exceptions.NoMetadataMatchException.NoMetadataMatchException:
+	    # 	file_exists = False
+	    # if not file_exists:
+	    if each['properties']['status']== 'Incomplete':
+            #download_metadata = api.download(only_uuid)			#will need to be uncommented once have user and pass inserted
+                # TODO:
+            # import imars_etl
+            # imars_etl.load(
+            # 	download_metadata['path'],
+            #	sql="uuid='{}' AND date_time='{}'".format(
+            # 		only_uuid
+            # 	)
+            # )
+        # bash `mv "./*.zip" "/srv/imars-objects/ftp-ingest/."`
+        #    in python: os.move shutil.move
+            each['properties'].update({'status':'Complete'})
+            with open('metadata_s3_appended.json','w') as outfile:
+                json.dump(meta_appended,outfile)
+        else:
+            pass
 
 if __name__ == "__main__":
     parser = ArgumentParser(description='short desc of script goes here')
     parser.add_argument("metadata_s3_fpath", help="pass in the metadata_s3_fpath")
     parser.add_argument("roi_geojson_fpath", help="florida geojson fpath")
+    parser.add_argument("s3_meta_append_fpath", help="pass in appended meta_s3_fpath")
     main(parser.parse_args())

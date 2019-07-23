@@ -94,10 +94,7 @@ s3_api_query_metadata = BashOperator(
             THIS_DIR,
             "florida.geojson"
         ),
-        "metadata_s3": os.path.join(
-            THIS_DIR,
-            "metadata_s3.json"
-        ),
+        "metadata_s3": "/srv/imars-objects/florida/metadata_s3.json",
         "s3_api_python": os.path.join(
             THIS_DIR,
             "s3_api.py"

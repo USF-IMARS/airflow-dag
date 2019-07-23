@@ -56,19 +56,15 @@ THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 
 this_dag = DAG(
     dag_id=DAG_ID,
-    # KEEP ONLY ONE SECTION BELOW:
-    # === 1) for granule-datematched coverage checks
     default_args=get_default_args(
         # this start date should be the first granule to ingest
         start_date=datetime(2016, 2, 16, 1, 00, 00)
     ),
-    schedule_interval=None,  # the frequency of granules
-    catchup=True,  # latest only
-    # ===
     # === 2) for latest-only coverage checks:
+    schedule_interval=None,  # the frequency of granules
     #schedule_interval=timedelta(minutes=5),  # how often to check       #TODO once have all images up to today's date, make the check once a day or week
-    #catchup=False,  # latest only
-    #max_active_runs=1,
+    catchup=False,  # latest only
+    max_active_runs=1,
     # ===
 )
 this_dag.doc_md = __doc__  # sets web GUI to use docstring at top of file

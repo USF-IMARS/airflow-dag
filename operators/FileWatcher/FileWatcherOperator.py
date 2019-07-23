@@ -24,11 +24,11 @@ from imars_dags.operators.FileWatcher.check_filesize_match \
     import check_filesize_match
 
 DAWN_OF_TIME = datetime(2018, 5, 5, 5, 5)  # any date in past is fine
+VALID_STATUS_IDS = [1, 2, 3]  # += NULL
 
 
 def get_sql_selection(product_ids):
     # 1=std, 2=external, 3=to_load
-    VALID_STATUS_IDS = [1, 2, 3]  # += NULL
     return (
         "(status_id IN ({}) OR status_id IS NULL) AND product_id IN ({})"
     ).format(
@@ -105,20 +105,31 @@ def update_metadata_db(file_metadata, validation_meta):
 def _validate_file(f_meta):
     """performs validation on file row before triggering"""
     fpath = f_meta['filepath']
+    new_status = int(f_meta.get("status_id", 1))
     print("validating fpath:\n\t{}".format(fpath))
-    check_locally_accessible(f_meta)
+    try:
+        check_locally_accessible(f_meta)
+    except AssertionError:
+        new_status = 8  # status_id.lost
 
     # TODO: make available on ipfs
     # hash, ipfs_host = check_ipfs_accessible(f_meta)
     hash, ipfs_host = (f_meta['filepath'], "NA")  # temporary disable
 
-    check_filesize_match(f_meta)
+    try:
+        check_filesize_match(f_meta)
+    except RuntimeError:
+        new_status = 6  # status_id.wrong_size
 
-    check_for_duplicates(f_meta)
+    try:
+        check_for_duplicates(f_meta)
+    except NotImplementedError:
+        new_status = 7  # status_id.duplicate
+
     return {
         "last_ipfs_host": ipfs_host,
         "multihash": hash,
-        "status_id": 1,
+        "status_id": new_status,
     }
 
 
@@ -170,6 +181,11 @@ def _trigger_dags(
             "File area '{}' not included in DAG AREAS list. "
             "Skipping DAG triggers."
         ).format(file_metadata['area_name']))
+    elif validation_meta not in VALID_STATUS_IDS:
+        print(
+            "Non-normal status id; file failed an integrity check. "
+            "Skipping DAG triggers."
+        )
     else:
         # trigger the dags
         roi_name = file_metadata['area_name']

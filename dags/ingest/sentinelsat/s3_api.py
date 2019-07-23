@@ -95,7 +95,7 @@ def main(args):
             new_meta.extend(metadata)
 
     getJSON_write(args.s3_meta_append_fpath,new_meta)
-    
+
     #pulls UUID from the JSON file, checks status as incomplete or complete, then donwloads, updates the status to complete or pass if complete
     meta_appended = getJSON_read(args.s3_meta_append_fpath)
     for each in meta_appended:

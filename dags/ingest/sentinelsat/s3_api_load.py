@@ -34,8 +34,6 @@ def remove_dupes(mymetalist):
             else:
                 newlist.append(item)
 
-
-
 #starts new list, checks if each JSON file has data, then adds old data and new data, then overwrites previous JSON file
 new_meta=[]
 if os.stat('metadata_s3.json').st_size == 0:

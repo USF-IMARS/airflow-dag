@@ -14,12 +14,12 @@ from argparse import ArgumentParser
 
 
 def getJSON_read(filePathandName):
-	with open(filePathandName,'r') as infile:
-		return json.load(infile)
+    with open(filePathandName,'r') as infile:
+        return json.load(infile)
 
 def getJSON_write(filePathandName,variables):
-	with open(filePathandName,'w') as outfile:
-		return json.dump(variables,outfile)
+    with open(filePathandName,'w') as outfile:
+        return json.dump(variables,outfile)
 
 #not currently being used, but would block duplicates from being downloaded
 #ef remove_dupes(mymetalist):
@@ -76,11 +76,11 @@ def main(args):
 
     with open(args.metadata_s3_fpath,'w') as outfile:
         json.dump(json_stuff,outfile)
-        
+
     #makes sure the metadata and appended metadata have data within the files before combining them
     new_meta=[]
     if os.stat(args.metadata_s3_fpath).st_size == 0:
-	if os.stat(args.s3_meta_append_fpath).st_size == 0:
+        if os.stat(args.s3_meta_append_fpath).st_size == 0:
             exit()
         else:
             old_meta = getJSON_read(args.s3_meta_append_fpath)
@@ -93,31 +93,31 @@ def main(args):
             old_meta = getJSON_read(args.s3_meta_append_fpath)
             new_meta.extend(old_meta)
             new_meta.extend(metadata)
-            
+
     #pulls UUID from the JSON file, checks status as incomplete or complete, then donwloads, updates the status to complete or pass if complete
     meta_appended = getJSON_read(args.s3_meta_append_fpath)
     for each in meta_appended:
-	    only_uuid = each['properties']['uuid']
-	    # try:
-	    # 	imars_etl.select('WHERE uuid="{}"'.format(
-	    # 		only_uuid
-	    # 	))
-	    # 	file_exists = True
-	    # except imars_etl.exceptions.NoMetadataMatchException.NoMetadataMatchException:
-	    # 	file_exists = False
-	    # if not file_exists:
-	    if each['properties']['status']== 'Incomplete':
-            #download_metadata = api.download(only_uuid)			#will need to be uncommented once have user and pass inserted
+        only_uuid = each['properties']['uuid']
+        # try:
+        #     imars_etl.select('WHERE uuid="{}"'.format(
+        #         only_uuid
+        #     ))
+        #     file_exists = True
+        # except imars_etl.exceptions.NoMetadataMatchException.NoMetadataMatchException:
+        #     file_exists = False
+        # if not file_exists:
+        if each['properties']['status']== 'Incomplete':
+            #download_metadata = api.download(only_uuid)            #will need to be uncommented once have user and pass inserted
                 # TODO:
             # import imars_etl
             # imars_etl.load(
-            # 	download_metadata['path'],
-            #	sql="uuid='{}' AND date_time='{}'".format(
-            # 		only_uuid
-            # 	)
+            #     download_metadata['path'],
+            #    sql="uuid='{}' AND date_time='{}'".format(
+            #         only_uuid
+            #     )
             # )
-        # bash `mv "./*.zip" "/srv/imars-objects/ftp-ingest/."`
-        #    in python: os.move shutil.move
+            # bash `mv "./*.zip" "/srv/imars-objects/ftp-ingest/."`
+            #    in python: os.move shutil.move
             each['properties'].update({'status':'Complete'})
             with open(args.s3_meta_append_fpath,'w') as outfile:
                 json.dump(meta_appended,outfile)

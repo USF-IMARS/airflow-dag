@@ -2,7 +2,7 @@
 from unittest import TestCase
 from unittest.mock import patch
 
-from imars_dags.operators.FileWatcher.integrity_checks \
+from imars_dags.operators.FileWatcher.check_for_duplicates \
     import synonymous_gdalinfo
 
 

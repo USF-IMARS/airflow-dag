@@ -95,6 +95,7 @@ s3_api_query_metadata = BashOperator(
             THIS_DIR,
             "s3_api.py"
         ),
+        "metadata_s3_appended": "/srv/imars-objects/florida/metadata_s3_appended.json"
     },
     dag=this_dag,
 )

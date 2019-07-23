@@ -40,6 +40,8 @@ def check_for_duplicates(file_meta):
         sql=sql_selection,
         first=False,
     )
+    fpath_i = 0
+    mhash_i = 1
 
     print("--- result " + "-"*50)
     print(result)
@@ -52,10 +54,25 @@ def check_for_duplicates(file_meta):
         return False
     elif len(result) == 2:
         keepfile_meta, delfile_meta = result
-        fpath_i = 0
         keepfile_path = keepfile_meta[fpath_i]
         delfile_path = delfile_meta[fpath_i]
-        mhash_i = 1
+
+        if file_meta['filepath'] == delfile_path:
+            pass
+        elif file_meta['filepath'] == keepfile_path:
+            # swap this file is always delfile
+            delfile_meta, keepfile_meta = result
+            keepfile_path = keepfile_meta[fpath_i]
+            delfile_path = delfile_meta[fpath_i]
+        else:
+            raise AssertionError(
+                "This fpath should be in result!\n" +
+                "!!! fpath '{}' not in ['{}', '{}']".format(
+                    file_meta['filepath'],
+                    keepfile_path, delfile_path
+                )
+            )
+
         if (keepfile_meta[mhash_i] == delfile_meta[mhash_i]):
             print("duplicate entries are an exact match.")
             _handle_duplicate_entries(keepfile_path, delfile_path)

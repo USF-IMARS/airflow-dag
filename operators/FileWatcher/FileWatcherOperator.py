@@ -109,7 +109,8 @@ def _validate_file(f_meta):
     print("validating fpath:\n\t{}".format(fpath))
     try:
         check_locally_accessible(f_meta)
-    except AssertionError:
+    except AssertionError as a_err:
+        print(a_err)
         new_status = 8  # status_id.lost
 
     # TODO: make available on ipfs
@@ -118,12 +119,14 @@ def _validate_file(f_meta):
 
     try:
         check_filesize_match(f_meta)
-    except RuntimeError:
+    except RuntimeError as r_err:
+        print(r_err)
         new_status = 6  # status_id.wrong_size
 
     try:
         check_for_duplicates(f_meta)
     except NotImplementedError:
+        print('this file found to be a duplicate of another in db.')
         new_status = 7  # status_id.duplicate
 
     return {

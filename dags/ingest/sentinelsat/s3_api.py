@@ -60,6 +60,6 @@ def main(args):
 
 if __name__ == "__main__":
     parser = ArgumentParser(description='short desc of script goes here')
-    parser.add_argument("metadata_s3", help="pass in the metadata_s3_fpath")
+    parser.add_argument("metadata_s3_fpath", help="pass in the metadata_s3_fpath")
     parser.add_argument("roi_geojson_fpath", help="florida geojson fpath")
     main(parser.parse_args())

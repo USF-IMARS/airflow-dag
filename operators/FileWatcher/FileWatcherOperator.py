@@ -181,7 +181,7 @@ def _trigger_dags(
             "File area '{}' not included in DAG AREAS list. "
             "Skipping DAG triggers."
         ).format(file_metadata['area_name']))
-    elif validation_meta not in VALID_STATUS_IDS:
+    elif validation_meta['status_id'] not in VALID_STATUS_IDS:
         print(
             "Non-normal status id; file failed an integrity check. "
             "Skipping DAG triggers."

@@ -10,4 +10,4 @@ s3_meta_append={{params.metadata_s3_appended}}
 
 #python3 $s3_api --help
 
-python3 $s3_api $florida_map_json $s3_metadata_json $s3_meta_append
+python3 $s3_api --geojson $florida_map_json --meta $s3_metadata_json --append $s3_meta_append

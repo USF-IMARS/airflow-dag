@@ -97,7 +97,7 @@ def main(args):
     #pulls UUID from the JSON file, checks status as incomplete or complete, then donwloads, updates the status to complete or pass if complete
     meta_appended = getJSON_read(args.s3_meta_append_fpath)
     for each in meta_appended:
-        only_uuid = each['properties'][36]['uuid']
+        only_uuid = each['properties']['uuid']
         # try:
         #     imars_etl.select('WHERE uuid="{}"'.format(
         #         only_uuid

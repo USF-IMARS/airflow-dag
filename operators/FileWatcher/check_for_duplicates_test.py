@@ -7,13 +7,13 @@ from imars_dags.operators.FileWatcher.check_for_duplicates \
 
 
 class Test_synonymous_gdalinfo(TestCase):
-    @patch('imars_dags.operators.FileWatcher.integrity_checks.gdalinfo')
+    @patch('imars_dags.operators.FileWatcher.check_for_duplicates.gdalinfo')
     def test_identical_return_true(self, mock_gdalinfo):
         """ returns true on two identical gdalinfo output """
         mock_gdalinfo.return_value = 'a string w/ multiple\n    lines'
         self.assertEqual(synonymous_gdalinfo('f1', 'f2'), True)
 
-    @patch('imars_dags.operators.FileWatcher.integrity_checks.gdalinfo')
+    @patch('imars_dags.operators.FileWatcher.check_for_duplicates.gdalinfo')
     def test_synonyms_return_true(self, mock_gdalinfo):
         """ returns true on two synonyms """
         mock_gdalinfo.side_effect = [(
@@ -27,7 +27,7 @@ class Test_synonymous_gdalinfo(TestCase):
         )]
         self.assertEqual(synonymous_gdalinfo('f1', 'f2'), True)
 
-    @patch('imars_dags.operators.FileWatcher.integrity_checks.gdalinfo')
+    @patch('imars_dags.operators.FileWatcher.check_for_duplicates.gdalinfo')
     def test_not_synonyms_return_false(self, mock_gdalinfo):
         """ returns false on two non-synonyms """
         mock_gdalinfo.side_effect = [

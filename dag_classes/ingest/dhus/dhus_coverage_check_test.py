@@ -1,13 +1,14 @@
 # std modules:
 from unittest import TestCase
+import pytest
 
-from .DHUSCoverageBranchOperator import dhus_coverage_check
+from imars_dags.dag_classes.ingest.dhus.dhus_coverage_check \
+    import dhus_coverage_check
 
 
 class Test_dhus_coverage_check(TestCase):
 
-    # tests:
-    #########################
+    @pytest.mark.skip(reason="relies on downloading real data")
     def test_check_coverage_s3(self):
         """
         check coverage using dhus s3

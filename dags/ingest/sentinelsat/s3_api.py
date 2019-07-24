@@ -5,14 +5,16 @@
 #if first time start with: export SLUGIFY_USES_TEXT_UNIDECODE=yes; virtualenv venv; source venv/bin/activate; pip install -e .[test]; py.test -v
 #might have to add: pip install requests-mock; pip install rstcheck; pip install geojson
 
-from sentinelsat import SentinelAPI, read_geojson, geojson_to_wkt
 from datetime import date
 import os
 import collections
 import json
 from argparse import ArgumentParser
 
+from sentinelsat import SentinelAPI, read_geojson, geojson_to_wkt
+import imars_etl
 
+    
 def getJSON_read(filePathandName):
     with open(filePathandName,'r') as infile:
         return json.load(infile)
@@ -97,25 +99,30 @@ def main(args):
     #pulls UUID from the JSON file, checks status as incomplete or complete, then donwloads, updates the status to complete or pass if complete
     meta_appended = getJSON_read(args.s3_meta_append_fpath)
     for each in meta_appended:
-        only_uuid = each['properties'][36]['uuid']
-        # try:
-        #     imars_etl.select('WHERE uuid="{}"'.format(
-        #         only_uuid
-        #     ))
-        #     file_exists = True
-        # except imars_etl.exceptions.NoMetadataMatchException.NoMetadataMatchException:
-        #     file_exists = False
+        only_uuid = each['properties']['uuid']
+        try:
+            imars_etl.select('WHERE uuid="{}"'.format(
+                only_uuid
+            ))
+            file_exists = True
+        except imars_etl.exceptions.NoMetadataMatchException.NoMetadataMatchException:
+            file_exists = False
         # if not file_exists:
-        if each['properties']['status']== 'Incomplete':             #[38]['status']
-            #download_metadata = api.download(only_uuid)            #will need to be uncommented once have user and pass inserted
-                # TODO:
-            # import imars_etl
-            # imars_etl.load(
-            #     download_metadata['path'],
-            #    sql="uuid='{}' AND date_time='{}'".format(
-            #         only_uuid
-            #     )
-            # )
+        if not file_exists:  # and each['properties']['status'] == 'Incomplete':
+            download_metadata = api.download(only_uuid)
+            summary_str = each['properties']['summary']
+            assert summary_str.startswith('Date: ')
+            date_time = summary_str.split(',')[0].split('Date: ')[1].replace('Z', '').replace('T', ' ')
+            print('granule date_time: ' + date_time)
+            AREA_ID = 12
+            L1_PRODUCT_ID = 36
+            imars_etl.load(
+                download_metadata['path'],
+                sql="uuid='{}' AND date_time='{}' AND product_id={} AND area_id={} AND provenance='s3_api_v1'".format(
+                    only_uuid, date_time, L1_PRODUCT_ID, AREA_ID
+                ),
+            )
+            # if imars-etl has trouble could use:
             # bash `mv "./*.zip" "/srv/imars-objects/ftp-ingest/."`
             #    in python: os.move shutil.move
             each['properties'].update({'status':'Complete'})

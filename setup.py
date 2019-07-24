@@ -25,7 +25,7 @@ setup(
     author_email='imarsroot@marine.usf.edu',
     url='https://github.com/USF-IMARS/imars_dags',
 
-    tests_require=['nose'],
+    tests_require=['pytest'],
     install_requires=[
         # 'git+https://git}@github.com/7yl4r/pycmr.git/@prod'
         # TODO: add imars-etl here?

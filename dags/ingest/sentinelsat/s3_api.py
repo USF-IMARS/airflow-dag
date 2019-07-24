@@ -35,8 +35,8 @@ def getJSON_write(filePathandName,variables):
 
 def main(args):
     # stuff here
-    print(args.metadata_s3_fpath)
     print(args.roi_geojson_fpath)
+    print(args.metadata_s3_fpath)
     print(args.s3_meta_append_fpath)
 
     api = SentinelAPI(None, None, "https://scihub.copernicus.eu/dhus") ##### should we use a general IMARS password and user?
@@ -67,16 +67,21 @@ def main(args):
     # GeoJSON FeatureCollection containing footprints and metadata of the scenes        #how I get query data to JSON format and into JSON file
     json_query_results = api.to_geojson(products)
     json_stuff = json_query_results['features']
-
+   
+    print(json_stuff + '\n*3')
+    
     #adds status : incomplete to the properties in for each image metadata, also deletes useless variable 'id'
     for item in json_stuff:
         item['properties']['status']='Incomplete'
         if 'id' in item:
             del item['id']
-
+    
+    print(json_stuff + '\n*3')
+    
     with open(args.metadata_s3_fpath,'w') as outfile:
         json.dump(json_stuff,outfile)
-
+    
+    """
     #makes sure the metadata and appended metadata have data within the files before combining them
     new_meta=[]
     if os.stat(args.metadata_s3_fpath).st_size == 0:
@@ -125,7 +130,7 @@ def main(args):
                 json.dump(meta_appended,outfile)
         else:
             pass
-
+    """
 if __name__ == "__main__":
     parser = ArgumentParser(description='short desc of script goes here')
     parser.add_argument("metadata_s3_fpath", help="pass in the metadata_s3_fpath")

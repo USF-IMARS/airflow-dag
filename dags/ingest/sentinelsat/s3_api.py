@@ -108,7 +108,7 @@ def main(args):
         except imars_etl.exceptions.NoMetadataMatchException.NoMetadataMatchException:
             file_exists = False
         # if not file_exists:
-        if file_exists:  # and each['properties']['status'] == 'Incomplete':
+        if not file_exists:  # and each['properties']['status'] == 'Incomplete':
             download_metadata = api.download(only_uuid)
             summary_str = each['properties']['summary']
             assert summary_str.startswith('Date: ')

@@ -68,7 +68,8 @@ def main(args):
     json_query_results = api.to_geojson(products)
     json_stuff = json_query_results['features']
    
-    print(json_stuff + '\n*3')
+    print(json_stuff)
+    print('\n*3')
     
     #adds status : incomplete to the properties in for each image metadata, also deletes useless variable 'id'
     for item in json_stuff:
@@ -76,7 +77,8 @@ def main(args):
         if 'id' in item:
             del item['id']
     
-    print(json_stuff + '\n*3')
+    print(json_stuff)
+    print('\n*3')
     
     with open(args.metadata_s3_fpath,'w') as outfile:
         json.dump(json_stuff,outfile)

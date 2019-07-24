@@ -99,7 +99,7 @@ def main(args):
     #pulls UUID from the JSON file, checks status as incomplete or complete, then donwloads, updates the status to complete or pass if complete
     meta_appended = getJSON_read(args.s3_meta_append_fpath)
     for each in meta_appended:
-        only_uuid = each['properties']['uuid']
+        only_uuid = each['properties'][36]['uuid']
         # try:
         #     imars_etl.select('WHERE uuid="{}"'.format(
         #         only_uuid
@@ -108,7 +108,7 @@ def main(args):
         # except imars_etl.exceptions.NoMetadataMatchException.NoMetadataMatchException:
         #     file_exists = False
         # if not file_exists:
-        if each['properties']['status']== 'Incomplete':
+        if each['properties']['status']== 'Incomplete':             #[38]['status']
             #download_metadata = api.download(only_uuid)            #will need to be uncommented once have user and pass inserted
                 # TODO:
             # import imars_etl

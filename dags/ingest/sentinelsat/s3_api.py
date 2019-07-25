@@ -14,7 +14,7 @@ from argparse import ArgumentParser
 from sentinelsat import SentinelAPI, read_geojson, geojson_to_wkt
 import imars_etl
 
-    
+
 def getJSON_read(filePathandName):
     with open(filePathandName,'r') as infile:
         return json.load(infile)
@@ -95,7 +95,7 @@ def main(args):
             new_meta.extend(metadata)
 
     getJSON_write(args.s3_meta_append_fpath,new_meta)
-    
+
     #pulls UUID from the JSON file, checks status as incomplete or complete, then donwloads, updates the status to complete or pass if complete
     meta_appended = getJSON_read(args.s3_meta_append_fpath)
     for each in meta_appended:
@@ -117,7 +117,7 @@ def main(args):
             AREA_ID = 12
             L1_PRODUCT_ID = 36
             imars_etl.load(
-                download_metadata['path'],
+                filepath=download_metadata['path'],
                 sql="uuid='{}' AND date_time='{}' AND product_id={} AND area_id={} AND provenance='s3_api_v1'".format(
                     only_uuid, date_time, L1_PRODUCT_ID, AREA_ID
                 ),

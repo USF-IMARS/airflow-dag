@@ -14,7 +14,7 @@ from airflow.exceptions import AirflowSkipException
 import imars_etl
 
 # from imars_dags.util.globals import QUEUE
-# from imars_dags.operators.FileWatcher.integrity_checks \
+# from imars_dags.operators.FileWatcher.check_ipfs_accessible \
 #     import check_ipfs_accessible
 from imars_dags.operators.FileWatcher.check_locally_accessible \
     import check_locally_accessible

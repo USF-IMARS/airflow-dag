@@ -14,7 +14,7 @@ The short version of the simplest workflow:
 2. Wait for test server to pull your changes (via puppet). Pulls occur approximately once every half hour.
 3. Run the DAG tasks by
     1. waiting for a new DagRun to trigger
-    2. Trigger a new DAGRun 
+    2. Trigger a new DAGRun
     3. Clear an existing DAGRun
 4. View Results in web GUI
 
@@ -101,6 +101,19 @@ but here are the general steps:
 1. clone the repo
 2. cp settings/secrets.py manually
 3. install repo & dependencies w/ `pip install -e .` using setup.py
+
+### testing
+All tests included here can be run using pytest.
+
+IMPORTANT: you *must* run `pytest` from the parent directory of this repo, and you must use the `python -m pytest ...` syntax.
+For example: if `imars_dags` is in `/home/dags/imars_dags`:
+
+```bash
+cd /home/dags
+python3 -m pytest ./imars_dags/
+```
+
+If you do not run pytest in this way your tests will throw ImportErrors because of the unusual layout of this repo.
 
 ## NOTES:
 include this from a pip requirements.txt like:

@@ -99,7 +99,9 @@ def _is_nitf_prod_id(prod_id):
 
 
 def gdalinfo(filepath):
-    return subprocess.check_output("gdalinfo {}".format(filepath), shell=True)
+    res = subprocess.check_output("gdalinfo {}".format(filepath), shell=True)
+    if type(res) != str:
+        print("ERROR: gdalinfo output is not string:\n\t{}".format(res))
 
 
 def same_filesize(filepath1, filepath2):
@@ -113,11 +115,17 @@ def same_filesize(filepath1, filepath2):
 
 def synonymous_gdalinfo(filepath1, filepath2):
     """ returns true if files have "synonymous" gdalinfo output """
+    print("comparing gdalinfo on files:\n\t{}\n\t{}".format(
+        filepath1, filepath2
+    ))
+    info_1 = gdalinfo(filepath1)
+    info_2 = gdalinfo(filepath2)
+
     ACCEPTABLE_DIFFS = [
         'NITF_FDT', 'NITF_FTITLE', 'NITF_IID2'
     ]
     n = 0
-    for s in difflib.ndiff([gdalinfo(filepath1)], [gdalinfo(filepath2)]):
+    for s in difflib.ndiff([info_1], [info_2]):
         print("{} | {}".format(n, s))
         n += 1
         if s[0] == ' ':  # skip blank lines

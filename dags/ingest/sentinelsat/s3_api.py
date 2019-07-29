@@ -5,12 +5,14 @@
 #if first time start with: export SLUGIFY_USES_TEXT_UNIDECODE=yes; virtualenv venv; source venv/bin/activate; pip install -e .[test]; py.test -v
 #might have to add: pip install requests-mock; pip install rstcheck; pip install geojson
 
-from sentinelsat import SentinelAPI, read_geojson, geojson_to_wkt
 from datetime import date
 import os
 import collections
 import json
 from argparse import ArgumentParser
+
+from sentinelsat import SentinelAPI, read_geojson, geojson_to_wkt
+import imars_etl
 
 
 def getJSON_read(filePathandName):
@@ -35,8 +37,8 @@ def getJSON_write(filePathandName,variables):
 
 def main(args):
     # stuff here
-    print(args.metadata_s3_fpath)
     print(args.roi_geojson_fpath)
+    print(args.metadata_s3_fpath)
     print(args.s3_meta_append_fpath)
 
     api = SentinelAPI(None, None, "https://scihub.copernicus.eu/dhus") ##### should we use a general IMARS password and user?
@@ -74,9 +76,7 @@ def main(args):
         if 'id' in item:
             del item['id']
 
-    with open(args.metadata_s3_fpath,'w') as outfile:
-        json.dump(json_stuff,outfile)
-
+    getJSON_write(args.metadata_s3_fpath,json_stuff)
     #makes sure the metadata and appended metadata have data within the files before combining them
     new_meta=[]
     if os.stat(args.metadata_s3_fpath).st_size == 0:
@@ -100,24 +100,29 @@ def main(args):
     meta_appended = getJSON_read(args.s3_meta_append_fpath)
     for each in meta_appended:
         only_uuid = each['properties']['uuid']
-        # try:
-        #     imars_etl.select('WHERE uuid="{}"'.format(
-        #         only_uuid
-        #     ))
-        #     file_exists = True
-        # except imars_etl.exceptions.NoMetadataMatchException.NoMetadataMatchException:
-        #     file_exists = False
+        try:
+            imars_etl.select('WHERE uuid="{}"'.format(
+                only_uuid
+            ))
+            file_exists = True
+        except imars_etl.exceptions.NoMetadataMatchException.NoMetadataMatchException:
+            file_exists = False
         # if not file_exists:
-        if each['properties']['status']== 'Incomplete':
-            #download_metadata = api.download(only_uuid)            #will need to be uncommented once have user and pass inserted
-                # TODO:
-            # import imars_etl
-            # imars_etl.load(
-            #     download_metadata['path'],
-            #    sql="uuid='{}' AND date_time='{}'".format(
-            #         only_uuid
-            #     )
-            # )
+        if not file_exists:  # and each['properties']['status'] == 'Incomplete':
+            download_metadata = api.download(only_uuid)
+            summary_str = each['properties']['summary']
+            assert summary_str.startswith('Date: ')
+            date_time = summary_str.split(',')[0].split('Date: ')[1].replace('Z', '').replace('T', ' ')
+            print('granule date_time: ' + date_time)
+            AREA_ID = 12
+            L1_PRODUCT_ID = 36
+            imars_etl.load(
+                filepath=download_metadata['path'],
+                sql="uuid='{}' AND date_time='{}' AND product_id={} AND area_id={} AND provenance='s3_api_v1'".format(
+                    only_uuid, date_time, L1_PRODUCT_ID, AREA_ID
+                ),
+            )
+            # if imars-etl has trouble could use:
             # bash `mv "./*.zip" "/srv/imars-objects/ftp-ingest/."`
             #    in python: os.move shutil.move
             each['properties'].update({'status':'Complete'})
@@ -128,7 +133,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = ArgumentParser(description='short desc of script goes here')
-    parser.add_argument("metadata_s3_fpath", help="pass in the metadata_s3_fpath")
-    parser.add_argument("roi_geojson_fpath", help="florida geojson fpath")
-    parser.add_argument("s3_meta_append_fpath", help="pass in appended meta_s3_fpath")
+    parser.add_argument("-g", "--geojson", dest="roi_geojson_fpath", help="florida geojson fpath")
+    parser.add_argument("-m", "--meta", dest="metadata_s3_fpath", help="pass in the metadata_s3_fpath")
+    parser.add_argument("-a", "--append", dest="s3_meta_append_fpath", help="pass in appended meta_s3_fpath")
     main(parser.parse_args())

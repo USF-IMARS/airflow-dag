@@ -28,7 +28,6 @@ def check_for_duplicates(file_meta):
             date_time='{dt}' AND
             area_id={aid}
         ORDER BY last_processed
-        LIMIT 2
     """.format(
         pid=file_meta['product_id'],  # 30
         dt=file_meta['date_time'],  # 2016-07-27T16:00:59.016650+00:00
@@ -52,46 +51,51 @@ def check_for_duplicates(file_meta):
     elif len(result) == 1:
         print("One result and all is well.")
         return False
-    elif len(result) == 2:
-        keepfile_meta, delfile_meta = result
+
+    # remove results until we get down to 2
+    row_n = 0
+    while len(result) > 2:
+        print("WARN: {} identical files!".format(len(result)))
+        if file_meta['filepath'] != result[row_n][fpath_i]:
+            del result[row_n]
+
+    keepfile_meta, delfile_meta = result
+    keepfile_path = keepfile_meta[fpath_i]
+    delfile_path = delfile_meta[fpath_i]
+
+    if file_meta['filepath'] == delfile_path:
+        pass
+    elif file_meta['filepath'] == keepfile_path:
+        # swap this file is always delfile
+        delfile_meta, keepfile_meta = result
         keepfile_path = keepfile_meta[fpath_i]
         delfile_path = delfile_meta[fpath_i]
-
-        if file_meta['filepath'] == delfile_path:
-            pass
-        elif file_meta['filepath'] == keepfile_path:
-            # swap this file is always delfile
-            delfile_meta, keepfile_meta = result
-            keepfile_path = keepfile_meta[fpath_i]
-            delfile_path = delfile_meta[fpath_i]
-        else:
-            raise AssertionError(
-                "This fpath should be in result!\n" +
-                "!!! fpath '{}' not in ['{}', '{}']".format(
-                    file_meta['filepath'],
-                    keepfile_path, delfile_path
-                )
-            )
-
-        if (keepfile_meta[mhash_i] == delfile_meta[mhash_i]):
-            print("duplicate entries are an exact match.")
-            _handle_duplicate_entries(keepfile_path, delfile_path)
-            return True
-        elif (
-            _is_nitf_prod_id(file_meta['product_id']) and
-            _nitf_files_are_synonyms(keepfile_path, delfile_path)
-        ):
-            print("duplicate entries are NITF-synonyms")
-            _handle_duplicate_entries(keepfile_path, delfile_path)
-            return True
-        else:
-            print(
-                "duplicate entries are not identical or synonymous" +
-                "\n\t{}\n\t{}".format(keepfile_meta, delfile_meta)
-            )
-            return False
     else:
-        raise AssertionError("query returns >2 results?")
+        raise AssertionError(
+            "This fpath should be in result!\n" +
+            "!!! fpath '{}' not in ['{}', '{}']".format(
+                file_meta['filepath'],
+                keepfile_path, delfile_path
+            )
+        )
+
+    if (keepfile_meta[mhash_i] == delfile_meta[mhash_i]):
+        print("duplicate entries are an exact match.")
+        _handle_duplicate_entries(keepfile_path, delfile_path)
+        return True
+    elif (
+        _is_nitf_prod_id(file_meta['product_id']) and
+        _nitf_files_are_synonyms(keepfile_path, delfile_path)
+    ):
+        print("duplicate entries are NITF-synonyms")
+        _handle_duplicate_entries(keepfile_path, delfile_path)
+        return True
+    else:
+        print(
+            "duplicate entries are not identical or synonymous" +
+            "\n\t{}\n\t{}".format(keepfile_meta, delfile_meta)
+        )
+        return False
 
 
 def _is_nitf_prod_id(prod_id):

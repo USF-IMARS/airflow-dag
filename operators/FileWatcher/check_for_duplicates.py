@@ -52,6 +52,8 @@ def check_for_duplicates(file_meta):
         print("One result and all is well.")
         return False
 
+    result = list(result)  # convert tuple to list so it is mutable
+
     # remove results until we get down to 2
     row_n = 0
     while len(result) > 2:

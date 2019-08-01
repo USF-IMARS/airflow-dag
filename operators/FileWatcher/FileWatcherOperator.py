@@ -223,8 +223,14 @@ def _trigger_dags(
                 session.commit()
                 n_dags_triggered += 1
             except Exception as err:
-                # mark this task "skipped" if duplicate
-                if('uplicate' in str(err)):
+                if (any([
+                    substr in str(err) for substr in [
+                        'uplicate',  # duplicates are fine
+                        # "no row" also means duplicate. see:
+                        # https://issues.apache.org/jira/browse/AIRFLOW-2319
+                        'No row was found for one'
+                    ]
+                ])):
                     # NOTE: yes, this is a terrible way to check but it's the
                     #      best I can do in this circumstance.
                     # we need to update even if skipping
@@ -233,7 +239,13 @@ def _trigger_dags(
                     )
                     pass
                 else:
-                    print('Non-duplicate error while triggering DAGRun')
+                    print(
+                        'Non-duplicate error while triggering DAGRun ' +
+                        '#{} {} @ {}'.format(
+                            n_dags_triggered, dag_to_trigger, trigger_date
+                        )
+                    )
+                    print("Stringified exception: {}".format(str(err)))
                     raise
             finally:
                 session.close()

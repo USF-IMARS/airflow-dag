@@ -204,7 +204,7 @@ def _trigger_dags(
             dag_to_trigger = "{}_{}".format(
                 processing_dag_name, roi_name
             )
-            print(dag_to_trigger + "...")
+            print("triggering " + dag_to_trigger + "...")
 
             try:
                 session = settings.Session()
@@ -228,8 +228,12 @@ def _trigger_dags(
                     # NOTE: yes, this is a terrible way to check but it's the
                     #      best I can do in this circumstance.
                     # we need to update even if skipping
+                    print(
+                        'DagRun already exists for this (file + DAG) combo.'
+                    )
                     pass
                 else:
+                    print('Non-duplicate error while triggering DAGRun')
                     raise
             finally:
                 session.close()

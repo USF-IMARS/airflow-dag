@@ -147,7 +147,7 @@ def _trigger_dags(
 ):
     # === get file metadata
     sql_selection = get_sql_selection(product_ids)
-    post_where_str = "ORDER BY last_processed ASC LIMIT 1"
+    post_where_str = "ORDER BY proc_counter,last_processed ASC LIMIT 1"
     # SELECT {cols} FROM file WHERE {sql} {post_where}
     print('SELECT {} FROM file WHERE {} {}'.format(
         '*',

@@ -60,6 +60,9 @@ def check_for_duplicates(file_meta):
         print("WARN: {} identical files!".format(len(result)))
         if file_meta['filepath'] != result[row_n][fpath_i]:
             del result[row_n]
+            # row_n was implicitly incremented b/c we deleted an item
+        else:
+            row_n += 1
 
     keepfile_meta, delfile_meta = result
     keepfile_path = keepfile_meta[fpath_i]

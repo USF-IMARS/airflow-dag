@@ -73,15 +73,15 @@ RRS_TIF_PATH=$(ls ${RRS_OUT}/*Rrs.tif)  # TODO: also dumb
 rrs_TIF_PATH=$(ls ${RRS_OUT}/*_rrssub.tif)  # TODO: also also dumb
 MAP_TIF_PATH=$(ls ${RRS_OUT}/*_Map_pytest.tif)  # TODO: also also also dumb
 
-imars-etl load --noparse --sql \
+imars-etl load --noparse --duplicates_ok --sql \
     "area_id={{params.area_id}} AND product_id={{params.Rrs_ID}} AND date_time='{{ts}}' AND provenance='af-ntftorrs_v2'" \
     $RRS_TIF_PATH
     
-imars-etl load --noparse --sql \
+imars-etl load --noparse --duplicates_ok --sql \
     "area_id={{params.area_id}} AND product_id={{params.rrs_ID}} AND date_time='{{ts}}' AND provenance='af-ntftorrs_v2'" \
     $rrs_TIF_PATH
     
-imars-etl load --noparse --sql \
+imars-etl load --noparse --duplicates_ok --sql \
     "area_id={{params.area_id}} AND product_id={{params.classf_ID}} AND date_time='{{ts}}' AND provenance='af-ntftorrs_v2'" \
     $MAP_TIF_PATH
     

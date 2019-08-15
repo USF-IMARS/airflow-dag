@@ -10,7 +10,7 @@ echo '=== Extract...'
 # instead of this:
 imars-etl extract \
     'product_id={{params.l1_pid}} AND date_time="{{ts}}"'
-L1_PATH=$(ls *.SEN3)  # should this be *.zip?
+L1_PATH=$(ls *.zip)
 
 
 echo '=== Transform...'
@@ -23,8 +23,9 @@ set +e
 source $OCSSWROOT/OCSSW_bash.env
 set -e
 
-echo unzipping...
-mv $L1_PATH $L1_PATH.zip
+# remove .zip extension
+L1_PATH=$(basename $L1_PATH .zip)
+
 unzip $L1_PATH.zip -d $L1_PATH
 
 # find the file we're looking for inside the unzipped dir

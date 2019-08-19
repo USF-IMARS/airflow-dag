@@ -59,7 +59,7 @@ for area_short_name in AREAS:
             "area_id": AREA_ID,
             "area_short_name": AREA_SHORT_NAME,
         },
-        queue=QUEUE.SAT_SCRIPTS,
+        queue=QUEUE.OCSSW,
         dag=this_dag,
     )
 
@@ -76,7 +76,7 @@ for area_short_name in AREAS:
                 "map_FL_S3_OLCI.xml"  # TODO: create this file
             ),
         },
-        queue=QUEUE.SAT_SCRIPTS,
+        queue=QUEUE.SNAP,
         dag=this_dag,
     )
 

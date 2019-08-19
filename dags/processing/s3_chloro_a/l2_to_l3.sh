@@ -15,7 +15,7 @@ OUTFILE='mapped.tif'
 
 echo '=== Transform...'
 echo mapping w/ ${GPT_XML}...
-/opt/snap_6_0/bin/gpt $GPT_XML -t $OUTFILE -f GeoTIFF $L2_PATH
+/opt/snap/bin/gpt $GPT_XML -t $OUTFILE -f GeoTIFF $L2_PATH
 
 echo "output file $OUTFILE is ready?"
 ls -lh .

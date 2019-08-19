@@ -25,6 +25,7 @@ class QUEUE:
     IPFS_PRIVATE_NODE = 'ipfs_private_node'
     MATLAB = 'matlab'
     WV2_PROC = 'wv2_proc'  # https://github.com/USF-IMARS/wv2-processing
+    OCSSW = 'ocssw'  # seadas ocssw
 
 
 class POOL:

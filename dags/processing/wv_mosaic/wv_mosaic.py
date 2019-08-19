@@ -51,11 +51,11 @@ for area_short_name in AREAS:
         task_id='build_vrt',
         bash_command="""
             gdalbuildvrt \
-                /srv/imars-objects/{{area_short_name}}/wv_classif.vrt \
-                /srv/imars-objects/{{area_short_name}}/tif_classification/*
+                /srv/imars-objects/{{params.area_name}}/wv_classif.vrt \
+                /srv/imars-objects/{{params.area_name}}/tif_classification/*
         """,
         params={
-            "area_short_name": area_short_name,
+            "area_name": area_short_name,
         }
     )
     create_overview = BashOperator(
@@ -63,11 +63,11 @@ for area_short_name in AREAS:
         task_id='create_overview',
         bash_command="""
             gdaladdo -ro -r average \
-                /srv/imars-objects/{{area_short_name}}/wv_classif.vrt \
+                /srv/imars-objects/{{params.area_name}}/wv_classif.vrt \
                 1
         """,
         params={
-            "area_short_name": area_short_name,
+            "area_name": area_short_name,
         }
     )
     # colorize = BashOperator(
@@ -78,10 +78,10 @@ for area_short_name in AREAS:
     #           https://gis.stackexchange.com/a/272805/107752
     #
     #       custom_colorize.py \
-    #           /srv/imars-objects/{{area_short_name}}/wv_classif.vrt.ovr
+    #           /srv/imars-objects/{{params.area_name}}/wv_classif.vrt.ovr
     #     """,
     #     params={
-    #         "area_short_name": area_short_name,
+    #         "area_name": area_short_name,
     #     }
     # )
     create_tiles = BashOperator(
@@ -89,11 +89,11 @@ for area_short_name in AREAS:
         task_id='create_tiles',
         bash_command="""
             gdal2tiles.py -p raster \
-                /srv/imars-objects/{{area_short_name}}/wv2_classif.vrt.ovr \
-                /srv/imars-objects/{{area_short_name}}/wv2_classif_tiles
+                /srv/imars-objects/{{params.area_name}}/wv2_classif.vrt.ovr \
+                /srv/imars-objects/{{params.area_name}}/wv2_classif_tiles
         """,
         params={
-            "area_short_name": area_short_name,
+            "area_name": area_short_name,
         }
     )
     build_vrt >> create_overview

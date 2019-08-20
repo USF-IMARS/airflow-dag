@@ -89,8 +89,8 @@ for area_short_name in AREAS:
         task_id='create_tiles',
         bash_command="""
             gdal2tiles.py -p raster \
-                /srv/imars-objects/{{params.area_name}}/wv2_classif.vrt.ovr \
-                /srv/imars-objects/{{params.area_name}}/wv2_classif_tiles
+                /srv/imars-objects/{{params.area_name}}/wv_classif.vrt.ovr \
+                /srv/imars-objects/{{params.area_name}}/wv_classif_tiles
         """,
         params={
             "area_name": area_short_name,

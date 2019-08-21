@@ -145,11 +145,11 @@ def get_grepped_log_counts(greps_json_file, base_log_path):
                 unmatched_files
             )
     if len(never_matched_files) > 0:
-        if len(never_matched_files) < 100:
-            print("UNMATCHED:\n")
-            pp.pprint(never_matched_files)
-        else:
-            print("{} UNMATCHED FILES!".format(len(never_matched_files)))
+        print("{} UNMATCHED files! First 10:".format(
+            len(never_matched_files)
+        ))
+        pp.pprint(never_matched_files[:10])
+
 
     counts['unmatched'] = len(never_matched_files)
     print("\n" + "-"*100)

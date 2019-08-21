@@ -4,6 +4,7 @@
 """
 # std libs
 from datetime import datetime
+from datetime import timedelta
 import fnmatch
 import os
 
@@ -30,7 +31,9 @@ with DAG(
     default_args=get_default_args(
         start_date=datetime(2001, 11, 28)  # use earliest possible date
     ),
-    schedule_interval=None,
+    schedule_interval=timedelta(hours=1),
+    catchup=False,  # latest only
+    max_active_runs=1,
 ) as dag:
     dag.doc_md = __doc__  # sets web GUI to use docstring at top of file
     DAG_LOGS_PATH = "/srv/imars-objects/airflow_tmp/logs"

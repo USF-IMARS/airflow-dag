@@ -1,0 +1,43 @@
+{
+    "*":[
+        [
+            "duplicate",
+            "imars_etl.exceptions.DuplicateFileException.DuplicateFileException"
+        ],
+        ["disk_full_q", "write error [disk full?]"],
+        ["disk_full", "[Errno 28] No space left on device"],
+        ["i_o_err",   "[Errno 5] Input/output error"],
+        ["fi_exists", "[Errno 17] File exists:"],
+        [
+            "ipfs_lckd",
+            "Error: cannot acquire lock: Lock FcntlFlock of /home/airflow/.ipfs/"
+            "repo.lock failed: resource temporarily unavailable"
+        ],
+        [
+            "multimeta",
+            "imars_etl.exceptions.TooManyMetadataMatchesException."
+            "TooManyMetadataMatchesException"
+        ],
+        ["sigterm",   "Received SIGTERM. Terminating subprocesses."],
+        [
+            "ext_kill",
+            "State of this instance has been externally set to failed. "
+            "Taking the poison pill."
+        ],
+        [
+            "ext_sucs",
+            "State of this instance has been externally set to success. "
+            "Taking the poison pill."
+        ],
+        ["unpack_io", "too many values to unpack [expected 4]"],
+        ["upstr_unmet", "Dependencies not met for <TaskInstance"],
+        ["permissn", "[Errno 13] Permission denied"],
+        [
+            "no_fpath",
+            "imars-etl load: error: the following arguments are required: filepath"
+        ],
+        ["unk_col", "\"Unknown column \""],
+        ["no_dir",    "[Errno 2] No such file or directory"],
+        ["sql_c_lim", "has exceeded the \"max_connections_per_hour\""],
+    ]
+}

@@ -9,6 +9,7 @@
 
 import os
 import re
+import sys
 import operator
 import pprint
 from glob import glob
@@ -41,7 +42,7 @@ def get_logfiles(base_log_path, dag_glob, task_glob):
     full_glob = "{}/{}/{}/*/*.log".format(
         base_log_path, dag_glob, task_glob
     )
-    print("getting logs for glob " + full_glob)
+    print("searching logs for glob :\n\t{}".format(full_glob))
     for log_path in glob(full_glob):
         yield log_path
 
@@ -68,6 +69,26 @@ def get_greps_from_config_json(json_config_fpath):
         return dag_glob, greps_by_task_globs_dict
 
 
+def progressbar(it, prefix="", size=60, file=sys.stdout):
+    """
+    ASCII progress bar based on https://stackoverflow.com/a/34482761/1483986
+    """
+    count = len(it)
+
+    def show(j):
+        x = int(size*j/count)
+        file.write(
+            "%s[%s%s] %i/%i\r" % (prefix, "#"*x, "."*(size-x), j, count)
+        )
+        file.flush()
+    show(0)
+    for i, item in enumerate(it):
+        yield item
+        show(i+1)
+    file.write("\n")
+    file.flush()
+
+
 def get_grepped_log_counts(greps_json_file, base_log_path):
     """
     returns sorted dict of counts for all log classifications
@@ -78,30 +99,31 @@ def get_grepped_log_counts(greps_json_file, base_log_path):
     # iterate over each task
     print("{} tasks glob strings found".format(len(greps_by_task_globs)))
 
-    for task_glob, greps in list(greps_by_task_globs.items()):
+    never_matched_files = set()
+    for task_glob, greps in greps_by_task_globs.items():
         print("\t{}".format(task_glob))
         # import pdb; pdb.set_trace()
         for key, strin in list(greps.items()):
+            assert key not in counts  # no duplicate keys!
             counts[key] = 0
         counts['success'] = 0
 
         print("{} grep strings for this task glob".format(len(greps)))
         # search this task's logfiles
-        for files in get_logfiles(base_log_path, dag_glob, task_glob):
-            print("grepping {} files".format(
-                len(files)
-            ))
-            unmatched_files = []
+        unmatched_files = []
+        log_files = list(get_logfiles(base_log_path, dag_glob, task_glob))
+        for i in progressbar(range(len(log_files))):
+            file = log_files[i]
             # grep the file for strings
             # print(files) #entry.name)
             matches = []
-            fstr = open(files).read()
+            fstr = open(file).read()
             # special case for successful run:
             if fstr.strip().endswith("Command exited with return code 0"):
                 counts['success'] += 1
                 matches.append('success')
             for grep_key, grep_str in list(greps.items()):
-                if grep_str in open(files).read():
+                if grep_str in open(file).read():
                     counts[grep_key] += 1
                     matches.append(grep_key)
                     # print(grep_key)
@@ -109,16 +131,26 @@ def get_grepped_log_counts(greps_json_file, base_log_path):
                 pass
             elif len(matches) > 1:
                 # print('ERR: multiple matches!:{}'.format(matches))
-                # print(files)
+                # print(file)
                 for key in matches:
                     counts[key] -= 1
                 multimatch_key = '_AND_'.join(matches)
                 counts[multimatch_key] = counts.get(multimatch_key, 0) + 1
             else:  # matches < 1:
-                print('UNMATCHED:')
-                unmatched_files.append(files)  # entry.name)
-                print(files)
+                unmatched_files.append(file)  # entry.name)
+        # XOR unmatched_files with
+        if len(never_matched_files) == 0:  # init unmatched
+            never_matched_files = set(unmatched_files)
+        else:
+            # keep only unmatched_files from this search & previous
+            never_matched_files = never_matched_files.intersection(
+                unmatched_files
+            )
+    if len(never_matched_files) > 0:
+        print("UNMATCHED:\n{}".format(never_matched_files))
 
-        sorted_counts = sorted(counts.items(), key=operator.itemgetter(1))
-        pp.pprint(sorted_counts)
-        return sorted_counts
+    counts['unmatched'] = len(never_matched_files)
+    print("\n" + "-"*100)
+    sorted_counts = sorted(counts.items(), key=operator.itemgetter(1))
+    pp.pprint(sorted_counts)
+    return sorted_counts

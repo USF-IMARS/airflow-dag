@@ -26,7 +26,7 @@ find {{params.dag_logs_path}} -mindepth 2 -maxdepth 3
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 
 with DAG(
-    dag_id="",
+    dag_id="log_grep_results_to_graphite",
     default_args=get_default_args(
         start_date=datetime(2001, 11, 28)  # use earliest possible date
     ),

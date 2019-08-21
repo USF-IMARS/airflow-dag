@@ -42,7 +42,7 @@ def get_logfiles(base_log_path, dag_glob, task_glob):
     full_glob = "{}/{}/{}/*/*.log".format(
         base_log_path, dag_glob, task_glob
     )
-    print("searching logs for glob :\n\t{}".format(full_glob))
+    print("grepping logs matching glob :\n\t{}".format(full_glob))
     for log_path in glob(full_glob):
         yield log_path
 
@@ -99,7 +99,7 @@ def get_grepped_log_counts(greps_json_file, base_log_path):
     # iterate over each task
     print("{} tasks glob strings found".format(len(greps_by_task_globs)))
 
-    never_matched_files = set()
+    never_matched_files = []
     for task_glob, greps in greps_by_task_globs.items():
         print("\t{}".format(task_glob))
         # import pdb; pdb.set_trace()
@@ -107,6 +107,7 @@ def get_grepped_log_counts(greps_json_file, base_log_path):
             assert key not in counts  # no duplicate keys!
             counts[key] = 0
         counts['success'] = 0
+        counts['unmatched'] = 0
 
         print("{} grep strings for this task glob".format(len(greps)))
         # search this task's logfiles
@@ -137,17 +138,18 @@ def get_grepped_log_counts(greps_json_file, base_log_path):
                 multimatch_key = '_AND_'.join(matches)
                 counts[multimatch_key] = counts.get(multimatch_key, 0) + 1
             else:  # matches < 1:
-                unmatched_files.append(file)  # entry.name)
-        # XOR unmatched_files with
-        if len(never_matched_files) == 0:  # init unmatched
-            never_matched_files = set(unmatched_files)
+                unmatched_files.append(file.replace(base_log_path, ""))
         else:
-            # keep only unmatched_files from this search & previous
-            never_matched_files = never_matched_files.intersection(
+            # keep unmatched_files from this search & previous
+            never_matched_files.extend(
                 unmatched_files
             )
     if len(never_matched_files) > 0:
-        print("UNMATCHED:\n{}".format(never_matched_files))
+        if len(never_matched_files) < 100:
+            print("UNMATCHED:\n")
+            pp.pprint(never_matched_files)
+        else:
+            print("{} UNMATCHED FILES!".format(len(never_matched_files)))
 
     counts['unmatched'] = len(never_matched_files)
     print("\n" + "-"*100)

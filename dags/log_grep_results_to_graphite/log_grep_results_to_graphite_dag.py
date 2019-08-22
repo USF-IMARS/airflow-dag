@@ -21,7 +21,7 @@ CLEAN_OLDER_DAGS_CMD = """
 echo rm N-{{params.n_to_keep}} from {{params.dag_logs_path}}
 find {{params.dag_logs_path}} -mindepth 2 -maxdepth 3
 #     | xargs 1 | \
-#     python keep_last_n.py -n {{params.n_to_keep}} "
+#     python3 keep_last_n.py -n {{params.n_to_keep}} "
 """
 
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -58,7 +58,7 @@ with DAG(
                 grep_dag_logs = BashOperator(
                     task_id="grep_logs_{}".format(dag_log_dir),
                     bash_command="""
-                        python {{params.script_path}} \
+                        python3 {{params.script_path}} \
                             {{params.dag_greps_file}} \
                             {{params.dag_logs_path}}
                     """,

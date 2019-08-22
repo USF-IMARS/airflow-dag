@@ -31,7 +31,7 @@ with DAG(
     default_args=get_default_args(
         start_date=datetime(2001, 11, 28)  # use earliest possible date
     ),
-    dag_concurrency=5,
+    concurrency=5,
     schedule_interval=timedelta(hours=1),
     catchup=False,  # latest only
     max_active_runs=1,

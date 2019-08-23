@@ -40,6 +40,8 @@ def main(args):
     print(args.roi_geojson_fpath)
     print(args.metadata_s3_fpath)
     print(args.s3_meta_append_fpath)
+    start_date = args.date + "T00:00:00.000Z"  # midnight the day before
+    end_date = args.date + "T23:59:59.999Z"  # barely before midnight today
 
     api = SentinelAPI(None, None, "https://scihub.copernicus.eu/dhus") ##### should we use a general IMARS password and user?
     data_dir = os.getcwd()                                                 # the only way I found to get all the parts of code to work in my directory
@@ -59,7 +61,7 @@ def main(args):
     footprint = geojson_to_wkt(read_geojson(args.roi_geojson_fpath))
     products = collections.OrderedDict()
     products = api.query(footprint,
-                        date=('20171010', date(2017, 10, 15)),                #two different ways to show date, once we get it going, change the first date to '20150101' and last to 'NOW', then update to be 'NOW-1 and 'NOW'
+                        date=(start_date, end_date),                #two different ways to show date, once we get it going, change the first date to '20150101' and last to 'NOW', then update to be 'NOW-1 and 'NOW'
                         #area_relation({'Intersects','Contains','IsWithin'}) might need to add, default intersect    #propbably wont need
                         platformname='Sentinel-3',
                         producttype='OL_1_EFR___',
@@ -136,4 +138,5 @@ if __name__ == "__main__":
     parser.add_argument("-g", "--geojson", dest="roi_geojson_fpath", help="florida geojson fpath")
     parser.add_argument("-m", "--meta", dest="metadata_s3_fpath", help="pass in the metadata_s3_fpath")
     parser.add_argument("-a", "--append", dest="s3_meta_append_fpath", help="pass in appended meta_s3_fpath")
+    parser.add_argument("-d", "--date", help="date to download in format YYYMMDD")
     main(parser.parse_args())

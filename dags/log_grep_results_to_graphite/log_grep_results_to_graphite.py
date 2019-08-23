@@ -5,12 +5,12 @@
 # std libs
 from datetime import datetime
 from datetime import timedelta
-import fnmatch
 import os
 
 # deps
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
+from airflow_log_grepper.sanitize_glob_string import sanitize_glob_string
 
 # this package
 from imars_dags.util.get_default_args import get_default_args
@@ -44,30 +44,26 @@ with DAG(
     # for each dag_config
     for dag_config_file in os.listdir(DAG_CONFIGS_PATH):
         dag_glob = dag_config_file.replace(".json", "")
-        # for each DAG matching the config
-        for dag_log_dir in os.listdir(DAG_LOGS_PATH):
-            if fnmatch.fnmatch(dag_log_dir, dag_glob):
-                # clean_older_dags = BashOperator(
-                #     task_id='clean_older_{}'.format(dag_log_dir),
-                #     bash_command=CLEAN_OLDER_DAGS_CMD,
-                #     params={
-                #         "dag_logs_path": DAG_LOGS_PATH + "/" + dag_log_dir,
-                #         "n_to_keep": 2  # TODO: get per-DAG setting
-                #     }
-                # )
-                # TODO: what happens if a dag matches more than one glob?!?
-                grep_dag_logs = BashOperator(
-                    task_id="grep_logs_{}".format(dag_log_dir),
-                    bash_command="""
-                        airflow_log_grepper_to_graphite \
-                            '{{params.dag_greps_file}}' \
-                            {{params.dag_logs_path}}
-                    """,
-                    params={
-                        "dag_logs_path": DAG_LOGS_PATH + "/" + dag_log_dir,
-                        "dag_greps_file":
-                            DAG_CONFIGS_PATH + "/" + dag_config_file,
-                    },
-                    task_concurrency=3,
-                )
-                # clean_older_dags >> grep_dag_logs
+        # clean_older_dags = BashOperator(
+        #     task_id='clean_older_{}'.format(dag_log_dir),
+        #     bash_command=CLEAN_OLDER_DAGS_CMD,
+        #     params={
+        #         "dag_logs_path": DAG_LOGS_PATH + "/" + dag_log_dir,
+        #         "n_to_keep": 2  # TODO: get per-DAG setting
+        #     }
+        # )
+        grep_dag_logs = BashOperator(
+            task_id=sanitize_glob_string(dag_glob),
+            bash_command="""
+                airflow_log_grepper_to_graphite \
+                    '{{params.dag_greps_file}}' \
+                    {{params.dag_logs_path}}
+            """,
+            params={
+                "dag_logs_path": DAG_LOGS_PATH,
+                "dag_greps_file":
+                    DAG_CONFIGS_PATH + "/" + dag_config_file,
+            },
+            task_concurrency=3,
+        )
+        # clean_older_dags >> grep_dag_logs

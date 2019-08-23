@@ -59,7 +59,7 @@ with DAG(
                     task_id="grep_logs_{}".format(dag_log_dir),
                     bash_command="""
                         airflow_log_grepper_to_graphite \
-                            {{params.dag_greps_file}} \
+                            '{{params.dag_greps_file}}' \
                             {{params.dag_logs_path}}
                     """,
                     params={

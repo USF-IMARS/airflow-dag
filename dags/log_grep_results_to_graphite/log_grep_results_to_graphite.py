@@ -1,7 +1,7 @@
 import os
 import sys
 import subprocess
-from .log_grepper import get_grepped_log_counts
+from . import log_grepper
 
 
 def sanitize_glob_string(glob_str):
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     # DAG name for graphite comes from filename
     dag_dir_glob = os.path.basename(greps_json_file).replace(".json", "")
 
-    for match_name, count in get_grepped_log_counts(
+    for match_name, count in log_grepper.get_grepped_log_counts(
         greps_json_file, dag_logs_dir
     ):
         metric = "{host}.exec.per_ten_min.airflow.logs.{dag}.{match}".format(

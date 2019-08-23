@@ -58,16 +58,13 @@ with DAG(
                 grep_dag_logs = BashOperator(
                     task_id="grep_logs_{}".format(dag_log_dir),
                     bash_command="""
-                        python3 {{params.script_path}} \
+                        airflow_log_grepper_to_graphite \
                             {{params.dag_greps_file}} \
                             {{params.dag_logs_path}}
                     """,
                     params={
                         "dag_logs_path": DAG_LOGS_PATH + "/" + dag_log_dir,
                         "dag_greps_file": dag_config_file,
-                        "script_path": (
-                            THIS_DIR + "/log_grep_results_to_graphite.py"
-                        )
                     },
                     task_concurrency=3,
                 )

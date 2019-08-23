@@ -1,75 +1,69 @@
+"""
+
+
+"""
+# std libs
+from datetime import datetime
+from datetime import timedelta
 import os
-import sys
-import subprocess
-from imars_dags.dags.log_grep_results_to_graphite.log_grepper \
-    import get_grepped_log_counts
+
+# deps
+from airflow import DAG
+from airflow.operators.bash_operator import BashOperator
+from airflow_log_grepper.sanitize_glob_string import sanitize_glob_string
+
+# this package
+from imars_dags.util.get_default_args import get_default_args
 
 
-def sanitize_glob_string(glob_str):
-    """
-    Replaces characters in a glob string which might offend airflow's DAG and
-    task naming conventions or graphite's metric namespacing.
+# TODO: more action and less talk in this command:
+CLEAN_OLDER_DAGS_CMD = """
+echo rm N-{{params.n_to_keep}} from {{params.dag_logs_path}}
+find {{params.dag_logs_path}} -mindepth 2 -maxdepth 3
+#     | xargs 1 | \
+#     python3 keep_last_n.py -n {{params.n_to_keep}} "
+"""
 
-    I.e. : convert glob strings to underscores, letters, numbers while trying
-           to preserve the meaning of the glob.
+THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 
-   This works best if the glob_str uses only lowercase letters, because the
-   replacements use uppercase letters.
-    """
-    for offensive_char, replacement in [
-        ['*', 'X'],
-        ['[', 'I'],
-        [']', 'I'],
-        ['{', 'I'],
-        ['}', 'I'],
-        [',', 'I'],
-        ['.', 'O'],
-        ['-', 'T'],
-        ['?', 'Q'],
-        ['/', 'V'],
-    ]:
-        glob_str = glob_str.replace(offensive_char, replacement)
-    return glob_str
-
-
-if __name__ == "__main__":
-    print("-"*100)
-    HOSTNAME = subprocess.check_output("hostname -s", shell=True).strip()
-    DATE = subprocess.check_output("date +%s", shell=True).strip()
-
-    greps_json_file = sys.argv[1]
-    dag_logs_dir = sys.argv[2]
-    try:
-        testing = sys.argv[3]
-        assert testing.lower() in [
-            'y', '1', 'yes', 'test', 'testing', 'true'
-        ]
-        test = True
-    except IndexError:
-        testing = False
-    # DAG name for graphite comes from filename
-    dag_dir_glob = os.path.basename(greps_json_file).replace(".json", "")
-
-    for match_name, count in get_grepped_log_counts(
-        greps_json_file, dag_logs_dir
-    ):
-        metric = "{host}.exec.per_ten_min.airflow.logs.{dag}.{match}".format(
-            host=HOSTNAME,
-            dag=sanitize_glob_string(dag_dir_glob),
-            match=match_name
+with DAG(
+    dag_id="log_grep_results_to_graphite",
+    default_args=get_default_args(
+        start_date=datetime(2001, 11, 28)  # use earliest possible date
+    ),
+    concurrency=5,
+    schedule_interval=timedelta(hours=1),
+    catchup=False,  # latest only
+    max_active_runs=1,
+) as dag:
+    dag.doc_md = __doc__  # sets web GUI to use docstring at top of file
+    DAG_LOGS_PATH = "/srv/imars-objects/airflow_tmp/logs"
+    DAG_CONFIGS_PATH = (
+        THIS_DIR + "/dag_configs"
+    )
+    # for each dag_config
+    for dag_config_file in os.listdir(DAG_CONFIGS_PATH):
+        dag_glob = dag_config_file.replace(".json", "")
+        # clean_older_dags = BashOperator(
+        #     task_id='clean_older_{}'.format(dag_log_dir),
+        #     bash_command=CLEAN_OLDER_DAGS_CMD,
+        #     params={
+        #         "dag_logs_path": DAG_LOGS_PATH + "/" + dag_log_dir,
+        #         "n_to_keep": 2  # TODO: get per-DAG setting
+        #     }
+        # )
+        grep_dag_logs = BashOperator(
+            task_id=sanitize_glob_string(dag_glob),
+            bash_command="""
+                airflow_log_grepper_to_graphite \
+                    '{{params.dag_greps_file}}' \
+                    {{params.dag_logs_path}}
+            """,
+            params={
+                "dag_logs_path": DAG_LOGS_PATH,
+                "dag_greps_file":
+                    DAG_CONFIGS_PATH + "/" + dag_config_file,
+            },
+            task_concurrency=3,
         )
-        print("{} {} {}".format(metric, count, DATE))
-        if not testing:
-            result = subprocess.check_output(
-                (
-                    "timeout 3 echo {metric} {count} {dt} | " +
-                    "nc {server} {port}"
-                ).format(
-                    metric=metric,
-                    count=count,
-                    dt=DATE,
-                    server="graphite",
-                    port=2003
-                ),
-                shell=True,
-            )
+        # clean_older_dags >> grep_dag_logs

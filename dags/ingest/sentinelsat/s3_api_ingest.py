@@ -58,14 +58,10 @@ this_dag = DAG(
     dag_id=DAG_ID,
     default_args=get_default_args(
         # this start date should be the first granule to ingest
-        start_date=datetime(2016, 2, 16, 1, 00, 00)
+        start_date=datetime(2016, 2, 16, 1, 00, 00)  # s3 launch date
     ),
-    # === 2) for latest-only coverage checks:
-    schedule_interval=None,  # the frequency of granules
-    #schedule_interval=timedelta(minutes=5),  # how often to check       #TODO once have all images up to today's date, make the check once a day or week
-    catchup=False,  # latest only
+    schedule_interval="0 12 * * *",  # how often to check
     max_active_runs=1,
-    # ===
 )
 this_dag.doc_md = __doc__  # sets web GUI to use docstring at top of file
 

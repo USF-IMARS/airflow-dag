@@ -55,6 +55,7 @@ with DAG(
                 #         "n_to_keep": 2  # TODO: get per-DAG setting
                 #     }
                 # )
+                # TODO: what happens if a dag matches more than one glob?!?
                 grep_dag_logs = BashOperator(
                     task_id="grep_logs_{}".format(dag_log_dir),
                     bash_command="""
@@ -64,7 +65,8 @@ with DAG(
                     """,
                     params={
                         "dag_logs_path": DAG_LOGS_PATH + "/" + dag_log_dir,
-                        "dag_greps_file": dag_config_file,
+                        "dag_greps_file":
+                            DAG_CONFIGS_PATH + "/" + dag_config_file,
                     },
                     task_concurrency=3,
                 )

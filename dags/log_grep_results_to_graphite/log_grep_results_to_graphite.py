@@ -47,14 +47,14 @@ with DAG(
         # for each DAG matching the config
         for dag_log_dir in os.listdir(DAG_LOGS_PATH):
             if fnmatch.fnmatch(dag_log_dir, dag_glob):
-                clean_older_dags = BashOperator(
-                    task_id='clean_older_{}'.format(dag_log_dir),
-                    bash_command=CLEAN_OLDER_DAGS_CMD,
-                    params={
-                        "dag_logs_path": DAG_LOGS_PATH + "/" + dag_log_dir,
-                        "n_to_keep": 2  # TODO: get per-DAG setting
-                    }
-                )
+                # clean_older_dags = BashOperator(
+                #     task_id='clean_older_{}'.format(dag_log_dir),
+                #     bash_command=CLEAN_OLDER_DAGS_CMD,
+                #     params={
+                #         "dag_logs_path": DAG_LOGS_PATH + "/" + dag_log_dir,
+                #         "n_to_keep": 2  # TODO: get per-DAG setting
+                #     }
+                # )
                 grep_dag_logs = BashOperator(
                     task_id="grep_logs_{}".format(dag_log_dir),
                     bash_command="""
@@ -68,4 +68,4 @@ with DAG(
                     },
                     task_concurrency=3,
                 )
-                clean_older_dags >> grep_dag_logs
+                # clean_older_dags >> grep_dag_logs

@@ -1,8 +1,7 @@
 import os
 import sys
 import subprocess
-from imars_dags.dags.log_grep_results_to_graphite.log_grepper \
-    import get_grepped_log_counts
+from .log_grepper import get_grepped_log_counts
 
 
 def sanitize_glob_string(glob_str):

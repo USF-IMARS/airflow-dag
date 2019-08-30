@@ -1,8 +1,8 @@
 """
-=========================================================================
-this sets up a file watcher that catches a whole bunch of products
+---------------------------------------------------------------------------
+Sets up a file watcher that catches a whole bunch of products
 and triggers DAGs and changes their status in the metadata db.
-=========================================================================
+---------------------------------------------------------------------------
 Tasks in this DAG watch the imars metadata db for `status_id=="to_load"`
 files of a certain `product` type. The `product.short_name` is used in the
 name of the DAG in the form `file_trigger_{short_name}.py`. The
@@ -33,14 +33,14 @@ The following diagram illustrates the relationship between this DAG and
 
 ```
                                                     |====> ["std"]
-(auto_ingest_dag) =|                                |
-manual_ingest =====|==> ["to_load"] ==(file_trigger_dag)===> (processing_dag_1)
-                                                      |====> (processing_dag_2)
-                                                      |       ...
-key:                                                  |====> (processing_dag_n)
----------
-(dag_name)
-["status"]
+    (auto_ingest_dag) =|                            |
+    manual_ingest =====|==> ["to_load"] ==(file_trigger_dag)=> (proc_dag_1)
+                                                    |====> (processing_dag_2)
+                                                    |       ...
+    key:                                            |====> (processing_dag_n)
+    ---------
+    (dag_name)
+    ["status"]
 ```
 """
 from airflow import DAG

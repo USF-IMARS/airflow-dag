@@ -5,9 +5,9 @@ ORTHO_DIR=ortho
 RRS_OUT=output
 CLASS_OUT=$RRS_OUT
 
-rrs_SQL="area_id={{params.area_id}} AND product_id={{params.Rrs_ID}} AND date_time='{{ts}}' AND provenance='af-ntftorrs_v2'"
-RRS_SQL="area_id={{params.area_id}} AND product_id={{params.rrs_ID}} AND date_time='{{ts}}' AND provenance='af-ntftorrs_v2'"
-MAP_SQL="area_id={{params.area_id}} AND product_id={{params.classf_ID}} AND date_time='{{ts}}' AND provenance='af-ntftorrs_v2'"
+rrs_SQL="\"area_id={{params.area_id}} AND product_id={{params.Rrs_ID}} AND date_time='{{ts}}' AND provenance='af-ntftorrs_v2'\""
+RRS_SQL="\"area_id={{params.area_id}} AND product_id={{params.rrs_ID}} AND date_time='{{ts}}' AND provenance='af-ntftorrs_v2'\""
+MAP_SQL="\"area_id={{params.area_id}} AND product_id={{params.classf_ID}} AND date_time='{{ts}}' AND provenance='af-ntftorrs_v2'\""
 
 if imars-etl select $rrs_SQL && imars-etl select $RRS_SQL && imars-etl select $MAP_SQL ;
 then

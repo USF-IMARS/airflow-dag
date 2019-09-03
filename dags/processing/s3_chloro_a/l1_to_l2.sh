@@ -46,3 +46,4 @@ else
         --sql $L2_SQL\
         --json '{"area_short_name":"{{params.area_short_name}}"}'\
         $L2_PATH
+fi

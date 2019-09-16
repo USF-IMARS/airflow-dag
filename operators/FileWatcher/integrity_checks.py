@@ -1,4 +1,5 @@
 import os.path
+import os.remove
 from os import stat
 import socket
 import subprocess
@@ -185,7 +186,17 @@ def _handle_duplicate_entries(keep_path, del_path):
     print("="*80 + "\n !!! DUPLICATE !!! \n" + "v"*80)
     print("keeping:\n" + keep_path)
     print(del_path + "\nis being deleted")
-    print("^"*80 + "\n LOL JK; DO IT MANUALLY YOU FAT DINK. \n" + "="*80)
-    # TODO: rm del_path entry in db
-    # TODO: rm file @ del_path
+    # === TODO: rm del_path entry in db
+    DEL_STATUS_ID = 4  # ?
+    # TODO: rm del_path entry
     raise NotImplementedError("NYI")
+    imars-etl.sql
+        "UPDATE file SET status_id={} WHERE filepath='{}'".format(
+            DEL_STATUS_ID, del_path
+        )
+    # === TODO: rm file @ del_path
+    print("^"*80 + "\n LOL JK; DO IT MANUALLY YOU FAT DINK. \n" + "="*80)
+    # rm file @ del_path
+    os.remove(del_path)
+    # create symlink?
+    os.symlink(keep_path, del_path)

@@ -31,3 +31,4 @@ else
     imars-etl load --sql \
         $L3_SQL \
         $OUTFILE
+fi

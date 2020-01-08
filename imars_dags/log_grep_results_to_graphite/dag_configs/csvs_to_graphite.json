@@ -1,5 +1,0 @@
-{
-    "*": {
-        "socket_timeout": "socket.error: [Errno 110] Connection timed out"
-    }
-}

@@ -18,14 +18,12 @@ from datetime import datetime
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 
-from imars_dags.util.get_default_args import get_default_args
-
 
 this_dag = DAG(
     dag_id="bouys_to_graphite_fgbnms",
-    default_args=get_default_args(
-        start_date=datetime(2014, 1, 1)
-    ),
+    default_args={
+        "start_date": datetime(2014, 1, 1)
+    },
     schedule_interval="59 23 * * *",
     max_active_runs=3,  # low to ensure we don't hurt his server
 )

@@ -7,14 +7,12 @@ from datetime import datetime
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 
-from imars_dags.util.get_default_args import get_default_args
-
 
 this_dag = DAG(
     dag_id="csvs_to_graphite",
-    default_args=get_default_args(
-        start_date=datetime(2018, 7, 30)
-    ),
+    default_args={
+            "start_date": datetime(2014, 1, 1)
+    },
     schedule_interval="00 12 * * * *",
     catchup=False,
     max_active_runs=1,

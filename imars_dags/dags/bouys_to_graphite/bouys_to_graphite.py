@@ -36,7 +36,7 @@ data_url = (
     "http://tabs.gerg.tamu.edu/~woody/newtabs/viewdata.php?buoy=tabs_fg2"
 )
 script_path = (
-    "/home/airflow/dags/imars_dags/dags/ingest/bouys_to_graphite/" +
+    "/home/airflow/dags/imars_dags/imars_dags/ingest/bouys_to_graphite/" +
     "bouy_file_to_graphite.py"
 )
 load_data_to_graphite = BashOperator(

@@ -29,7 +29,7 @@ with this_dag as dag:
         ),
         bash_command="""
             python2 \
-            /home/airflow/dags/imars_dags/dags/csvs_to_graphite/py_scripts/fgbnms_csvs2graph.py
+            /home/airflow/dags/imars_dags/imars_dags/csvs_to_graphite/py_scripts/fgbnms_csvs2graph.py
         """,
     )
     fgb_river_ts = BashOperator(
@@ -38,7 +38,7 @@ with this_dag as dag:
         ),
         bash_command="""
             python2 \
-            /home/airflow/dags/imars_dags/dags/csvs_to_graphite/py_scripts/fgb_river_ts.py
+            /home/airflow/dags/imars_dags/imars_dags/csvs_to_graphite/py_scripts/fgb_river_ts.py
         """,
     )
     fgb_sat_region = BashOperator(
@@ -47,7 +47,7 @@ with this_dag as dag:
         ),
         bash_command="""
             python2 \
-            /home/airflow/dags/imars_dags/dags/csvs_to_graphite/py_scripts/fgb_sat_region.py
+            /home/airflow/dags/imars_dags/imars_dags/csvs_to_graphite/py_scripts/fgb_sat_region.py
         """,
     )
 
@@ -58,7 +58,7 @@ with this_dag as dag:
         ),
         bash_command="""
             python2 \
-            /home/airflow/dags/imars_dags/dags/csvs_to_graphite/py_scripts/fk_sat_region.py
+            /home/airflow/dags/imars_dags/imars_dags/csvs_to_graphite/py_scripts/fk_sat_region.py
         """,
     )
     fk_river_ts = BashOperator(
@@ -67,7 +67,7 @@ with this_dag as dag:
         ),
         bash_command="""
             python2 \
-            /home/airflow/dags/imars_dags/dags/csvs_to_graphite/py_scripts/fk_river_ts.py
+            /home/airflow/dags/imars_dags/imars_dags/csvs_to_graphite/py_scripts/fk_river_ts.py
         """,
     )
     fk_bouy_ts = BashOperator(
@@ -76,6 +76,6 @@ with this_dag as dag:
         ),
         bash_command="""
             python2 \
-            /home/airflow/dags/imars_dags/dags/csvs_to_graphite/py_scripts/fk_bouy_ts.py
+            /home/airflow/dags/imars_dags/imars_dags/csvs_to_graphite/py_scripts/fk_bouy_ts.py
         """,
     )

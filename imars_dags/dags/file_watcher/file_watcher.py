@@ -64,51 +64,51 @@ with this_dag as dag:
     # ======================================================================
     # === incoming wv2 .ntf files (already unzipped)
     # pid=11, short_name=ntf_wv2_m1bs
-    assert 11 not in claimed_ids
-    from imars_dags.dags.processing.wv2_classification import wv_classification
-    file_trigger_ntf_wv2_m1bs = FileWatcherOperator(
-        task_id="file_trigger_ntf_wv2_m1bs",
-        product_ids=[11],
-        dags_to_trigger=[
-            get_dag_id(
-                dag_name=wv_classification.DAG_NAME,
-                dag_type=DAGType.PROCESSING
-            )
-        ],
-        area_names=wv_classification.AREAS,
-    )
-    claimed_ids.append(11)
+    # assert 11 not in claimed_ids
+    # from imars_dags.dags.processing.wv2_classification import wv_classification
+    # file_trigger_ntf_wv2_m1bs = FileWatcherOperator(
+    #     task_id="file_trigger_ntf_wv2_m1bs",
+    #     product_ids=[11],
+    #     dags_to_trigger=[
+    #         get_dag_id(
+    #             dag_name=wv_classification.DAG_NAME,
+    #             dag_type=DAGType.PROCESSING
+    #         )
+    #     ],
+    #     area_names=wv_classification.AREAS,
+    # )
+    # claimed_ids.append(11)
 
     # === incoming zipped wv2 files
     # id 6 == zip_wv3_ftp_ingest
-    assert 6 not in claimed_ids
-    from imars_dags.dags.processing import wv2_unzip
-    file_trigger_zip_wv2_ftp_ingest = FileWatcherOperator(
-        task_id="file_trigger_zip_wv2_ftp_ingest",
-        product_ids=[6],
-        dags_to_trigger=[
-            get_dag_id(
-                dag_name=wv2_unzip.DAG_NAME, dag_type=DAGType.PROCESSING
-            )
-        ],
-        area_names=wv2_unzip.AREAS
-    )
-    claimed_ids.append(6)
+    # assert 6 not in claimed_ids
+    # from imars_dags.dags.processing import wv2_unzip
+    # file_trigger_zip_wv2_ftp_ingest = FileWatcherOperator(
+    #     task_id="file_trigger_zip_wv2_ftp_ingest",
+    #     product_ids=[6],
+    #     dags_to_trigger=[
+    #         get_dag_id(
+    #             dag_name=wv2_unzip.DAG_NAME, dag_type=DAGType.PROCESSING
+    #         )
+    #     ],
+    #     area_names=wv2_unzip.AREAS
+    # )
+    # claimed_ids.append(6)
 
     # === incoming Sentinel 3 zipped EFR files
-    assert 36 not in claimed_ids
-    from imars_dags.dags.processing.s3_chloro_a import s3_chloro_a
-    file_trigger_s3a_zipped_ol_1_efr = FileWatcherOperator(
-        task_id="file_trigger_s3a_zipped_ol_1_efr",
-        product_ids=[36],
-        dags_to_trigger=[
-            get_dag_id(
-                dag_name=s3_chloro_a.DAG_NAME, dag_type=DAGType.PROCESSING
-            )
-        ],
-        area_names=s3_chloro_a.AREAS
-    )
-    claimed_ids.append(36)
+    # assert 36 not in claimed_ids
+    # from imars_dags.dags.processing.s3_chloro_a import s3_chloro_a
+    # file_trigger_s3a_zipped_ol_1_efr = FileWatcherOperator(
+    #     task_id="file_trigger_s3a_zipped_ol_1_efr",
+    #     product_ids=[36],
+    #     dags_to_trigger=[
+    #         get_dag_id(
+    #             dag_name=s3_chloro_a.DAG_NAME, dag_type=DAGType.PROCESSING
+    #         )
+    #     ],
+    #     area_names=s3_chloro_a.AREAS
+    # )
+    # claimed_ids.append(36)
 
     # ======================================================================
     # ids cannot be claimed more than once; that would cause missing DAGRuns.

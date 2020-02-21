@@ -13,7 +13,6 @@ from airflow.exceptions import AirflowSkipException
 
 import imars_etl
 
-import airflow  # required to set up PYTHONPATH
 # from imars_dags.operators.FileWatcher.check_ipfs_accessible \
 #     import check_ipfs_accessible
 from imars_dags.operators.FileWatcher.check_locally_accessible \

@@ -70,10 +70,7 @@ with this_dag as dag:
         task_id="file_trigger_ntf_wv2_m1bs",
         product_ids=[11],
         dags_to_trigger=[
-            get_dag_id(
-                dag_name=wv_classification.DAG_NAME,
-                dag_type=DAGType.PROCESSING
-            )
+            wv_classification.DAG_NAME,
         ],
         area_names=wv_classification.AREAS,
     )

@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import imars_etl
 
-from imars_dags.dags.processing.wv2_classification.scripts.read_bands_at \
+from imars_dags.dags.wv2_classification.scripts.read_bands_at \
     import read_bands_at
 
 

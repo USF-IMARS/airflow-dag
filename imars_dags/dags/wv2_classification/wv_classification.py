@@ -22,7 +22,7 @@ from imars_dags.dags.wv2_classification.Area import Area
 from imars_dags.util.get_dag_id import get_dag_id
 from imars_dags.dags.wv2_classification.scripts.add_img_points_to_csv \
     import add_img_points_to_csv
-
+from imars_dags.util.globals import QUEUE
 
 DAG_NAME = os.path.splitext(os.path.basename(__file__))[0]
 
@@ -46,9 +46,9 @@ for area_short_name in AREAS:
             region=area_short_name,
             dag_name=DAG_NAME
         ),
-        default_args=get_default_args(
-            start_date=datetime(2007, 9, 18)  # WV1 launch
-        ),
+        default_args={
+            "start_date": datetime(2007, 9, 18)  # WV1 launch
+        },
         schedule_interval=None,
         concurrency=20,
     )

@@ -19,7 +19,6 @@ from airflow.operators.python_operator import PythonOperator
 
 # this package
 from imars_dags.dags.wv2_classification.Area import Area
-from imars_dags.util.get_dag_id import get_dag_id
 from imars_dags.dags.wv2_classification.scripts.add_img_points_to_csv \
     import add_img_points_to_csv
 from imars_dags.util.globals import QUEUE
@@ -41,11 +40,7 @@ for area_short_name in AREAS:
     area_short_name = area.short_name
     area_id = area.id
     this_dag = DAG(
-        dag_id=get_dag_id(
-            __file__,
-            region=area_short_name,
-            dag_name=DAG_NAME
-        ),
+        dag_id=DAG_NAME + '_' + area_short_name,
         default_args={
             "start_date": datetime(2007, 9, 18)  # WV1 launch
         },

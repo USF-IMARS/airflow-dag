@@ -82,9 +82,7 @@ with this_dag as dag:
     #     task_id="file_trigger_zip_wv2_ftp_ingest",
     #     product_ids=[6],
     #     dags_to_trigger=[
-    #         get_dag_id(
-    #             dag_name=wv2_unzip.DAG_NAME, dag_type=DAGType.PROCESSING
-    #         )
+    #         wv2_unzip.DAG_NAME
     #     ],
     #     area_names=wv2_unzip.AREAS
     # )
@@ -97,9 +95,7 @@ with this_dag as dag:
     #     task_id="file_trigger_s3a_zipped_ol_1_efr",
     #     product_ids=[36],
     #     dags_to_trigger=[
-    #         get_dag_id(
-    #             dag_name=s3_chloro_a.DAG_NAME, dag_type=DAGType.PROCESSING
-    #         )
+    #         dag_name=s3_chloro_a.DAG_NAME
     #     ],
     #     area_names=s3_chloro_a.AREAS
     # )

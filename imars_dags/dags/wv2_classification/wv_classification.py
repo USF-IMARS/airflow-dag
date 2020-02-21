@@ -19,6 +19,7 @@ from airflow.operators.python_operator import PythonOperator
 
 # this package
 from imars_dags.dags.wv2_classification.Area import Area
+from imars_dags.util.get_dag_id import get_dag_id
 from imars_dags.dags.wv2_classification.scripts.add_img_points_to_csv \
     import add_img_points_to_csv
 

@@ -47,7 +47,7 @@ from airflow import DAG
 
 from imars_dags.operators.FileWatcher.FileWatcherOperator \
     import FileWatcherOperator
-from imars_dags.dags.file_watcher.get_dag_id import get_dag_id
+from imars_dags.util.get_dag_id import get_dag_id
 from imars_dags.dags.file_watcher.DAGType import DAGType
 
 

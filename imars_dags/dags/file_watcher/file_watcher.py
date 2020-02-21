@@ -65,7 +65,7 @@ with this_dag as dag:
     # === incoming wv2 .ntf files (already unzipped)
     # pid=11, short_name=ntf_wv2_m1bs
     assert 11 not in claimed_ids
-    from imars_dags.dags.processing.wv2_classification import wv_classification
+    from imars_dags.dags.wv2_classification import wv_classification
     file_trigger_ntf_wv2_m1bs = FileWatcherOperator(
         task_id="file_trigger_ntf_wv2_m1bs",
         product_ids=[11],

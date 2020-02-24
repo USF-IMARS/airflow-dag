@@ -15,12 +15,9 @@ import os
 # deps
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
-from airflow.operators.python_operator import PythonOperator
 
 # this package
 from imars_dags.dags.wv2_classification.Area import Area
-from imars_dags.dags.wv2_classification.scripts.add_img_points_to_csv \
-    import add_img_points_to_csv
 from imars_dags.util.globals import QUEUE
 
 DAG_NAME = os.path.splitext(os.path.basename(__file__))[0]
@@ -83,22 +80,6 @@ for area_short_name in AREAS:
     )
 
     # TODO: rrs_to_class
-
-    # === save band values from selected points for later analysis
-    # TODO: all points currently in west fl pen,
-    #       but hopefully we get more and rm this if.
-    if area_short_name == 'west_fl_pen':
-        img_bands_at_pts_to_csv = PythonOperator(
-            dag=this_dag,
-            task_id='img_bands_at_pts_to_csv',
-            queue=QUEUE.WV2_PROC,
-            provide_context=True,
-            python_callable=add_img_points_to_csv,
-            op_kwargs={
-                'product_id': PRODUCT_ID_Rrs
-            }
-        )
-        ntf_to_rrs >> img_bands_at_pts_to_csv
 
     # === DAG connections
     # ntf_to_rrs >> rrs_to_class

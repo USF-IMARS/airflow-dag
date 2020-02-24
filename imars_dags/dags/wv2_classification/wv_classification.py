@@ -32,7 +32,14 @@ AREAS = [
     'monroe',
     'panhandle',
     'west_fl_pen',
-    'tx_coast',
+    # 'tx_coast',  TODO: this one out-of-date
+    'alabama',
+    'mississippi',
+    'la_east',
+    'la_west',
+    'texas_sw',
+    'texas_ne',
+    'texas_central'
 ]
 
 for area_short_name in AREAS:

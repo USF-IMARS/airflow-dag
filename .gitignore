@@ -1,6 +1,8 @@
 # sensitive login info
 settings/secrets.py
 
+virtualEnv/
+
 # =============================================================================
 
 # Byte-compiled / optimized / DLL files

@@ -36,8 +36,7 @@ def check_for_duplicates(file_meta):
 
     result = imars_etl.select(
         cols="filepath,multihash",
-        sql=sql_selection,
-        first=False,
+        sql=sql_selection
     )
     fpath_i = 0
     mhash_i = 1

@@ -17,7 +17,7 @@ from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 
 # this package
-from imars_dags.dags.util.Area import Area
+from imars_dags.util.Area import Area
 from imars_dags.util.globals import QUEUE
 
 DAG_NAME = os.path.splitext(os.path.basename(__file__))[0]

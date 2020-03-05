@@ -30,7 +30,7 @@ for area_short_name in AREAS:
     AREA_SHORT_NAME = area.short_name
     AREA_ID = area.id
 
-    DAG_ID = "s3_chloro_a_{}".format(AREA_ID)
+    DAG_ID = "s3_chloro_a_{}".format(area_short_name)
     THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 
     this_dag = DAG(

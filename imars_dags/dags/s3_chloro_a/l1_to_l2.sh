@@ -1,6 +1,6 @@
 #!/bin/bash
-L2_SQL='product_id={{params.l2_pid}} AND area_id={{params.area_id}} AND date_time="{{execution_date}}" AND provenance="af-l1tol2_v1"'
-if imars-etl select $L2_SQL ;
+L2_SQL="product_id={{params.l2_pid}} AND area_id={{params.area_id}} AND date_time=\"{{execution_date}}\" AND provenance=\"af-l1tol2_v1\""
+if imars-etl select "$L2_SQL" ;
 then
     echo "L2 product already exists"
 else
@@ -43,7 +43,6 @@ else
 
     echo '=== Load...'
     imars-etl load \
-        --sql $L2_SQL\
-        --json '{"area_short_name":"{{params.area_short_name}}"}'\
+        --sql "$L2_SQL" \
         $L2_PATH
 fi

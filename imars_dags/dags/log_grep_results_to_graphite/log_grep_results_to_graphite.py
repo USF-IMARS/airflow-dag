@@ -1,6 +1,11 @@
 """
-
-
+This DAG sends statistics about task runs to graphite for visualization in
+grafana.
+.json files in ./dag_configs/ are named with a glob expression to match the
+relevant dags.
+Inside the files is a json object with keys to match task ids.
+Within each task object there is a list of strings to grep for in the logs and
+keys used to name the result.
 """
 # std libs
 from datetime import datetime

@@ -1,0 +1,5 @@
+{
+    "file_trigger_*": {
+        "file_not_found": "FileNotFoundError: [Errno 2] No such file or directory:"
+    }
+}

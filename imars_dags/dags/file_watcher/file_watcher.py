@@ -89,17 +89,17 @@ with this_dag as dag:
     # claimed_ids.append(6)
 
     # === incoming Sentinel 3 zipped EFR files
-    # assert 36 not in claimed_ids
-    # from imars_dags.dags.processing.s3_chloro_a import s3_chloro_a
-    # file_trigger_s3a_zipped_ol_1_efr = FileWatcherOperator(
-    #     task_id="file_trigger_s3a_zipped_ol_1_efr",
-    #     product_ids=[36],
-    #     dags_to_trigger=[
-    #         dag_name=s3_chloro_a.DAG_NAME
-    #     ],
-    #     area_names=s3_chloro_a.AREAS
-    # )
-    # claimed_ids.append(36)
+    assert 36 not in claimed_ids
+    from imars_dags.dags.s3_chloro_a import s3_chloro_a
+    file_trigger_s3a_zipped_ol_1_efr = FileWatcherOperator(
+        task_id="file_trigger_s3a_zipped_ol_1_efr",
+        product_ids=[36],
+        dags_to_trigger=[
+            s3_chloro_a.DAG_NAME
+        ],
+        area_names=s3_chloro_a.AREAS
+    )
+    claimed_ids.append(36)
 
     # ======================================================================
     # ids cannot be claimed more than once; that would cause missing DAGRuns.

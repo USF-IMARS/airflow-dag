@@ -1,0 +1,8 @@
+{
+    "ntf_to_rrs": {
+        "gdal_warp_err": "ERROR- Error found - Return Code = 1:  gdalwarp ",
+        "index_err_s5": "INFO - IndexError: index 5 is out of bounds for axis 0 with size 5",
+        "missing_module": "No module named wv_classify.wv_classify"
+    },
+    "img_bands_at_pts_to_csv": {}
+}

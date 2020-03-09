@@ -1,0 +1,5 @@
+{
+    "*": {
+        "duplicate_file": "imars_etl.exceptions.DuplicateFileException.DuplicateFileException: file found in metadata db with identical content",
+    }
+}

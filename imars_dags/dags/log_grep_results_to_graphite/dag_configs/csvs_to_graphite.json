@@ -1,5 +1,6 @@
 {
     "*": {
-        "socket_timeout": "socket.error: [Errno 110] Connection timed out"
+        "socket_timeout": "socket.error: [Errno 110] Connection timed out",
+        "socket_unknown": "socket.gaierror: [Errno -2] Name or service not known"
     }
 }

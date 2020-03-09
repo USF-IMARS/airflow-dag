@@ -11,7 +11,8 @@ from airflow.operators.bash_operator import BashOperator
 this_dag = DAG(
     dag_id="csvs_to_graphite",
     default_args={
-            "start_date": datetime(2014, 1, 1)
+            "start_date": datetime(2014, 1, 1),
+            "retries": 2,
     },
     schedule_interval="00 12 * * * *",
     catchup=False,

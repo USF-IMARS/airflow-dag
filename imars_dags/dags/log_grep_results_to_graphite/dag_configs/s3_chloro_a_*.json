@@ -1,0 +1,9 @@
+{
+    "l1_to_l2": {
+        "duplicate_file": "imars_etl.exceptions.DuplicateFileException.DuplicateFileException: file found in metadata db with identical content",
+        "sigterm": "Received SIGTERM. Terminating subprocesses"
+    },
+    "l2_to_l3": {
+        "duplicate_file": "imars_etl.exceptions.DuplicateFileException.DuplicateFileException: file found in metadata db with identical content",
+    }
+}

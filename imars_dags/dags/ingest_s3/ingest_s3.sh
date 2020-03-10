@@ -6,13 +6,13 @@
 # these dates come from airflow. example: 20191130
 START_DATE="{{prev_ds_nodash}}"
 END_DATE="{{ds_nodash}}"
-
+GEOJSON_PATH="/home/airflow/dags/imars_dags/imars_dags/dags/ingest_s3/florida.geojson"
 mkdir s3files
 
 sentinelsat \
 	-d \
 	--url "https://scihub.copernicus.eu/dhus" \
-	-g "florida.geojson" \
+	-g $GEOJSON_PATH\
 	-s $START_DATE -e $END_DATE \
 	--producttype "OL_1_EFR___" \
 	--path "s3files"

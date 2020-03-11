@@ -12,7 +12,7 @@ mkdir s3files
 sentinelsat \
 	-d \
 	--url "https://scihub.copernicus.eu/dhus" \
-	-g $GEOJSON_PATH\
+	-g $GEOJSON_PATH \
 	-s $START_DATE -e $END_DATE \
 	--producttype "OL_1_EFR___" \
 	--path "s3files"

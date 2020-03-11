@@ -20,7 +20,7 @@ sentinelsat \
 	# -- instrument ???
 	# -- cloud 30
 
-find ./s3files -name 'S3A_OL_1_EFR__*.zip' \
+find ./s3files -name 'S3*.zip' \
 	| xargs -n 1 imars-etl load \
 		--duplicates_ok \
 		--sql 'product_id=36 AND area_id=12 AND provenance="s3_api_af_v01"' \

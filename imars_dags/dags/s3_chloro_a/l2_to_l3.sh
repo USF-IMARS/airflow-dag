@@ -1,6 +1,6 @@
 #!/bin/bash
 L3_SQL="product_id={{params.p_id}} AND area_id={{params.area_id}} AND date_time='{{ts}}' AND provenance='af-l2tol3_v1'"
-if imars-etl select $L3_SQL ;
+if imars-etl select "$L3_SQL" ;
 then
     echo "L2 product already exists"
 else
@@ -29,6 +29,6 @@ else
 
     echo '=== Load...'
     imars-etl load --duplicates_ok \
-        --sql $L3_SQL \
+        --sql "$L3_SQL" \
         $OUTFILE
 fi

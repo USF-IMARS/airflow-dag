@@ -42,7 +42,7 @@ else
 
 
     echo '=== Load...'
-    imars-etl load -vvv --duplicates_ok \
+    imars-etl -vvv load --duplicates_ok \
         --sql "$L2_SQL" \
         $L2_PATH
 fi

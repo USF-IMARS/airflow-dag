@@ -1,6 +1,6 @@
 #!/bin/bash
 L3_SQL="product_id={{params.p_id}} AND area_id={{params.area_id}} AND date_time='{{ts}}' AND provenance='af-l2tol3_v1'"
-if imars-etl select "$L3_SQL" ;
+if imars-etl -vvv select "$L3_SQL" ;
 then
     echo "L2 product already exists"
 else
@@ -12,7 +12,7 @@ else
 
     echo '=== Extract...'
     L2_PATH='input.nc'
-    imars-etl extract -o $L2_PATH \
+    imars-etl -vvv extract -o $L2_PATH \
         "product_id={{params.input_pid}} AND area_id={{params.input_area_id}} AND date_time='{{ts}}'"
 
     GPT_XML={{ params.gpt_xml }}

@@ -24,7 +24,6 @@ from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 import imars_etl
 
-from imars_dags.util.get_default_args import get_default_args
 from imars_dags.util.merge_dicts import merge_dicts
 
 
@@ -62,12 +61,12 @@ class IngestDirectoryDAG(DAG):
             schedule_interval=schedule_interval,
             catchup=False,
             max_active_runs=1,
-            default_args=get_default_args(
+            default_args={
                 # start_date is ideally utcnow()-schedule_interval but
                 #   that gets tricky if schedule_interval is string.
-                start_date=datetime(2018, 7, 30),
-                retries=0,
-            ),
+                "start_date": datetime(2018, 7, 30),
+                "retries": 0,
+            },
             **kwargs
         )
         self.directory_path = directory_path

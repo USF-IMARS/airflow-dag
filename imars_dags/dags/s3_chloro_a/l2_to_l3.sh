@@ -28,7 +28,7 @@ else
     echo "I guess so?"
 
     echo '=== Load...'
-    imars-etl load --duplicates_ok \
+    imars-etl -vvv load --duplicates_ok \
         --sql "$L3_SQL" \
         $OUTFILE
 fi

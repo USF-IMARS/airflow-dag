@@ -12,7 +12,7 @@ else
     #         'product_id={{params.l1_pid}} AND date_time="{{ts}}"'
     # )
     # instead of this:
-    imars-etl extract \
+    imars-etl -vvv extract \
         'product_id={{params.l1_pid}} AND date_time="{{ts}}"'
     L1_PATH=$(ls *.zip)
 

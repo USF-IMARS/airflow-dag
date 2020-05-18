@@ -15,23 +15,47 @@ the data.
 
 import _csv_to_graphite as csv2graph
 
-FILENAME_FORMAT = (
-    "{directory}{prod}_TS_MODA_{timescale}_{loc}.csv"
-)
 
-
-def csv2graph_roi(roi, subregions, directory):
-    # TODO: could use glob instead of manually passing subregions
-    for prod in [
+def csv2graph_roi(
+    roi, subregions, directory,
+    db_version="",  # v2
+    prod_format_strings=[
         "/EXT_TS_AQUA/OC/{roi_upper}db_chlor_a",
         "/EXT_TS_AQUA/OC/{roi_upper}db_nflh",
         "/EXT_TS_AQUA/OC/{roi_upper}db_Rrs_667",
         "/EXT_TS_AQUA/OC/{roi_upper}db_ABI",
         "/EXT_TS_AQUA/SST4/{roi_upper}db_sst4"
-    ]:
+    ],
+    FILENAME_FORMAT="{directory}{prod}_TS_MODA_{timescale}_{loc}.csv"
+):
+    """
+    Parameters:
+    -----------
+    roi : str
+        lowercase (large) region of interest.
+        e.g. fk or fgb
+    subregions: str []
+        small RoI names from within the larger RoI.
+    directory: str (path)
+        path to the directory which contains the files.
+    
+    Example Usage:
+    --------------
+    csv2graph_roi(
+        roi='FK',
+        subregions=[
+            'BB', 'UK', 'MR', 'SFP12', 'SFP18', 'WS', 'LK', 'DT', 'WFS', 'SR',
+            'IFB', 'FLB'
+        ],
+        directory='/srv/imars-objects/modis_aqua_fk'
+    )
+        
+    """
+    # TODO: could use glob instead of manually passing subregions
+    for prod in prod_format_strings:
         for loc in subregions:
             # === daily
-            product_name = prod.split("db_")[1]
+            product_name = prod.split("db{}_".format(db_version)[1]
             fname = FILENAME_FORMAT.format(
                 directory=directory,
                 prod=prod.format(

@@ -80,3 +80,10 @@ with this_dag as dag:
             /home/airflow/dags/imars_dags/imars_dags/dags/csvs_to_graphite/py_scripts/fk_bouy_ts.py
         """,
     )
+    fwc_sat_regions = BashOperator(
+        task_id="fwc_sat_regions",
+        bash_command="""
+            python2 \
+            /home/airflow/dags/imars_dags/imars_dags/dags/csvs_to_graphite/py_scripts/fwc_sat_region.py
+        """
+    )

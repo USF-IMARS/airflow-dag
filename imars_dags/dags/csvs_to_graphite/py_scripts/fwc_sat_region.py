@@ -17,7 +17,7 @@ csv2graph_roi(
         'SFP7', 'SFP8', 'SFP9_5', 'SPF9', 'SLI', 'SOM', 'SR', 'UFB1', 'UFB2', 'UFB4', 'UK',
         'UK_IN', 'UK_MID', 'UK_OFF', 'WFB', 'WFS', 'WS'
     ],
-    directory='/srv/imars-objects/fk/',
+    directory='/srv/imars-objects/fk',
     db_version="v2",
     prod_format_strings=[
         '/EXT_TS_VSNPP/SSTN/{roi_upper}dbv2_sstn',

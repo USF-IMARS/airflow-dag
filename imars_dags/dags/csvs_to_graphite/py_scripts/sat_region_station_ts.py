@@ -55,7 +55,7 @@ def csv2graph_roi(
     for prod in prod_format_strings:
         for loc in subregions:
             # === daily
-            product_name = prod.split("db{}_".format(db_version)[1]
+            product_name = prod.split("db{}_".format(db_version))[1]
             fname = FILENAME_FORMAT.format(
                 directory=directory,
                 prod=prod.format(

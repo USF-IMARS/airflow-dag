@@ -4,7 +4,7 @@ from sat_region_station_ts import csv2graph_roi
 
 csv2graph_roi(
     roi='fk',
-    [
+    subregions=[
         'BB', 'BIS', 'CAR', 'DT', 'DTN', 'EFB', 'ED_IN', 'EK_MID', 'FLB', 'FROCK', 
         'IFB', 'KW', 'LK', 'MIA', 'MK', 'MOD', 'MQ', 'MR', 'MUK', 'PBI', 'PEV', 'SANDK', 
         'SFP10', 'SFP11', 'SFP12', 'SFP13', 'SFP14', 'SFP15_5', 'SFP15', 'SFP16', 'SFP17',
@@ -17,7 +17,7 @@ csv2graph_roi(
         'SFP7', 'SFP8', 'SFP9_5', 'SPF9', 'SLI', 'SOM', 'SR', 'UFB1', 'UFB2', 'UFB4', 'UK',
         'UK_IN', 'UK_MID', 'UK_OFF', 'WFB', 'WFS', 'WS'
     ],
-    '/srv/imars-objects/fk/',
+    directory='/srv/imars-objects/fk/',
     db_version="v2",
     prod_format_strings=[
         '/EXT_TS_VSNPP/SSTN/{roi_upper}dbv2_sstn',

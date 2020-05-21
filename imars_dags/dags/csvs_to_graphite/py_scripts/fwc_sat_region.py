@@ -5,7 +5,7 @@ from sat_region_station_ts import csv2graph_roi
 csv2graph_roi(
     roi='fwc',
     subregions=[
-        'BB', 'BIS', 'CAR', 'DT', 'DTN', 'EFB', 'ED_IN', 'EK_MID', 'FLB', 'FROCK', 
+        'BB', 'BIS', 'CAR', 'DT', 'DTN', 'EFB', 'EK_IN', 'EK_MID', 'FLB', 'FROCK', 
         'IFB', 'KW', 'LK', 'MIA', 'MK', 'MOD', 'MQ', 'MR', 'MUK', 'PBI', 'PEV', 'SANDK', 
         'SFP10', 'SFP11', 'SFP12', 'SFP13', 'SFP14', 'SFP15_5', 'SFP15', 'SFP16', 'SFP17',
         'SFP18', 'SFP19', 'SFP1', 'SFP20', 'SFP21_5', 'SFP22_5', 'SFP22', 'SFP23', 'SFP24',

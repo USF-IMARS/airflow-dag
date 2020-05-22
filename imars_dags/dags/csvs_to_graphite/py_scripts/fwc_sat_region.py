@@ -3,7 +3,7 @@ from sat_region_station_ts import csv2graph_roi
 # example file: /srv/imars-objects/fk/EXT_TS_VSNPP/SSTN/FKdbv2_sstn_TS_VSNPP_daily_BB.csv
 
 csv2graph_roi(
-    roi='fwc',
+    roi='fk',
     subregions=[
         'BB', 'BIS', 'CAR', 'DT', 'DTN', 'EFB', 'EK_IN', 'EK_MID', 'FLB', 'FROCK', 
         'IFB', 'KW', 'LK', 'MIA', 'MK', 'MOD', 'MQ', 'MR', 'MUK', 'PBI', 'PEV', 'SANDK', 

@@ -14,7 +14,7 @@ csv2graph_roi(
         'SFP52', 'SFP53', 'SFP54', 'SFP5_5', 'SFP55', 'SFP56', 'SFP57_2', 'SFP57_3',
         'SFP57', 'SFP5', 'SFP61', 'SFP62', 'SFP63', 'SFP64', 'SFP6_5', 'SFP61', 'SFP62',
         'SFP63', 'SFP64', 'SFP6_5', 'SFP65', 'SFP66', 'SFP67', 'SFP69', 'SFP6', 'SFP70',
-        'SFP7', 'SFP8', 'SFP9_5', 'SPF9', 'SLI', 'SOM', 'SR', 'UFB1', 'UFB2', 'UFB4', 'UK',
+        'SFP7', 'SFP8', 'SFP9_5', 'SFP9', 'SLI', 'SOM', 'SR', 'UFB1', 'UFB2', 'UFB4', 'UK',
         'UK_IN', 'UK_MID', 'UK_OFF', 'WFB', 'WFS', 'WS'
     ],
     directory='/srv/imars-objects/fk',

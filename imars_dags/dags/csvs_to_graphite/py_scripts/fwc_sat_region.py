@@ -24,7 +24,7 @@ csv2graph_roi(
         '/EXT_TS_VSNPP/OC/{roi_upper}dbv2_chlor_a',
         '/EXT_TS_VSNPP/OC/{roi_upper}dbv2_Rrs_671',
         '/EXT_TS_VSNPP/OC/{roi_upper}dbv2_Kd_490',
-        '/EXT_TS_VSNPP/OC/{roi_upper}dbv2_ABI',
+        '/EXT_TS_MODA/OC/{roi_upper}dbv2_ABI',
     ],
     FILENAME_FORMAT="{directory}{prod}_TS_VSNPP_{timescale}_{loc}.csv"
 )

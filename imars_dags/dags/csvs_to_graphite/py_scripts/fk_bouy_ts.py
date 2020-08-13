@@ -7,15 +7,15 @@
 import _csv_to_graphite as csv2graph
 
 for produ in ['sal', 'temp']:
+    for roi in [
+        'bnkf1', 'BOBALLEN', 'bobf1', 'BUTTERNUT', 'LITTLERABBIT',
+        'lrkf1', 'PETERSON', 'pykf1', 'WHIPRAY', 'wrbf1'
+    ]
     csv2graph.main(
         (
-            "/srv/imars-objects/modis_aqua_fk/SAL_TS_NDBC/"
-            "pkyf1_NDBC_{}_FKdb.csv"
-        ).format(
-            produ
+            "/srv/imars-objects/fk/SAL_TS_NDBC/" +
+            f"{roi}_NDBC_{produ}_FKdb.csv"
         ),
-        'imars_regions.fk.bouys.pkyf1.{}'.format(
-            produ
-        ),
+        f"imars_regions.fk.bouys.{roi}.{produ}",
         ["mean", "climatology", "anomaly"]
     )

@@ -53,15 +53,6 @@ with this_dag as dag:
     )
 
     # === FKNMS
-    fk_sat_region = BashOperator(
-        task_id=(
-            "fk_sat_region"
-        ),
-        bash_command="""
-            python2 \
-            /home/airflow/dags/imars_dags/imars_dags/dags/csvs_to_graphite/py_scripts/fk_sat_region.py
-        """,
-    )
     fk_river_ts = BashOperator(
         task_id=(
             "fk_river_ts"
@@ -79,4 +70,18 @@ with this_dag as dag:
             python2 \
             /home/airflow/dags/imars_dags/imars_dags/dags/csvs_to_graphite/py_scripts/fk_bouy_ts.py
         """,
+    )
+    fwc_sat_regions = BashOperator(
+        task_id="fwc_sat_regions",
+        bash_command="""
+            python2 \
+            /home/airflow/dags/imars_dags/imars_dags/dags/csvs_to_graphite/py_scripts/fwc_sat_region.py
+        """
+    )
+    fwc_river_ts = BashOperator(
+        task_id="fwc_river_ts",
+        bash_command="""
+            python2 \
+            /home/airflow/dags/imars_dags/imars_dags/dags/csvs_to_graphite/py_scripts/fwc_river_ts.py
+        """
     )

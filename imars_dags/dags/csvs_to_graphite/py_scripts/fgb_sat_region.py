@@ -1,9 +1,31 @@
 from sat_region_station_ts import csv2graph_roi
 
 csv2graph_roi(
-    'FGB',
-    [
-        'STET', 'WFG', 'EFG'
+    roi='FGB', 
+    subregions=[
+        'EFG',
+        'WFG',
+        'STET',
+        'COAST1',
+        'COAST2',
+        'COAST3',
+        'COAST4',
+        'SS1',
+        'SS2',
+        'SS3',
+        'SS4',
+        'SS5',
+        'SS6',
+        'SS7',
+        'SS8'
+    ],        
+    directory='/srv/imars-objects/fgb'
+    db_version=v2,
+    prod_format_strings=[
+        '/EXT_TS_VSNPP/SSTN/{roi_upper}dbv2_sstn',
+        '/EXT_TS_VSNPP/OC/{roi_upper}dbv2_chlor_a',
+        '/EXT_TS_VSNPP/OC/{roi_upper}dbv2_Rrs_671',
+        '/EXT_TS_VSNPP/OC/{roi_upper}dbv2_Kd_490',
     ],
-    '/srv/imars-objects/modis_aqua_fgbnms'
+    FILENAME_FORMAT="{directory}{prod}_TS_VSNPP_{timescale}_{loc}.csv"
 )
